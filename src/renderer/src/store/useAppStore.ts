@@ -12,17 +12,28 @@ import { activeFocusTasks, commitFocus, normalizeState } from '@shared/focus'
 
 type Screen = 'today' | 'projects' | 'summary' | 'settings'
 
+/** Aviso efímero al completar una tarea con tiempo registrado. */
+export interface CompletionReveal {
+  id: string
+  text: string
+  ms: number
+  at: number
+}
+
 interface AppState extends PersistedState {
   hydrated: boolean
   screen: Screen
   /** proyecto abierto en la pantalla Proyectos. */
   activeProjectId: string | null
+  /** última tarea completada con tiempo — la muestra el toast, luego se limpia. */
+  recentCompletion: CompletionReveal | null
 
   hydrate: () => Promise<void>
   /** Aplica un estado llegado de otra ventana sin re-guardarlo. */
   applyRemote: (state: PersistedState) => void
   setScreen: (s: Screen) => void
   setActiveProject: (id: string | null) => void
+  clearRecentCompletion: () => void
   checkRollover: () => void
 
   addTask: (text: string, projectId: string) => void
@@ -96,6 +107,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   hydrated: false,
   screen: 'today',
   activeProjectId: null,
+  recentCompletion: null,
 
   hydrate: async () => {
     const loaded = (await window.modo?.loadState()) ?? INITIAL_STATE
@@ -125,6 +137,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setScreen: (screen) => set({ screen }),
   setActiveProject: (activeProjectId) => set({ activeProjectId }),
+  clearRecentCompletion: () => set({ recentCompletion: null }),
 
   checkRollover: () => {
     const rolled = rolloverIfNeeded(persisted(get()))
@@ -148,14 +161,19 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   toggleTask: (id) =>
-    set((s) =>
-      mapTaskEverywhere(s, id, (t) => {
+    set((s) => {
+      let reveal: CompletionReveal | null = s.recentCompletion
+      const patch = mapTaskEverywhere(s, id, (t) => {
         const done = !t.done
         // al completar: cerrar el cronómetro de enfoque si estaba corriendo
         const base = done ? commitFocus(t) : t
+        if (done && base.timeSpentMs >= 1000) {
+          reveal = { id: t.id, text: base.text, ms: base.timeSpentMs, at: Date.now() }
+        }
         return { ...base, done, completedDate: done ? new Date().toISOString() : null }
       })
-    ),
+      return { ...patch, recentCompletion: reveal }
+    }),
 
   deleteTask: (id) =>
     set((s) => ({

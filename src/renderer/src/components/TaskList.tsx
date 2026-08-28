@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import { Check, Pause, Play, Trash2 } from 'lucide-react'
 import type { Task } from '@shared/types'
-import { elapsedMs, formatDuration } from '@shared/focus'
 import { useAppStore } from '../store/useAppStore'
-import { useNow } from '../hooks/useNow'
 
 interface Props {
   tasks: Task[]
-  /** contador "lleva N días" + cronómetro de enfoque (solo tiene sentido en Hoy). */
+  /** contador "lleva N días" (solo tiene sentido en Hoy). */
   showRolled?: boolean
   /** muestra el botón de enfoque (▶) en cada fila. */
   focusable?: boolean
@@ -56,8 +54,6 @@ function TaskItem({
   const [draft, setDraft] = useState(task.text)
 
   const running = task.focusStartedAt !== null
-  const now = useNow(running)
-  const spent = elapsedMs(task, now)
 
   return (
     <li
@@ -96,30 +92,18 @@ function TaskItem({
           className="flex-1 bg-transparent text-sm outline-none"
         />
       ) : (
-        <button
-          type="button"
+        <span
           onDoubleClick={() => {
             setDraft(task.text)
             setEditing(true)
           }}
-          className="flex min-w-0 flex-1 flex-col items-start text-left"
+          className={`flex min-w-0 flex-1 items-center gap-2 truncate text-sm ${
+            task.done ? 'text-paper-dim line-through' : 'text-paper'
+          }`}
         >
-          <span
-            className={`w-full truncate text-sm ${
-              task.done ? 'text-paper-dim line-through' : 'text-paper'
-            }`}
-          >
-            {task.text}
-          </span>
-          {focusable && !task.done && (spent > 0 || running) && (
-            <span
-              className={`text-[10px] tabular-nums ${running ? 'text-orange' : 'text-paper-dim'}`}
-            >
-              {formatDuration(spent)}
-              {running && ' · en curso'}
-            </span>
-          )}
-        </button>
+          {task.text}
+          {running && <span className="shrink-0 text-[10px] text-orange">en curso</span>}
+        </span>
       )}
 
       {showRolled && task.daysRolled > 0 && !task.done && (
@@ -130,7 +114,7 @@ function TaskItem({
 
       {focusable && !task.done && (
         <button
-          aria-label={running ? 'Pausar enfoque' : 'Trabajar en esta tarea'}
+          aria-label={running ? 'Pausar' : 'Trabajar en esta tarea'}
           onClick={() => toggleFocus(task.id)}
           className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border transition-colors ${
             running

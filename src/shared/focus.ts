@@ -30,6 +30,17 @@ export function formatDuration(ms: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
+/** Legible para humanos: "45 s", "23 min", "1 h 5 min". Sin segundos que estresen. */
+export function formatDurationLong(ms: number): string {
+  const totalSec = Math.round(ms / 1000)
+  if (totalSec < 60) return `${totalSec} s`
+  const totalMin = Math.round(totalSec / 60)
+  if (totalMin < 60) return `${totalMin} min`
+  const h = Math.floor(totalMin / 60)
+  const m = totalMin % 60
+  return m === 0 ? `${h} h` : `${h} h ${m} min`
+}
+
 /** Cierra un tramo de enfoque sumando el tiempo transcurrido (con tope anti-basura). */
 export function commitFocus(task: Task, now: number = Date.now()): Task {
   if (!task.focusStartedAt) return task

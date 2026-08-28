@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
 import { Maximize2 } from 'lucide-react'
-import { elapsedMs, formatDuration } from '@shared/focus'
 import { useAppStore } from '../store/useAppStore'
-import { useNow } from '../hooks/useNow'
+import ProgressRing from './ProgressRing'
 import FocusTaskRow from './FocusTaskRow'
 import MultitaskNudge from './MultitaskNudge'
+import CompletionToast from './CompletionToast'
 
 // El rollover diario lo maneja solo la ventana principal; el mini recibe el
 // estado ya actualizado por el broadcast store:changed.
@@ -20,10 +20,8 @@ export default function MiniFloating(): React.JSX.Element {
 
   const pending = todayTasks.filter((t) => !t.done)
   const done = todayTasks.length - pending.length
+  const pct = todayTasks.length === 0 ? 0 : done / todayTasks.length
   const focusing = pending.filter((t) => t.focusStartedAt !== null)
-  const anyRunning = focusing.length > 0
-  const now = useNow(anyRunning)
-  const focusedTotal = focusing.reduce((acc, t) => acc + elapsedMs(t, now), 0)
 
   // pendientes con enfoque activo primero
   const ordered = [...pending].sort(
@@ -32,17 +30,9 @@ export default function MiniFloating(): React.JSX.Element {
 
   return (
     <div className="drag flex h-screen w-screen p-2">
-      <div className="glass-strong flex h-full w-full flex-col overflow-hidden rounded-[22px] shadow-glass">
-        <header className="flex items-center justify-between px-3.5 pb-2 pt-3">
-          <div>
-            <p className="text-[10px] uppercase tracking-widest text-paper-dim">Enfoque</p>
-            <p className="text-xs text-paper">
-              {done}/{todayTasks.length} hoy
-              {anyRunning && (
-                <span className="text-orange"> · {formatDuration(focusedTotal)}</span>
-              )}
-            </p>
-          </div>
+      <div className="glass-strong relative flex h-full w-full flex-col overflow-hidden rounded-[22px] shadow-glass">
+        <header className="flex items-center justify-between px-3.5 pb-1 pt-3">
+          <p className="text-[10px] uppercase tracking-widest text-paper-dim">Enfoque</p>
           <button
             aria-label="Abrir ventana completa"
             onClick={() => window.modo?.exitMiniMode()}
@@ -52,15 +42,21 @@ export default function MiniFloating(): React.JSX.Element {
           </button>
         </header>
 
-        <div className="no-drag min-h-0 flex-1 space-y-1.5 overflow-y-auto px-3 pb-3">
-          {!hydrated ? (
-            <p className="px-1 py-6 text-center text-xs text-paper-dim">…</p>
-          ) : focusing.length >= 2 ? (
-            <MultitaskNudge count={focusing.length} />
-          ) : null}
+        <div className="grid place-items-center pb-2 pt-1">
+          <ProgressRing
+            pct={pct}
+            size={116}
+            stroke={6}
+            label="del día"
+            sub={`${done}/${todayTasks.length}`}
+          />
+        </div>
+
+        <div className="no-drag min-h-0 flex-1 space-y-1.5 overflow-y-auto border-t border-border px-3 py-3">
+          {hydrated && focusing.length >= 2 && <MultitaskNudge count={focusing.length} />}
 
           {hydrated && pending.length === 0 ? (
-            <p className="px-1 py-8 text-center text-xs text-paper-dim">
+            <p className="px-1 py-6 text-center text-xs text-paper-dim">
               {todayTasks.length === 0
                 ? 'Sin tareas hoy. Ábrela para agregar.'
                 : '¡Todo cerrado por hoy!'}
@@ -73,6 +69,8 @@ export default function MiniFloating(): React.JSX.Element {
             </ul>
           )}
         </div>
+
+        <CompletionToast compact />
       </div>
     </div>
   )

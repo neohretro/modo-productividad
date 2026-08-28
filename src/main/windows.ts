@@ -11,7 +11,7 @@ let miniWindow: BrowserWindow | null = null
 /** Qué ventana es la "cara" actual de la app (para tray / atajo global). */
 let activeKind: 'main' | 'mini' = 'main'
 
-const MINI_SIZE = { width: 300, height: 404 }
+const MINI_SIZE = { width: 300, height: 468 }
 
 function loadRoute(win: BrowserWindow, route: 'index' | 'mini'): void {
   const file = route === 'index' ? 'index.html' : 'mini.html'

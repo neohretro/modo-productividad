@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Minus, PictureInPicture2, X } from 'lucide-react'
 import { useAppStore } from './store/useAppStore'
 import BottomNav from './components/BottomNav'
+import CompletionToast from './components/CompletionToast'
 import Today from './screens/Today'
 import Projects from './screens/Projects'
 import Summary from './screens/Summary'
@@ -61,7 +62,7 @@ export default function App(): React.JSX.Element {
   const Screen = SCREENS[screen]
 
   return (
-    <div className="flex h-full flex-col bg-ink/95 p-4">
+    <div className="relative flex h-full flex-col bg-ink/95 p-4">
       <header className="drag flex items-center justify-between px-2 py-1">
         <span className="text-xs tracking-widest text-paper-dim">
           MODO CREADOR · PRODUCTIVIDAD
@@ -80,6 +81,7 @@ export default function App(): React.JSX.Element {
       </main>
 
       <BottomNav />
+      <CompletionToast />
     </div>
   )
 }
