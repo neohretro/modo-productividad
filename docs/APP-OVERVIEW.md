@@ -87,8 +87,8 @@ reinicia solo, vive semanas). Chips para cambiar de uno a otro.
   tarea con cronómetro: 23 min".
 
 **Ajustes** — Tema (claro / oscuro / el del sistema), iniciar con Windows, atajo
-global de teclado, aviso de multitasking, activar el modo mini, y las
-actualizaciones.
+global de teclado, aviso de multitasking, activar el modo mini, la cuenta para
+sincronizar, y las actualizaciones.
 
 ### "Hoy" vs. Proyectos — la diferencia clave
 
@@ -134,6 +134,20 @@ seguidos (máximo 3 guardados).
 - Cerrar la ventana completa te devuelve al mini. Salir de verdad es desde la
   bandeja.
 
+### Sincronización en la nube (opcional)
+
+La app funciona **sin cuenta**: tus tareas viven en tu computadora. Si quieres
+tenerlas en varios equipos, en Ajustes hay una sección **"Cuenta"**: escribes tu
+correo, te llega un código de un solo uso, lo tecleas y listo (sin contraseñas).
+
+Desde ese momento, cada cambio se guarda solo en la nube unos segundos después, y
+cada equipo con tu sesión se mantiene al día. Si dos equipos cambiaron cosas
+distintas, se combinan sin perder nada. Puedes cerrar sesión cuando quieras y la
+app sigue funcionando en local.
+
+Es la misma cuenta del ecosistema MODO CREADOR. Al entrar puedes marcar si quieres
+recibir novedades por correo (opcional).
+
 ### Actualizaciones automáticas
 
 La app revisa sola si hay una versión nueva. Cuando la hay, muestra una barra:
@@ -155,23 +169,22 @@ Ajustes.
   muestra un aviso azul la primera vez ("Windows protegió tu PC"). Se resuelve con
   **"Más información" → "Ejecutar de todas formas"**. (Se quitará al comprar un
   certificado de firma para la versión pública.)
-- **Versión actual:** 0.1.1
+- **Versión actual:** 0.3.0
 
 ## Privacidad
 
-- Todo es **local por defecto**. Tus tareas viven en tu computadora, no hay
-  servidor ni cuenta.
+- Todo es **local por defecto**. Tus tareas viven en tu computadora; sin cuenta no
+  hay ningún servidor de por medio.
+- La **sincronización en la nube es opcional** y solo se activa cuando tú inicias
+  sesión. Puedes cerrar sesión cuando quieras.
 - Al desinstalar, **no se borran tus tareas** (por si reinstalas).
-- La sincronización en la nube (roadmap) será **opcional** y con tu permiso
-  explícito.
 
 ---
 
 ## Roadmap (lo que viene)
 
-- **Sincronización en la nube (opcional)** — tus tareas en varios dispositivos,
-  creando una cuenta gratis. La app seguirá funcionando sin cuenta.
 - **Versión para Mac.**
+- **Plan de pago** (a futuro): la sincronización básica seguirá siendo gratis.
 
 ---
 
