@@ -10,6 +10,7 @@ const api = {
   enterMiniMode: () => ipcRenderer.send('window:enterMini'),
   exitMiniMode: () => ipcRenderer.send('window:exitMini'),
   notifyMultitask: (count: number) => ipcRenderer.send('notify:multitask', count),
+  setResolvedTheme: (theme: 'light' | 'dark') => ipcRenderer.send('theme:set', theme),
   getAppVersion: (): Promise<string> => ipcRenderer.invoke('app:getVersion'),
 
   // persistencia

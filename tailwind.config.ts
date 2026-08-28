@@ -24,6 +24,7 @@ export default {
           DEFAULT: 'var(--paper)',
           dim: 'var(--paper-dim)'
         },
+        frost: 'var(--frost)',
         orange: {
           DEFAULT: 'var(--orange)',
           soft: 'var(--orange-soft)',

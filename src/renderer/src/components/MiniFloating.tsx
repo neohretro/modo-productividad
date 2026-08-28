@@ -37,9 +37,14 @@ export default function MiniFloating(): React.JSX.Element {
   )
 
   return (
-    <div className="drag flex h-screen w-screen p-2.5">
-      <div className="frost relative flex h-full w-full flex-col overflow-hidden rounded-[26px]">
-        <header className="flex items-center justify-between gap-2 px-3 pb-1.5 pt-2.5">
+    <div className="drag relative flex h-screen w-screen flex-col overflow-hidden bg-frost">
+      {/* resplandor detrás del anillo — caja cuadrada, se desvanece dentro de sí */}
+      <div
+        className="ring-halo pointer-events-none absolute left-1/2 top-[116px] h-[210px] w-[210px] -translate-x-1/2 -translate-y-1/2"
+        aria-hidden
+      />
+      <div className="relative flex h-full w-full flex-col">
+        <header className="relative flex items-center justify-between gap-2 px-3 pb-1.5 pt-2.5">
           <Dropdown
             className="min-w-0 flex-1"
             value={miniTargetId}
@@ -58,12 +63,17 @@ export default function MiniFloating(): React.JSX.Element {
           </button>
         </header>
 
-        <div className="relative grid place-items-center pb-2.5 pt-1">
-          <div className="ring-halo pointer-events-none absolute inset-0" />
-          <ProgressRing pct={pct} size={132} stroke={6} label={view.name} sub={`${done}/${view.tasks.length}`} />
+        <div className="relative grid place-items-center pb-3 pt-1">
+          <ProgressRing
+            pct={pct}
+            size={132}
+            stroke={6}
+            label={view.name}
+            sub={`${done}/${view.tasks.length}`}
+          />
         </div>
 
-        <div className="no-drag min-h-0 flex-1 space-y-1.5 overflow-y-auto border-t border-border px-3 pt-3">
+        <div className="no-drag relative min-h-0 flex-1 space-y-1.5 overflow-y-auto px-3 pt-1">
           {hydrated && focusing.length >= 2 && <MultitaskNudge count={focusing.length} />}
 
           {hydrated && ordered.length === 0 ? (

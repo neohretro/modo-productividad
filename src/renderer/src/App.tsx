@@ -63,7 +63,7 @@ export default function App(): React.JSX.Element {
   const Screen = SCREENS[screen]
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden rounded-[22px] border border-border-hi bg-ink px-5 pb-3 pt-2.5">
+    <div className="relative flex h-full flex-col overflow-hidden bg-ink px-5 pb-3 pt-2.5">
       <header className="drag flex items-center justify-between px-1 pb-2">
         <span className="text-[10px] font-medium tracking-[0.2em] text-paper-dim">
           MODO CREADOR · PRODUCTIVIDAD

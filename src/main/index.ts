@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { getState, registerStoreIpc } from './store'
 import {
@@ -6,6 +6,7 @@ import {
   enterMiniMode,
   exitMiniMode,
   getMainWindow,
+  setWindowsBackground,
   showActiveWindow,
   startApp
 } from './windows'
@@ -33,6 +34,7 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.on('window:enterMini', () => enterMiniMode())
     ipcMain.on('window:exitMini', () => exitMiniMode())
     ipcMain.on('notify:multitask', (_e, count: number) => notifyMultitask(count))
+    ipcMain.on('theme:set', (_e, t: 'light' | 'dark') => setWindowsBackground(t))
     ipcMain.handle('app:getVersion', () => app.getVersion())
 
     registerStoreIpc(onSettingsChange)
@@ -41,6 +43,13 @@ if (!app.requestSingleInstanceLock()) {
     const { settings } = getState()
     applyLoginItem(settings.launchOnStartup)
     applyGlobalShortcut(settings.globalShortcut)
+    const resolvedTheme =
+      settings.theme === 'system'
+        ? nativeTheme.shouldUseDarkColors
+          ? 'dark'
+          : 'light'
+        : settings.theme
+    setWindowsBackground(resolvedTheme)
 
     startApp()
     createTray()

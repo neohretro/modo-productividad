@@ -15,7 +15,9 @@ export function useTheme(): void {
 
   useEffect(() => {
     const apply = (): void => {
-      document.documentElement.dataset.theme = resolve(pref)
+      const resolved = resolve(pref)
+      document.documentElement.dataset.theme = resolved
+      window.modo?.setResolvedTheme(resolved)
     }
     apply()
 
