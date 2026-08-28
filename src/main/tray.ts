@@ -3,10 +3,11 @@ import { getState, patchSettings } from './store'
 import { enterMiniMode, exitMiniMode, showActiveWindow } from './windows'
 import { applyLoginItem } from './system'
 
-// Isotipo MODO (cuadrado negro + esquina activa naranja), 32px, embebido para
-// evitar problemas de ruta entre dev y el paquete asar.
+// Isotipo MODO (tarjeta negra + ventana blanca + esquina activa naranja), 32px,
+// embebido para evitar problemas de ruta entre dev y el paquete asar.
+// Generado por scripts/gen-icons.mjs — mantener en sync con build/tray.png.
 const TRAY_PNG =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZElEQVR42u3XMQrAQAhEUTsvnztvSBEIsptoWLX5H6Z/7YgQmVR1eDcOCW8r4A9iOyCKSAFEEGkALyIV4EGkA74QJYA3RBlghSgFzBDlAItoATwRbYAb0Qq4BgAAAAAAOD5kOwF0NfIR3xk0XgAAAABJRU5ErkJggg=='
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAArklEQVR42u2WMQrCMBSGgy7/IYpLLubulCWLVyhCrhHIIVzEe+QgTx6oaNBC09Q4/B98W/v6dXgkxhCyMjIa+eBFRjP0DFBz7wDV9Q6Ibw8DGACcAMRWzg3IAKSlcwOEAa9aa8V7LymlKvXd63Enab99ej5ssn74rpsMCCHIUnRGMTd+XZkyQP9iKTqDAQyoDtA1rF3BhzqjOmAl/zsg/yDATQU0P44LHS+phJCSG3jzqZgbHLZMAAAAAElFTkSuQmCC'
 
 let tray: Tray | null = null
 
