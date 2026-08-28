@@ -253,12 +253,14 @@ Animaciones por CSS `@keyframes` con la curva del Brand OS. Reevaluar en Fase 3 
 - [x] Ícono de la app: `build/icon.ico` multi-resolución (16–256), generado por
       `scripts/gen-icons.mjs` sin dependencias. Isotipo MODO con esquina naranja.
 - [x] Instalador verificado: la app empaquetada arranca y muestra el mini.
+- [x] **Auto-actualización** (`electron-updater`, GitHub Releases): la app avisa en pantalla
+      "Nueva versión → Descargar" y "Lista → Reiniciar e instalar". `src/main/updater.ts`,
+      `UpdateBanner`, Ajustes › Actualizaciones. Ver [`RELEASING.md`](RELEASING.md).
 - [ ] Firma de código: **sin firmar** por ahora (beta). SmartScreen avisará en la
       primera ejecución. Requiere certificado OV/EV comprado para producción pública.
-- [ ] Auto-actualización (`electron-updater`) — stretch, no bloqueante. Pendiente.
 
-**Cómo generar el instalador:** `npm run dist:win` (corre `electron-vite build` +
-`electron-builder --win`). Para Mac: `npm run dist:mac` (desde una Mac).
+**Cómo generar el instalador:** `npm run dist:win`. **Publicar una versión:**
+`set GH_TOKEN=… && npm run release:win` (pasos completos en `RELEASING.md`).
 
 ### Fase 5 — Stretch (post-beta)
 
