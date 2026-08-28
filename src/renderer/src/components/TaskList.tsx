@@ -70,7 +70,7 @@ function TaskItem({
             : 'border-border bg-transparent hover:border-paper-dim'
         }`}
       >
-        {task.done && <Check size={13} strokeWidth={3} />}
+        {task.done && <Check size={13} strokeWidth={3} className="animate-pop" />}
       </button>
 
       {editing ? (

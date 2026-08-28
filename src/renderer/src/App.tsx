@@ -72,7 +72,7 @@ export default function App(): React.JSX.Element {
 
       <main className="flex flex-1 flex-col overflow-hidden p-2">
         {hydrated ? (
-          <div key={screen} className="flex flex-1 animate-rise flex-col overflow-hidden">
+          <div key={screen} className="flex flex-1 animate-fade flex-col overflow-hidden">
             <Screen />
           </div>
         ) : (

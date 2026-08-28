@@ -101,4 +101,49 @@
   .animate-fade {
     animation: modo-fade 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
+
+  /* check al completar una tarea: aparece con precisión, sin rebote */
+  @keyframes modo-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-pop {
+    animation: modo-pop 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* entrada escalonada de las cards del bento al abrir una pantalla */
+  .stagger > * {
+    animation: modo-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .stagger > *:nth-child(1) {
+    animation-delay: 0ms;
+  }
+  .stagger > *:nth-child(2) {
+    animation-delay: 45ms;
+  }
+  .stagger > *:nth-child(3) {
+    animation-delay: 90ms;
+  }
+  .stagger > *:nth-child(4) {
+    animation-delay: 135ms;
+  }
+  .stagger > *:nth-child(n + 5) {
+    animation-delay: 180ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-rise,
+    .animate-fade,
+    .animate-pop,
+    .stagger > * {
+      animation: none;
+    }
+  }
 }

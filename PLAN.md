@@ -127,11 +127,15 @@ Project { id, name, tasks: Task[], createdDate }   // progreso acumulado, nunca 
 
 ### 4.3 Modo enfoque y aviso de multitasking ✅
 
-El **modo mini** no es solo el anillo: lista las tareas de "Hoy" y, por cada una,
-un botón ▶ para empezar a trabajarla. Al iniciar, corre un **cronómetro** (guardado
-como `focusStartedAt`, un timestamp — así todas las ventanas calculan el mismo tiempo
-y sobrevive a un cierre). Al **completar** la tarea, el cronómetro se cierra y el
-tiempo se suma a `timeSpentMs` → alimenta el Resumen ("cuánto te tomó cada tarea").
+El **modo mini** muestra el anillo del día arriba y debajo la lista de tareas de
+"Hoy", con un botón ▶ por tarea para empezar a trabajarla.
+
+**No hay cronómetro visible mientras la tarea corre** — solo un "en curso" (feedback
+del usuario: un contador a la vista estresa). El tiempo se registra en silencio
+(`focusStartedAt`, un timestamp — todas las ventanas calculan igual y sobrevive a un
+cierre). **Al completar**, el tramo se cierra, se suma a `timeSpentMs`, y aparece un
+aviso efímero ("Te tomó 25 min", `CompletionToast`, ~4.5 s). Ese dato también va al
+Resumen ("cuánto te tomó cada tarea").
 
 Se pueden enfocar **varias tareas a la vez** (no se bloquea), pero al cruzar 2+ aparece
 un **aviso suave**: banner en pantalla + notificación nativa (con la cita de la APA

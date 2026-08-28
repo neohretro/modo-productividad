@@ -30,7 +30,7 @@ export default function Today(): React.JSX.Element {
   const last7 = buildLast7(snapshots)
 
   return (
-    <div className="grid flex-1 grid-cols-12 gap-4 overflow-hidden">
+    <div className="stagger grid flex-1 grid-cols-12 gap-4 overflow-hidden">
       {/* bienvenida */}
       <section className="glass col-span-12 flex items-center justify-between rounded-card p-6">
         <div>

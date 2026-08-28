@@ -56,8 +56,8 @@ interface AppState extends PersistedState {
   setMultitaskNudges: (on: boolean) => void
 }
 
-/** Solo los campos que van a disco. */
-function persisted(s: AppState): PersistedState {
+/** Solo los campos que van a disco. También sirve de selector para lógica pura. */
+export function persisted(s: AppState): PersistedState {
   return {
     version: s.version,
     todayTasks: s.todayTasks,
