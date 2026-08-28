@@ -19,6 +19,13 @@ export function setState(next: PersistedState): void {
   store.set('state', next)
 }
 
+/** Empuja un estado a todas las ventanas (main + mini) sin volver a guardarlo. */
+export function broadcastState(next: PersistedState): void {
+  for (const win of BrowserWindow.getAllWindows()) {
+    win.webContents.send('store:changed', next)
+  }
+}
+
 export function patchSettings(patch: Partial<AppSettings>): PersistedState {
   const current = getState()
   const next = { ...current, settings: { ...current.settings, ...patch } }
@@ -30,7 +37,10 @@ export function patchSettings(patch: Partial<AppSettings>): PersistedState {
  * Registra la persistencia. `onSettingsChange` se dispara cuando el renderer
  * guarda un estado con settings distintos (para re-aplicar login item, atajo, etc.).
  */
-export function registerStoreIpc(onSettingsChange: (s: AppSettings) => void): void {
+export function registerStoreIpc(
+  onSettingsChange: (s: AppSettings) => void,
+  onStateSaved: (s: PersistedState) => void = () => {}
+): void {
   ipcMain.handle('store:load', (): PersistedState => getState())
 
   ipcMain.handle('store:save', (event, next: PersistedState): void => {
@@ -47,6 +57,7 @@ export function registerStoreIpc(onSettingsChange: (s: AppSettings) => void): vo
     if (JSON.stringify(prev.settings) !== JSON.stringify(next.settings)) {
       onSettingsChange(next.settings)
     }
+    onStateSaved(next)
   })
 }
 

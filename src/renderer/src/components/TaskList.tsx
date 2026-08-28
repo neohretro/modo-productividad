@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, Pause, Play, Trash2 } from 'lucide-react'
+import { Bell, Check, Pause, Play, Trash2 } from 'lucide-react'
 import type { Task } from '@shared/types'
 import { useAppStore } from '../store/useAppStore'
 import { useTaskMenu } from '../hooks/useTaskMenu'
@@ -117,6 +117,10 @@ function TaskItem({
       )}
 
       <div className="mt-0.5 flex shrink-0 items-center gap-2 self-start">
+        {task.remindAt && !task.done && (
+          <Bell size={13} strokeWidth={2} className="text-orange" aria-label="Con recordatorio" />
+        )}
+
         {showRolled && task.daysRolled > 0 && !task.done && (
           <span className="rounded-full bg-orange-glow px-2 py-0.5 text-[10px] text-orange">
             {task.daysRolled}d

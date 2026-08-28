@@ -51,12 +51,13 @@ donde quieras. Muestra:
   pausar, ✓ para completarla.
 - **Un campo para agregar tareas** sin salir del mini.
 - **Clic derecho en una tarea**: editar, copiar el texto, duplicar, moverla a
-  mañana o a otra fecha, moverla a un proyecto, o eliminarla.
+  mañana o a otra fecha, moverla a un proyecto, ponerle un **recordatorio**
+  (en 1 h, hoy a las 18:00, mañana a las 9:00 o la hora que elijas), o eliminarla.
 - **Un botón para expandir** a la ventana completa.
 
 ### La ventana completa
 
-Cuatro secciones:
+Cinco secciones:
 
 **Hoy** — Card de bienvenida con saludo según la hora. El anillo de avance grande.
 Tarjetas de stats: tareas completadas, racha, mini gráfico de los últimos 7 días.
@@ -64,6 +65,12 @@ La lista continua de tareas del día. Un botón "Copiar lista" que copia tus
 pendientes con viñetas (para pegárselos a una IA, por ejemplo). Y una sección
 "Programadas" con las tareas que pusiste para una fecha futura, que aparecen solas
 ese día.
+
+**Semana** — Vista de calendario: los 7 días (lunes a domingo) en columnas, con
+navegación entre semanas y un botón para volver a hoy. Cada día muestra sus
+tareas — los días pasados, lo que completaste ese día; hoy, tu lista de Hoy; los
+días futuros, lo que dejaste programado. Puedes agregar una tarea a un día
+concreto y arrastrar una tarea de un día a otro para reprogramarla.
 
 **Proyectos** — Crea proyectos (MODO Planner, Gear, lo que sea), renómbralos,
 elimínalos. Cada proyecto tiene su propio anillo de progreso **acumulado** (no se
@@ -101,6 +108,15 @@ queda en el Resumen agrupado por proyecto.
 Si enfocas dos o más tareas a la vez, aparece el aviso de multitasking (banner en
 la app + notificación de Windows). Es suave y con cooldown; puedes seguir si
 quieres.
+
+### Recordatorios
+
+A cualquier tarea le puedes poner un recordatorio con clic derecho: presets
+rápidos (en 1 hora, hoy a las 18:00, mañana a las 9:00) o la fecha y hora exacta
+que quieras. A esa hora salta una **notificación nativa de Windows** con el texto
+de la tarea; un clic te lleva a la app. Si la hora llegó con la app cerrada, el
+aviso aparece la próxima vez que la abres (hasta 24 h después). Las tareas con
+recordatorio muestran una campanita.
 
 ### La racha
 
@@ -153,8 +169,6 @@ Ajustes.
 
 ## Roadmap (lo que viene)
 
-- **Vista de calendario / semana** — ver las tareas repartidas en los días.
-- **Recordatorios** — notificaciones nativas de Windows a la hora que elijas.
 - **Sincronización en la nube (opcional)** — tus tareas en varios dispositivos,
   creando una cuenta gratis. La app seguirá funcionando sin cuenta.
 - **Versión para Mac.**

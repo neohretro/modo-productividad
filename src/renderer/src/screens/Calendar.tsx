@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Check, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Bell, Check, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { PersistedState, Task } from '@shared/types'
 import { addDaysISO, toISODate } from '@shared/date'
 import { buildWeek, canAddOn, weekOf } from '@shared/calendar'
@@ -146,6 +146,9 @@ function DayTask({
         }`}
       >
         {task.text}
+        {task.remindAt && !task.done && (
+          <Bell size={8} strokeWidth={2.5} className="ml-1 inline -translate-y-px text-orange" />
+        )}
       </span>
     </div>
   )

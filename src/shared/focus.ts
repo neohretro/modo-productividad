@@ -60,7 +60,8 @@ function normalizeTask(t: Partial<Task>): Task {
     daysRolled: t.daysRolled ?? 0,
     timeSpentMs: t.timeSpentMs ?? 0,
     focusStartedAt: t.focusStartedAt ?? null,
-    scheduledDate: t.scheduledDate ?? null
+    scheduledDate: t.scheduledDate ?? null,
+    remindAt: t.remindAt ?? null
   }
 }
 

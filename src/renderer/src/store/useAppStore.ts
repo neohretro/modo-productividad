@@ -54,6 +54,8 @@ interface AppState extends PersistedState {
   editTask: (id: string, text: string) => void
   setEditingTask: (id: string | null) => void
   duplicateTask: (id: string) => void
+  /** Pone (o quita, con null) el recordatorio de una tarea. ISO datetime. */
+  setReminder: (id: string, remindAt: string | null) => void
   /** Programa una tarea de Hoy para una fecha (ISO). Fecha pasada/hoy = la activa ya. */
   moveTaskToDate: (id: string, dateISO: string) => void
   /** Trae una tarea programada de vuelta a Hoy ahora. */
@@ -103,7 +105,8 @@ function newTask(text: string, projectId: string): Task {
     daysRolled: 0,
     timeSpentMs: 0,
     focusStartedAt: null,
-    scheduledDate: null
+    scheduledDate: null,
+    remindAt: null
   }
 }
 
@@ -252,6 +255,16 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   setEditingTask: (editingTaskId) => set({ editingTaskId }),
+
+  setReminder: (id, remindAt) =>
+    set((s) => {
+      const patch = (t: Task): Task => (t.id === id ? { ...t, remindAt } : t)
+      return {
+        todayTasks: s.todayTasks.map(patch),
+        scheduledTasks: s.scheduledTasks.map(patch),
+        projects: s.projects.map((p) => ({ ...p, tasks: p.tasks.map(patch) }))
+      }
+    }),
 
   duplicateTask: (id) =>
     set((s) => {

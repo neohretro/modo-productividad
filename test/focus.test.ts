@@ -75,7 +75,7 @@ test('normalizeState rellena campos nuevos y sube la versión', () => {
   } as unknown as Partial<PersistedState>
 
   const out = normalizeState(legacy, 1_000_000)
-  assert.equal(out.version, 2)
+  assert.equal(out.version, 3)
   assert.equal(out.todayTasks[0].timeSpentMs, 0)
   assert.equal(out.todayTasks[0].focusStartedAt, null)
   assert.equal(out.projects[0].tasks[0].timeSpentMs, 0)

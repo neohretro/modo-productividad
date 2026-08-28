@@ -27,6 +27,8 @@ export interface Task {
   focusStartedAt: number | null
   /** ISO date a la que está programada; null = activa ahora. Vive en `scheduledTasks`. */
   scheduledDate: string | null
+  /** ISO datetime del recordatorio (notificación nativa), o null. Se limpia al dispararse. */
+  remindAt: string | null
 }
 
 export interface Project {
@@ -99,7 +101,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system'
 }
 
-export const STATE_VERSION = 2
+export const STATE_VERSION = 3
 
 export const INITIAL_STATE: PersistedState = {
   version: STATE_VERSION,

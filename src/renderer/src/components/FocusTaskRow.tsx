@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, Pause, Play } from 'lucide-react'
+import { Bell, Check, Pause, Play } from 'lucide-react'
 import type { Task } from '@shared/types'
 import { useAppStore } from '../store/useAppStore'
 import { useTaskMenu } from '../hooks/useTaskMenu'
@@ -70,7 +70,14 @@ export default function FocusTaskRow({ task }: { task: Task }): React.JSX.Elemen
             {task.text}
           </p>
         )}
-        {running && <p className="mt-0.5 text-[10px] text-orange">en curso</p>}
+        <div className="mt-0.5 flex items-center gap-2 text-[10px] text-orange">
+          {running && <span>en curso</span>}
+          {task.remindAt && !task.done && (
+            <span className="flex items-center gap-1">
+              <Bell size={9} strokeWidth={2.5} /> recordatorio
+            </span>
+          )}
+        </div>
       </div>
 
       <button

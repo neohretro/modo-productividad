@@ -12,6 +12,7 @@ import {
 } from './windows'
 import { createTray, refreshTrayMenu } from './tray'
 import { notifyMultitask } from './notifications'
+import { syncReminders } from './reminders'
 import { applyGlobalShortcut, applyLoginItem, unregisterAllShortcuts } from './system'
 import {
   checkForUpdates,
@@ -50,7 +51,7 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.on('updater:download', () => void downloadUpdate())
     ipcMain.on('updater:install', () => quitAndInstall())
 
-    registerStoreIpc(onSettingsChange)
+    registerStoreIpc(onSettingsChange, () => syncReminders())
 
     // --- estado nativo inicial desde settings persistidas ---
     const { settings } = getState()
@@ -67,6 +68,7 @@ if (!app.requestSingleInstanceLock()) {
     startApp()
     createTray()
     initUpdater()
+    syncReminders()
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createMiniWindow({ show: true })
