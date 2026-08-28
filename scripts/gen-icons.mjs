@@ -83,8 +83,35 @@ function icon(x, y, size) {
   return [r, g, b, 255]
 }
 
+/** Empaqueta varios PNG en un .ico (Windows / electron-builder). */
+function ico(sizes) {
+  const images = sizes.map((s) => png(s, icon))
+  const header = Buffer.alloc(6)
+  header.writeUInt16LE(0, 0)
+  header.writeUInt16LE(1, 2)
+  header.writeUInt16LE(sizes.length, 4)
+
+  const entries = Buffer.alloc(16 * sizes.length)
+  let offset = 6 + 16 * sizes.length
+  sizes.forEach((s, i) => {
+    const e = entries.subarray(i * 16, i * 16 + 16)
+    e.writeUInt8(s >= 256 ? 0 : s, 0)
+    e.writeUInt8(s >= 256 ? 0 : s, 1)
+    e.writeUInt8(0, 2)
+    e.writeUInt8(0, 3)
+    e.writeUInt16LE(1, 4)
+    e.writeUInt16LE(32, 6)
+    e.writeUInt32LE(images[i].length, 8)
+    e.writeUInt32LE(offset, 12)
+    offset += images[i].length
+  })
+
+  return Buffer.concat([header, entries, ...images])
+}
+
 mkdirSync(OUT, { recursive: true })
 writeFileSync(resolve(OUT, 'icon.png'), png(512, icon))
 writeFileSync(resolve(OUT, 'icon-32.png'), png(32, icon))
 writeFileSync(resolve(OUT, 'tray.png'), png(32, icon))
-console.log('íconos generados en build/')
+writeFileSync(resolve(OUT, 'icon.ico'), ico([16, 24, 32, 48, 64, 128, 256]))
+console.log('íconos generados en build/ (png, ico, tray)')

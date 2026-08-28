@@ -1,28 +1,45 @@
 appId: com.modocreador.productividad
 productName: MODO CREADOR - Productividad
+copyright: © 2026 MODO CREADOR
+
 directories:
   buildResources: build
+  output: dist
+
 files:
-  - '!**/.vscode/*'
-  - '!src/*'
-  - '!electron.vite.config.{js,ts,mjs,cjs}'
-  - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
-  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml,package-lock.json}'
-  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json,tailwind.config.ts,postcss.config.js}'
+  - out/**
+  - package.json
+  - '!**/{.vscode,.github,test,scripts}'
+  - '!**/*.{ts,tsx,map}'
+  - '!**/{tsconfig*.json,tailwind.config.ts,postcss.config.js,electron.vite.config.*,vitest.config.ts,eslint.config.*}'
+  - '!**/{.env,.env.*,.editorconfig,.prettier*,README.md,PLAN.md,BRAND.md,AGENTS.md,CLAUDE.md}'
+
 asarUnpack:
   - resources/**
+
 win:
   target:
     - target: nsis
       arch: [x64]
-  artifactName: ${productName}-${version}-setup.${ext}
+  icon: build/icon.ico
+  artifactName: MODO-Creador-Productividad-${version}-setup.${ext}
+  requestedExecutionLevel: asInvoker
+
 nsis:
   oneClick: false
   perMachine: false
   allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: MODO CREADOR - Productividad
+  deleteAppDataOnUninstall: false
+
 mac:
   target:
     - target: dmg
       arch: [arm64, x64]
+  icon: build/icon.png
   category: public.app-category.productivity
-  artifactName: ${productName}-${version}.${ext}
+  artifactName: MODO-Creador-Productividad-${version}.${ext}
+
+# Auto-actualización (electron-updater): stretch, no configurado aún.
