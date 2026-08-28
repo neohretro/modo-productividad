@@ -42,10 +42,11 @@ export default function MiniFloating(): React.JSX.Element {
           </button>
         </header>
 
-        <div className="grid place-items-center pb-2 pt-1">
+        <div className="relative grid place-items-center pb-3 pt-1">
+          <div className="ring-halo pointer-events-none absolute inset-0" />
           <ProgressRing
             pct={pct}
-            size={116}
+            size={140}
             stroke={6}
             label="del día"
             sub={`${done}/${todayTasks.length}`}

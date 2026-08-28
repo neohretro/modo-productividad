@@ -62,17 +62,17 @@ export default function App(): React.JSX.Element {
   const Screen = SCREENS[screen]
 
   return (
-    <div className="relative flex h-full flex-col bg-ink/95 p-4">
-      <header className="drag flex items-center justify-between px-2 py-1">
-        <span className="text-xs tracking-widest text-paper-dim">
+    <div className="relative flex h-full flex-col overflow-hidden bg-ink px-5 pb-3 pt-2.5">
+      <header className="drag flex items-center justify-between px-1 pb-2">
+        <span className="text-[10px] font-medium tracking-[0.2em] text-paper-dim">
           MODO CREADOR · PRODUCTIVIDAD
         </span>
         <WindowControls />
       </header>
 
-      <main className="flex flex-1 flex-col overflow-hidden p-2">
+      <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {hydrated ? (
-          <div key={screen} className="flex flex-1 animate-fade flex-col overflow-hidden">
+          <div key={screen} className="flex min-h-0 flex-1 animate-fade flex-col overflow-hidden">
             <Screen />
           </div>
         ) : (

@@ -31,10 +31,10 @@ export function createMainWindow(opts: { show?: boolean } = {}): BrowserWindow {
   const autoShow = opts.show ?? true
 
   mainWindow = new BrowserWindow({
-    width: 1000,
-    height: 780,
-    minWidth: 900,
-    minHeight: 680,
+    width: 1060,
+    height: 800,
+    minWidth: 940,
+    minHeight: 700,
     show: false,
     frame: false,
     transparent: true,

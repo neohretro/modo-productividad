@@ -9,9 +9,11 @@
 
 :root {
   --ink: #070707;
-  --ink-glass: rgba(244, 243, 239, 0.04);
-  --ink-glass-strong: rgba(244, 243, 239, 0.07);
+  --ink-2: #0d0d0c;
+  --ink-glass: rgba(244, 243, 239, 0.045);
+  --ink-glass-strong: rgba(244, 243, 239, 0.075);
   --border: rgba(244, 243, 239, 0.1);
+  --border-hi: rgba(244, 243, 239, 0.16);
   --paper: #f4f3ef;
   --paper-dim: rgba(244, 243, 239, 0.55);
   --orange: #ff8c00;
@@ -27,8 +29,9 @@
 
   body {
     margin: 0;
-    /* la ventana Electron es transparente: el fondo real vive aquí */
-    background: transparent;
+    /* fondo real de la app: casi opaco (la ventana Electron es transparente solo
+       para las esquinas redondeadas; el contenido NO debe dejar ver el escritorio) */
+    background: var(--ink);
     color: var(--paper);
     font-family: theme('fontFamily.body');
     -webkit-font-smoothing: antialiased;
@@ -46,19 +49,33 @@
 }
 
 @layer components {
-  /* Superficie glass estándar de card */
+  /* Superficie glass estándar de card: relleno translúcido + luz sutil arriba
+     + sombra para dar profundidad sobre el negro. */
   .glass {
     background: var(--ink-glass);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border);
+    box-shadow:
+      inset 0 1px 0 rgba(244, 243, 239, 0.05),
+      0 1px 2px rgba(0, 0, 0, 0.4),
+      0 12px 32px -12px rgba(0, 0, 0, 0.55);
   }
 
   .glass-strong {
     background: var(--ink-glass-strong);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-hi);
+    box-shadow:
+      inset 0 1px 0 rgba(244, 243, 239, 0.06),
+      0 1px 2px rgba(0, 0, 0, 0.4),
+      0 12px 32px -12px rgba(0, 0, 0, 0.6);
+  }
+
+  /* resplandor ambiente naranja detrás del elemento de firma */
+  .ring-halo {
+    background: radial-gradient(circle at center, var(--orange-glow), transparent 62%);
   }
 
   /* Región arrastrable del marco propio */
