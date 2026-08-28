@@ -77,39 +77,43 @@ for (let attempt = 1; attempt <= 3 && !published; attempt++) {
   }
 }
 
-// 6. Asegurar que el release quede PUBLICADO (electron-builder a veces lo deja en borrador)
-try {
-  const list = JSON.parse(
-    cap(`curl -s -H "Authorization: Bearer ${token}" "https://api.github.com/repos/${OWNER}/${REPO}/releases?per_page=20"`)
-  )
-  const rel = list.find((r) => r.tag_name === `v${version}`)
-  if (rel && rel.draft) {
-    cap(
-      `curl -s -X PATCH -H "Authorization: Bearer ${token}" ` +
-        `"https://api.github.com/repos/${OWNER}/${REPO}/releases/${rel.id}" ` +
-        `-d "{\\"draft\\":false,\\"tag_name\\":\\"v${version}\\",\\"target_commitish\\":\\"main\\"}"`
-    )
-    console.log('  Release publicado (estaba en borrador).')
-  }
-} catch {
-  console.log('  Nota: revisa que el release en GitHub no haya quedado como borrador.')
-}
-
-// 7. Ahora sí: commit + subir main
+// 6. Commit del bump + subir main.
 sh('git add package.json')
 sh(`git commit -m "v${version}"`)
 sh('git push')
 
-// 8. Re-apuntar la etiqueta al commit del bump.
-//    electron-builder ya creó `v${version}` en GitHub (apuntando al commit
-//    anterior) al dejar de ser borrador. La movemos al commit "v${version}".
+// 7. Dejar la etiqueta `v${version}` apuntando al commit del bump.
+//    electron-builder pudo crearla ya (apuntando al commit anterior); la
+//    reescribimos. IMPORTANTE: borrar la etiqueta de un release PUBLICADO lo
+//    devuelve a borrador — por eso el "des-borrar" del paso 8 va DESPUÉS.
 try {
-  sh(`git push origin :refs/tags/v${version}`) // borra la remota
+  sh(`git push origin :refs/tags/v${version}`)
 } catch {
   /* puede no existir aún */
 }
 sh(`git tag -f v${version}`)
 sh(`git push origin v${version}`)
+
+// 8. Publicar el release contra la etiqueta ya correcta (electron-builder lo
+//    deja en borrador, y borrar la etiqueta en el paso 7 también lo re-borra).
+try {
+  const list = JSON.parse(
+    cap(`curl -s -H "Authorization: Bearer ${token}" "https://api.github.com/repos/${OWNER}/${REPO}/releases?per_page=20"`)
+  )
+  const rel = list.find((r) => r.tag_name === `v${version}`)
+  if (!rel) {
+    console.log('  ⚠ No encuentro el release en GitHub — publícalo a mano.')
+  } else if (rel.draft) {
+    cap(
+      `curl -s -X PATCH -H "Authorization: Bearer ${token}" ` +
+        `"https://api.github.com/repos/${OWNER}/${REPO}/releases/${rel.id}" ` +
+        `-d "{\\"draft\\":false,\\"tag_name\\":\\"v${version}\\",\\"name\\":\\"${version}\\"}"`
+    )
+    console.log('  Release publicado.')
+  }
+} catch {
+  console.log('  ⚠ No pude des-borrar el release por API — revísalo en GitHub.')
+}
 
 console.log(`\n  ✓ Versión ${version} publicada.`)
 console.log('  Las apps instaladas la verán en las próximas horas (o al pulsar')
