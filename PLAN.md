@@ -146,9 +146,9 @@ ventana completa (prop `focusable`).
 `normalizeState` (en `src/shared/focus.ts`) migra estados de versiones anteriores y
 cierra tramos de enfoque que quedaron colgados (> 4 h = app estuvo cerrada).
 
-### 4.2 Resumen: datos y sugerencias
+### 4.2 Resumen: datos y sugerencias ✅ (`src/shared/insights.ts`)
 
-Nueva pantalla (reemplaza y amplía "Estadísticas"). Muestra:
+Pantalla con selector de período (Hoy / 7 días / 30 días). Muestra:
 
 - **En qué trabajaste:** tareas completadas del período (hoy / semana / mes), agrupadas por proyecto.
 - **Progreso por proyecto:** barra/anillo pequeño por cada proyecto activo (avance acumulado).
@@ -236,13 +236,15 @@ de Fase 3 (entrada de cards, etc.).
 Nota: se quitó `motion` (Framer Motion) del renderer por bugs de bundling con Vite.
 Animaciones por CSS `@keyframes` con la curva del Brand OS. Reevaluar en Fase 3 si hace falta.
 
-### Fase 3 — Pulido UX/UI (bento grid completo)
+### Fase 3 — Pulido UX/UI (bento grid completo) ✅
 
-- [ ] Card de bienvenida con saludo dinámico.
-- [ ] Cards de stats (completadas, racha, mini gráfico 7 días).
-- [ ] Pantalla de Resumen con detalle histórico.
-- [ ] Nav inferior con las 4 secciones.
-- [ ] Microinteracciones: hover, transición al marcar tarea, entrada de cards.
+- [x] Card de bienvenida con saludo dinámico.
+- [x] Cards de stats (completadas, racha, mini gráfico 7 días).
+- [x] Pantalla de Resumen con detalle histórico + sugerencias (`src/shared/insights.ts`).
+- [x] Nav inferior con las 4 secciones.
+- [x] Microinteracciones: hover, `modo-pop` al marcar tarea, entrada escalonada de cards
+      (`.stagger`), `prefers-reduced-motion` respetado.
+- [x] 6 tests de insights (20 en total).
 
 ### Fase 4 — Empaquetado y distribución
 
