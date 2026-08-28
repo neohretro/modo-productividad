@@ -89,8 +89,12 @@ export default function MiniFloating(): React.JSX.Element {
           )}
         </div>
 
-        <div className="no-drag border-t border-border p-3">
-          <AddTask onAdd={(text) => addTask(text, view.id)} placeholder={`Agregar a ${view.name}`} />
+        <div className="no-drag px-3 pb-2.5 pt-1">
+          <AddTask
+            collapsible
+            onAdd={(text) => addTask(text, view.id)}
+            placeholder={`Agregar a ${view.name}`}
+          />
         </div>
 
         <CompletionToast compact />

@@ -18,7 +18,7 @@ export default function FocusTaskRow({ task }: { task: Task }): React.JSX.Elemen
     <li
       onContextMenu={onContextMenu}
       className={`no-drag flex animate-fade items-start gap-2 rounded-chip border px-2.5 py-2 transition-colors ${
-        running ? 'border-orange/60 bg-orange-glow' : 'border-border bg-ink-glass'
+        running ? 'border-orange/50 bg-orange-glow' : 'border-border bg-ink-soft'
       }`}
     >
       {menu}

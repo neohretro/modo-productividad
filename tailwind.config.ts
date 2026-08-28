@@ -14,7 +14,8 @@ export default {
         ink: {
           DEFAULT: 'var(--ink)',
           glass: 'var(--ink-glass)',
-          'glass-strong': 'var(--ink-glass-strong)'
+          'glass-strong': 'var(--ink-glass-strong)',
+          soft: 'var(--ink-soft)'
         },
         border: {
           DEFAULT: 'var(--border)',

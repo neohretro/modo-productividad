@@ -61,7 +61,7 @@ function TaskItem({
     <li
       onContextMenu={onContextMenu}
       className={`no-drag group flex animate-fade items-start gap-3 rounded-chip border px-3 py-2.5 transition-colors ${
-        running ? 'border-orange/50 bg-orange-glow' : 'border-border bg-ink-glass'
+        running ? 'border-orange/50 bg-orange-glow' : 'border-border bg-ink-soft'
       }`}
     >
       {menu}

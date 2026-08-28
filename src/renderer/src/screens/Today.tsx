@@ -170,7 +170,7 @@ export default function Today(): React.JSX.Element {
                   .map((t) => (
                     <li
                       key={t.id}
-                      className="flex items-center gap-2 rounded-chip border border-border bg-ink-glass px-3 py-2 text-xs"
+                      className="flex items-center gap-2 rounded-chip border border-border bg-ink-soft px-3 py-2 text-xs"
                     >
                       <span className="min-w-0 flex-1 select-text truncate text-paper-dim">
                         {t.text}

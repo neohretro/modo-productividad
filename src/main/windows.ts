@@ -13,7 +13,7 @@ let activeKind: 'main' | 'mini' = 'mini'
 /** Color de fondo de la ventana completa según el tema (evita bordes raros). */
 let bgColor = '#100f0e'
 
-const MINI_SIZE = { width: 300, height: 470 }
+const MINI_SIZE = { width: 296, height: 444 }
 
 /** El renderer avisa el tema resuelto; pintamos el fondo de la ventana completa igual.
  * El mini es transparente (vidrio real), no se le toca el fondo. */

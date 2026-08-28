@@ -13,6 +13,7 @@
   --ink: #e9e7e0; /* fondo de la app (cálido, no blanco puro) */
   --ink-glass: #fbfaf6; /* card */
   --ink-glass-strong: #ffffff; /* card elevada */
+  --ink-soft: rgba(28, 25, 20, 0.045); /* fila translúcida sobre vidrio */
   --frost: rgba(250, 249, 245, 0.72);
   --border: rgba(28, 25, 20, 0.07);
   --border-hi: rgba(28, 25, 20, 0.13);
@@ -33,6 +34,7 @@
     --ink: #100f0e;
     --ink-glass: #1a1917;
     --ink-glass-strong: #222020;
+    --ink-soft: rgba(244, 243, 239, 0.06);
     --frost: rgba(22, 21, 19, 0.68);
     --border: rgba(244, 243, 239, 0.08);
     --border-hi: rgba(244, 243, 239, 0.15);
@@ -52,6 +54,7 @@
   --ink: #100f0e;
   --ink-glass: #1a1917;
   --ink-glass-strong: #222020;
+  --ink-soft: rgba(244, 243, 239, 0.06);
   --frost: rgba(22, 21, 19, 0.68);
   --border: rgba(244, 243, 239, 0.08);
   --border-hi: rgba(244, 243, 239, 0.15);
