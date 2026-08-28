@@ -11,7 +11,7 @@ let miniWindow: BrowserWindow | null = null
 /** Qué ventana es la "cara" actual de la app (para tray / atajo global). */
 let activeKind: 'main' | 'mini' = 'main'
 
-const MINI_SIZE = { width: 208, height: 240 }
+const MINI_SIZE = { width: 300, height: 404 }
 
 function loadRoute(win: BrowserWindow, route: 'index' | 'mini'): void {
   const file = route === 'index' ? 'index.html' : 'mini.html'
@@ -81,7 +81,7 @@ export function createMiniWindow(): BrowserWindow {
     skipTaskbar: true,
     alwaysOnTop: true,
     hasShadow: false,
-    webPreferences: { preload: PRELOAD, sandbox: false }
+    webPreferences: { preload: PRELOAD, sandbox: false, backgroundThrottling: false }
   })
 
   miniWindow.setAlwaysOnTop(true, 'floating')

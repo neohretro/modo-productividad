@@ -9,6 +9,7 @@ const api = {
   closeWindow: () => ipcRenderer.send('window:close'),
   enterMiniMode: () => ipcRenderer.send('window:enterMini'),
   exitMiniMode: () => ipcRenderer.send('window:exitMini'),
+  notifyMultitask: (count: number) => ipcRenderer.send('notify:multitask', count),
   getAppVersion: (): Promise<string> => ipcRenderer.invoke('app:getVersion'),
 
   // persistencia

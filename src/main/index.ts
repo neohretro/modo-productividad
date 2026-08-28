@@ -9,6 +9,7 @@ import {
   toggleVisibility
 } from './windows'
 import { createTray, refreshTrayMenu } from './tray'
+import { notifyMultitask } from './notifications'
 import {
   applyGlobalShortcut,
   applyLoginItem,
@@ -35,6 +36,7 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.on('window:close', () => getMainWindow()?.hide()) // cerrar = a la bandeja
     ipcMain.on('window:enterMini', () => enterMiniMode())
     ipcMain.on('window:exitMini', () => exitMiniMode())
+    ipcMain.on('notify:multitask', (_e, count: number) => notifyMultitask(count))
     ipcMain.handle('app:getVersion', () => app.getVersion())
 
     registerStoreIpc(onSettingsChange)

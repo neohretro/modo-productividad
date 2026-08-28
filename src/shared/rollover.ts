@@ -11,6 +11,7 @@
  */
 import type { DailySnapshot, PersistedState, StreakState, Task } from './types'
 import { addDaysISO, daysBetween, toISODate } from './date'
+import { commitFocus } from './focus'
 
 /** Freezes máximos acumulables. */
 export const FREEZE_CAP = 3
@@ -53,12 +54,19 @@ export function rolloverIfNeeded(state: PersistedState, now: Date = new Date()):
     })
   }
 
-  const rolled: Task[] = pending.map((t) => ({ ...t, daysRolled: t.daysRolled + elapsed }))
+  // al cerrar el día se corta cualquier enfoque abierto de las tareas que ruedan
+  const rolled: Task[] = pending.map((t) => ({
+    ...commitFocus(t, now.getTime()),
+    daysRolled: t.daysRolled + elapsed
+  }))
 
   return {
     ...state,
     todayTasks: rolled,
-    archivedTasks: [...state.archivedTasks, ...completed.map((t) => ({ ...t }))],
+    archivedTasks: [
+      ...state.archivedTasks,
+      ...completed.map((t) => commitFocus(t, now.getTime()))
+    ],
     snapshots: [...state.snapshots, closingSnapshot, ...gapSnapshots],
     streak: evaluateStreak(state.streak, closingSnapshot, elapsed),
     lastRolloverDate: today

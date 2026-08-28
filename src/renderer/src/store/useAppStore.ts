@@ -8,6 +8,7 @@ import {
 } from '@shared/types'
 import { toISODate } from '@shared/date'
 import { rolloverIfNeeded } from '@shared/rollover'
+import { activeFocusTasks, commitFocus, normalizeState } from '@shared/focus'
 
 type Screen = 'today' | 'projects' | 'summary' | 'settings'
 
@@ -33,8 +34,15 @@ interface AppState extends PersistedState {
   renameProject: (id: string, name: string) => void
   deleteProject: (id: string) => void
 
+  /** Inicia el cronómetro de enfoque de una tarea. */
+  startFocus: (id: string) => void
+  /** Detiene el cronómetro y suma el tiempo del tramo. */
+  stopFocus: (id: string) => void
+  toggleFocus: (id: string) => void
+
   setLaunchOnStartup: (on: boolean) => void
   setGlobalShortcut: (accelerator: string) => void
+  setMultitaskNudges: (on: boolean) => void
 }
 
 /** Solo los campos que van a disco. */
@@ -59,7 +67,9 @@ function newTask(text: string, projectId: string): Task {
     projectId,
     createdDate: toISODate(),
     completedDate: null,
-    daysRolled: 0
+    daysRolled: 0,
+    timeSpentMs: 0,
+    focusStartedAt: null
   }
 }
 
@@ -89,13 +99,14 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   hydrate: async () => {
     const loaded = (await window.modo?.loadState()) ?? INITIAL_STATE
-    const rolled = rolloverIfNeeded(loaded)
+    const normalized = normalizeState(loaded)
+    const rolled = rolloverIfNeeded(normalized)
     set({
       ...rolled,
       hydrated: true,
       activeProjectId: rolled.projects[0]?.id ?? null
     })
-    if (rolled !== loaded) void window.modo?.saveState(persisted(get()))
+    void window.modo?.saveState(persisted(get()))
 
     window.modo?.onStateChanged((remote) => get().applyRemote(remote))
   },
@@ -138,11 +149,12 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   toggleTask: (id) =>
     set((s) =>
-      mapTaskEverywhere(s, id, (t) => ({
-        ...t,
-        done: !t.done,
-        completedDate: !t.done ? new Date().toISOString() : null
-      }))
+      mapTaskEverywhere(s, id, (t) => {
+        const done = !t.done
+        // al completar: cerrar el cronómetro de enfoque si estaba corriendo
+        const base = done ? commitFocus(t) : t
+        return { ...base, done, completedDate: done ? new Date().toISOString() : null }
+      })
     ),
 
   deleteTask: (id) =>
@@ -187,11 +199,38 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
     }),
 
+  startFocus: (id) => {
+    set((s) =>
+      mapTaskEverywhere(s, id, (t) =>
+        t.focusStartedAt || t.done ? t : { ...t, focusStartedAt: Date.now() }
+      )
+    )
+    // nudge de multitasking: se dispara desde la ventana que inició el enfoque
+    const active = activeFocusTasks(persisted(get()))
+    if (active.length >= 2 && get().settings.multitaskNudges) {
+      window.modo?.notifyMultitask(active.length)
+    }
+  },
+
+  stopFocus: (id) =>
+    set((s) => mapTaskEverywhere(s, id, (t) => commitFocus(t))),
+
+  toggleFocus: (id) => {
+    const task = [...get().todayTasks, ...get().projects.flatMap((p) => p.tasks)].find(
+      (t) => t.id === id
+    )
+    if (task?.focusStartedAt) get().stopFocus(id)
+    else get().startFocus(id)
+  },
+
   setLaunchOnStartup: (on) =>
     set((s) => ({ settings: { ...s.settings, launchOnStartup: on } })),
 
   setGlobalShortcut: (accelerator) =>
-    set((s) => ({ settings: { ...s.settings, globalShortcut: accelerator } }))
+    set((s) => ({ settings: { ...s.settings, globalShortcut: accelerator } })),
+
+  setMultitaskNudges: (on) =>
+    set((s) => ({ settings: { ...s.settings, multitaskNudges: on } }))
 }))
 
 if (import.meta.env.DEV) {

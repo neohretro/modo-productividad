@@ -30,6 +30,7 @@ export default function Settings(): React.JSX.Element {
   const settings = useAppStore((s) => s.settings)
   const setLaunchOnStartup = useAppStore((s) => s.setLaunchOnStartup)
   const setGlobalShortcut = useAppStore((s) => s.setGlobalShortcut)
+  const setMultitaskNudges = useAppStore((s) => s.setMultitaskNudges)
   const [version, setVersion] = useState('0.1.0')
   const [capturing, setCapturing] = useState(false)
 
@@ -79,7 +80,14 @@ export default function Settings(): React.JSX.Element {
         </button>
       </Row>
 
-      <Row title="Modo mini" desc="La burbuja flotante con el anillo del día, siempre visible.">
+      <Row
+        title="Avisar sobre multitasking"
+        desc="Cuando enfocas varias tareas a la vez, un aviso suave (nunca bloquea)."
+      >
+        <Toggle checked={settings.multitaskNudges} onChange={setMultitaskNudges} />
+      </Row>
+
+      <Row title="Modo mini" desc="La burbuja flotante con tus tareas y el cronómetro de enfoque.">
         <button
           onClick={() => window.modo?.enterMiniMode()}
           className="rounded-chip border border-border px-3 py-1.5 text-xs text-paper-dim hover:text-paper"

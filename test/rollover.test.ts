@@ -12,6 +12,8 @@ function task(over: Partial<Task> = {}): Task {
     createdDate: '2026-08-27',
     completedDate: null,
     daysRolled: 0,
+    timeSpentMs: 0,
+    focusStartedAt: null,
     ...over
   }
 }

@@ -6,6 +6,7 @@ import ProgressRing from '../components/ProgressRing'
 import StatCard from '../components/StatCard'
 import TaskList from '../components/TaskList'
 import AddTask from '../components/AddTask'
+import MultitaskNudge from '../components/MultitaskNudge'
 
 function greeting(): string {
   const h = new Date().getHours()
@@ -24,6 +25,7 @@ export default function Today(): React.JSX.Element {
   const total = todayTasks.length
   const done = todayTasks.filter((t) => t.done).length
   const pct = total === 0 ? 0 : done / total
+  const focusingCount = todayTasks.filter((t) => t.focusStartedAt !== null && !t.done).length
 
   const last7 = buildLast7(snapshots)
 
@@ -92,10 +94,16 @@ export default function Today(): React.JSX.Element {
           <h2 className="text-lg">Hoy</h2>
           <span className="text-xs text-paper-dim">lista continua · no se reinicia</span>
         </div>
+        {focusingCount >= 2 && (
+          <div className="mb-3">
+            <MultitaskNudge count={focusingCount} />
+          </div>
+        )}
         <div className="min-h-0 flex-1 overflow-y-auto pr-1">
           <TaskList
             tasks={todayTasks}
             showRolled
+            focusable
             emptyHint="Sin tareas hoy. Agrega la primera abajo."
           />
         </div>

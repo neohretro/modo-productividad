@@ -21,6 +21,10 @@ export interface Task {
    * 0 el día que se crea, +N cada vez que cierran días con la tarea abierta.
    */
   daysRolled: number
+  /** Milisegundos acumulados de trabajo (cronómetro del modo enfoque), ya cerrados. */
+  timeSpentMs: number
+  /** epoch ms del tramo de enfoque activo, o null si la tarea no está en curso. */
+  focusStartedAt: number | null
 }
 
 export interface Project {
@@ -58,6 +62,8 @@ export interface AppSettings {
   launchOnStartup: boolean
   globalShortcut: string
   miniWindowBounds: { x: number; y: number } | null
+  /** Avisar cuando hay varias tareas en enfoque a la vez (nudge, no bloqueo). */
+  multitaskNudges: boolean
 }
 
 /** Forma completa del estado persistido en disco (electron-store). */
@@ -78,11 +84,14 @@ export interface PersistedState {
 export const DEFAULT_SETTINGS: AppSettings = {
   launchOnStartup: false,
   globalShortcut: 'CommandOrControl+Shift+M',
-  miniWindowBounds: null
+  miniWindowBounds: null,
+  multitaskNudges: true
 }
 
+export const STATE_VERSION = 2
+
 export const INITIAL_STATE: PersistedState = {
-  version: 1,
+  version: STATE_VERSION,
   todayTasks: [],
   archivedTasks: [],
   projects: [],

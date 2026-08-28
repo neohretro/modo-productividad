@@ -1,16 +1,25 @@
 import { useState } from 'react'
-import { Check, Trash2 } from 'lucide-react'
+import { Check, Pause, Play, Trash2 } from 'lucide-react'
 import type { Task } from '@shared/types'
+import { elapsedMs, formatDuration } from '@shared/focus'
 import { useAppStore } from '../store/useAppStore'
+import { useNow } from '../hooks/useNow'
 
 interface Props {
   tasks: Task[]
-  /** muestra el contador "lleva N días" (solo tiene sentido en Hoy). */
+  /** contador "lleva N días" + cronómetro de enfoque (solo tiene sentido en Hoy). */
   showRolled?: boolean
+  /** muestra el botón de enfoque (▶) en cada fila. */
+  focusable?: boolean
   emptyHint?: string
 }
 
-export default function TaskList({ tasks, showRolled, emptyHint }: Props): React.JSX.Element {
+export default function TaskList({
+  tasks,
+  showRolled,
+  focusable,
+  emptyHint
+}: Props): React.JSX.Element {
   if (tasks.length === 0) {
     return (
       <p className="px-1 py-6 text-sm text-paper-dim">
@@ -19,27 +28,43 @@ export default function TaskList({ tasks, showRolled, emptyHint }: Props): React
     )
   }
 
-  // pendientes primero, luego completadas
   const ordered = [...tasks].sort((a, b) => Number(a.done) - Number(b.done))
 
   return (
     <ul className="flex flex-col gap-1.5">
       {ordered.map((t) => (
-        <TaskItem key={t.id} task={t} showRolled={showRolled} />
+        <TaskItem key={t.id} task={t} showRolled={showRolled} focusable={focusable} />
       ))}
     </ul>
   )
 }
 
-function TaskItem({ task, showRolled }: { task: Task; showRolled?: boolean }): React.JSX.Element {
+function TaskItem({
+  task,
+  showRolled,
+  focusable
+}: {
+  task: Task
+  showRolled?: boolean
+  focusable?: boolean
+}): React.JSX.Element {
   const toggleTask = useAppStore((s) => s.toggleTask)
   const deleteTask = useAppStore((s) => s.deleteTask)
   const editTask = useAppStore((s) => s.editTask)
+  const toggleFocus = useAppStore((s) => s.toggleFocus)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(task.text)
 
+  const running = task.focusStartedAt !== null
+  const now = useNow(running)
+  const spent = elapsedMs(task, now)
+
   return (
-    <li className="no-drag group flex animate-fade items-center gap-3 rounded-chip border border-border bg-ink-glass px-3 py-2.5">
+    <li
+      className={`no-drag group flex animate-fade items-center gap-3 rounded-chip border px-3 py-2.5 transition-colors ${
+        running ? 'border-orange/50 bg-orange-glow' : 'border-border bg-ink-glass'
+      }`}
+    >
       <button
         aria-label={task.done ? 'Marcar pendiente' : 'Completar'}
         onClick={() => toggleTask(task.id)}
@@ -71,23 +96,50 @@ function TaskItem({ task, showRolled }: { task: Task; showRolled?: boolean }): R
           className="flex-1 bg-transparent text-sm outline-none"
         />
       ) : (
-        <span
+        <button
+          type="button"
           onDoubleClick={() => {
             setDraft(task.text)
             setEditing(true)
           }}
-          className={`flex-1 truncate text-sm ${
-            task.done ? 'text-paper-dim line-through' : 'text-paper'
-          }`}
+          className="flex min-w-0 flex-1 flex-col items-start text-left"
         >
-          {task.text}
-        </span>
+          <span
+            className={`w-full truncate text-sm ${
+              task.done ? 'text-paper-dim line-through' : 'text-paper'
+            }`}
+          >
+            {task.text}
+          </span>
+          {focusable && !task.done && (spent > 0 || running) && (
+            <span
+              className={`text-[10px] tabular-nums ${running ? 'text-orange' : 'text-paper-dim'}`}
+            >
+              {formatDuration(spent)}
+              {running && ' · en curso'}
+            </span>
+          )}
+        </button>
       )}
 
       {showRolled && task.daysRolled > 0 && !task.done && (
         <span className="shrink-0 rounded-full bg-orange-glow px-2 py-0.5 text-[10px] text-orange">
           {task.daysRolled}d
         </span>
+      )}
+
+      {focusable && !task.done && (
+        <button
+          aria-label={running ? 'Pausar enfoque' : 'Trabajar en esta tarea'}
+          onClick={() => toggleFocus(task.id)}
+          className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border transition-colors ${
+            running
+              ? 'border-orange bg-orange text-ink'
+              : 'border-border text-paper-dim opacity-0 hover:border-orange hover:text-orange group-hover:opacity-100'
+          }`}
+        >
+          {running ? <Pause size={11} strokeWidth={2.5} /> : <Play size={11} strokeWidth={2.5} />}
+        </button>
       )}
 
       <button
