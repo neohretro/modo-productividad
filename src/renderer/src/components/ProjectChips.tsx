@@ -54,7 +54,7 @@ export default function ProjectChips(): React.JSX.Element {
             }
           }}
           placeholder="Nombre del proyecto"
-          className="rounded-chip border border-paper-dim bg-transparent px-3 py-1.5 text-xs outline-none"
+          className="rounded-chip border border-border-hi bg-transparent px-3 py-1.5 text-xs outline-none"
         />
       ) : (
         <button

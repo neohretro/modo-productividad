@@ -58,12 +58,16 @@ export interface StreakState {
   freezesAvailable: number
 }
 
+export type ThemePref = 'light' | 'dark' | 'system'
+
 export interface AppSettings {
   launchOnStartup: boolean
   globalShortcut: string
   miniWindowBounds: { x: number; y: number } | null
   /** Avisar cuando hay varias tareas en enfoque a la vez (nudge, no bloqueo). */
   multitaskNudges: boolean
+  /** Tema visible: claro, oscuro o el del sistema. */
+  theme: ThemePref
 }
 
 /** Forma completa del estado persistido en disco (electron-store). */
@@ -85,7 +89,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   launchOnStartup: false,
   globalShortcut: 'CommandOrControl+Shift+M',
   miniWindowBounds: null,
-  multitaskNudges: true
+  multitaskNudges: true,
+  theme: 'light'
 }
 
 export const STATE_VERSION = 2

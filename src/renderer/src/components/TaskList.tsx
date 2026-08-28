@@ -57,17 +57,17 @@ function TaskItem({
 
   return (
     <li
-      className={`no-drag group flex animate-fade items-center gap-3 rounded-chip border px-3 py-2.5 transition-colors ${
+      className={`no-drag group flex animate-fade items-start gap-3 rounded-chip border px-3 py-2.5 transition-colors ${
         running ? 'border-orange/50 bg-orange-glow' : 'border-border bg-ink-glass'
       }`}
     >
       <button
         aria-label={task.done ? 'Marcar pendiente' : 'Completar'}
         onClick={() => toggleTask(task.id)}
-        className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border transition-colors duration-200 ease-modo ${
+        className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center self-start rounded-md border transition-colors duration-200 ease-modo ${
           task.done
-            ? 'border-orange bg-orange text-ink'
-            : 'border-border bg-transparent hover:border-paper-dim'
+            ? 'border-orange bg-orange text-onaccent'
+            : 'border-border-hi bg-transparent hover:border-orange'
         }`}
       >
         {task.done && <Check size={13} strokeWidth={3} className="animate-pop" />}
@@ -97,42 +97,44 @@ function TaskItem({
             setDraft(task.text)
             setEditing(true)
           }}
-          className={`flex min-w-0 flex-1 items-center gap-2 truncate text-sm ${
+          className={`min-w-0 flex-1 py-0.5 text-sm leading-snug ${
             task.done ? 'text-paper-dim line-through' : 'text-paper'
           }`}
         >
           {task.text}
-          {running && <span className="shrink-0 text-[10px] text-orange">en curso</span>}
+          {running && <span className="ml-2 text-[10px] uppercase text-orange no-underline">· en curso</span>}
         </span>
       )}
 
-      {showRolled && task.daysRolled > 0 && !task.done && (
-        <span className="shrink-0 rounded-full bg-orange-glow px-2 py-0.5 text-[10px] text-orange">
-          {task.daysRolled}d
-        </span>
-      )}
+      <div className="mt-0.5 flex shrink-0 items-center gap-2 self-start">
+        {showRolled && task.daysRolled > 0 && !task.done && (
+          <span className="rounded-full bg-orange-glow px-2 py-0.5 text-[10px] text-orange">
+            {task.daysRolled}d
+          </span>
+        )}
 
-      {focusable && !task.done && (
+        {focusable && !task.done && (
+          <button
+            aria-label={running ? 'Pausar' : 'Trabajar en esta tarea'}
+            onClick={() => toggleFocus(task.id)}
+            className={`grid h-6 w-6 place-items-center rounded-full border transition-colors ${
+              running
+                ? 'border-orange bg-orange text-onaccent'
+                : 'border-border-hi text-paper-dim opacity-0 hover:border-orange hover:text-orange group-hover:opacity-100'
+            }`}
+          >
+            {running ? <Pause size={11} strokeWidth={2.5} /> : <Play size={11} strokeWidth={2.5} />}
+          </button>
+        )}
+
         <button
-          aria-label={running ? 'Pausar' : 'Trabajar en esta tarea'}
-          onClick={() => toggleFocus(task.id)}
-          className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border transition-colors ${
-            running
-              ? 'border-orange bg-orange text-ink'
-              : 'border-border text-paper-dim opacity-0 hover:border-orange hover:text-orange group-hover:opacity-100'
-          }`}
+          aria-label="Borrar tarea"
+          onClick={() => deleteTask(task.id)}
+          className="text-paper-dim opacity-0 transition-opacity duration-150 hover:text-orange group-hover:opacity-100"
         >
-          {running ? <Pause size={11} strokeWidth={2.5} /> : <Play size={11} strokeWidth={2.5} />}
+          <Trash2 size={15} strokeWidth={1.75} />
         </button>
-      )}
-
-      <button
-        aria-label="Borrar tarea"
-        onClick={() => deleteTask(task.id)}
-        className="shrink-0 text-paper-dim opacity-0 transition-opacity duration-150 hover:text-orange group-hover:opacity-100"
-      >
-        <Trash2 size={15} strokeWidth={1.75} />
-      </button>
+      </div>
     </li>
   )
 }

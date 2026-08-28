@@ -39,7 +39,7 @@ export default function ProgressRing({
   return (
     <div className="relative grid place-items-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={c} cy={c} r={r} fill="none" stroke="var(--border)" strokeWidth={stroke} />
+        <circle cx={c} cy={c} r={r} fill="none" stroke="var(--border-hi)" strokeWidth={stroke} />
         <circle
           cx={c}
           cy={c}
@@ -78,10 +78,30 @@ export default function ProgressRing({
         />
       </div>
 
-      <div className="pointer-events-none absolute flex flex-col items-center">
-        <span className="font-display text-5xl leading-none tabular-nums">{shown}%</span>
-        {label && <span className="mt-2 text-sm text-paper-dim">{label}</span>}
-        {sub && <span className="text-xs text-paper-dim/70">{sub}</span>}
+      <div className="pointer-events-none absolute flex flex-col items-center leading-none">
+        <span
+          className="font-display tabular-nums"
+          style={{ fontSize: Math.round(size * 0.2), lineHeight: 1 }}
+        >
+          {shown}
+          <span style={{ fontSize: Math.round(size * 0.11) }}>%</span>
+        </span>
+        {label && (
+          <span
+            className="mt-1.5 max-w-[85%] truncate text-paper-dim"
+            style={{ fontSize: Math.max(10, Math.round(size * 0.082)) }}
+          >
+            {label}
+          </span>
+        )}
+        {sub && (
+          <span
+            className="text-paper-dim/70"
+            style={{ fontSize: Math.max(9, Math.round(size * 0.068)) }}
+          >
+            {sub}
+          </span>
+        )}
       </div>
     </div>
   )

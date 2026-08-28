@@ -13,7 +13,7 @@ export default function BottomNav(): React.JSX.Element {
   const setScreen = useAppStore((s) => s.setScreen)
 
   return (
-    <nav className="no-drag mx-auto mt-2 flex w-fit items-center gap-1 rounded-chip border border-border bg-ink-glass p-1 backdrop-blur-glass">
+    <nav className="glass no-drag mx-auto mt-2 flex w-fit items-center gap-1 rounded-pill p-1">
       {ITEMS.map(({ id, label, Icon }) => {
         const active = screen === id
         return (

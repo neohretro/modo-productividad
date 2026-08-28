@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Minus, PictureInPicture2, X } from 'lucide-react'
 import { useAppStore } from './store/useAppStore'
+import { useTheme } from './theme'
 import BottomNav from './components/BottomNav'
 import CompletionToast from './components/CompletionToast'
 import Today from './screens/Today'
@@ -21,7 +22,7 @@ function WindowControls(): React.JSX.Element {
       </button>
       <button
         aria-label="Cerrar"
-        className={`${btn} hover:!bg-orange hover:!text-ink`}
+        className={`${btn} hover:!bg-orange hover:!text-onaccent`}
         onClick={() => window.modo?.closeWindow()}
       >
         <X size={15} strokeWidth={1.75} />
@@ -42,6 +43,7 @@ export default function App(): React.JSX.Element {
   const screen = useAppStore((s) => s.screen)
   const hydrate = useAppStore((s) => s.hydrate)
   const checkRollover = useAppStore((s) => s.checkRollover)
+  useTheme()
 
   useEffect(() => {
     void hydrate()
@@ -62,7 +64,7 @@ export default function App(): React.JSX.Element {
   const Screen = SCREENS[screen]
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden bg-ink px-5 pb-3 pt-2.5">
+    <div className="relative flex h-full flex-col overflow-hidden rounded-[22px] border border-border-hi bg-ink px-5 pb-3 pt-2.5">
       <header className="drag flex items-center justify-between px-1 pb-2">
         <span className="text-[10px] font-medium tracking-[0.2em] text-paper-dim">
           MODO CREADOR · PRODUCTIVIDAD

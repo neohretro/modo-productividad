@@ -1,5 +1,38 @@
 import { useEffect, useState } from 'react'
+import { Monitor, Moon, Sun } from 'lucide-react'
+import type { ThemePref } from '@shared/types'
 import { useAppStore } from '../store/useAppStore'
+
+const THEMES: { value: ThemePref; label: string; Icon: typeof Sun }[] = [
+  { value: 'light', label: 'Claro', Icon: Sun },
+  { value: 'dark', label: 'Oscuro', Icon: Moon },
+  { value: 'system', label: 'Sistema', Icon: Monitor }
+]
+
+function ThemeSwitch({
+  value,
+  onChange
+}: {
+  value: ThemePref
+  onChange: (v: ThemePref) => void
+}): React.JSX.Element {
+  return (
+    <div className="flex gap-1 rounded-chip border border-border bg-ink-glass p-1">
+      {THEMES.map(({ value: v, label, Icon }) => (
+        <button
+          key={v}
+          onClick={() => onChange(v)}
+          className={`flex items-center gap-1.5 rounded-[11px] px-2.5 py-1 text-xs transition-colors ease-modo ${
+            value === v ? 'bg-orange text-onaccent' : 'text-paper-dim hover:text-paper'
+          }`}
+        >
+          <Icon size={13} strokeWidth={2} />
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 function Toggle({
   checked,
@@ -31,6 +64,7 @@ export default function Settings(): React.JSX.Element {
   const setLaunchOnStartup = useAppStore((s) => s.setLaunchOnStartup)
   const setGlobalShortcut = useAppStore((s) => s.setGlobalShortcut)
   const setMultitaskNudges = useAppStore((s) => s.setMultitaskNudges)
+  const setTheme = useAppStore((s) => s.setTheme)
   const [version, setVersion] = useState('0.1.0')
   const [capturing, setCapturing] = useState(false)
 
@@ -52,8 +86,12 @@ export default function Settings(): React.JSX.Element {
   }
 
   return (
-    <div className="glass flex flex-1 flex-col gap-1 rounded-card p-6">
+    <div className="glass flex flex-1 flex-col gap-1 overflow-y-auto rounded-card p-6">
       <h2 className="mb-4 text-xl">Ajustes</h2>
+
+      <Row title="Tema" desc="Claro, oscuro o el que tengas en el sistema.">
+        <ThemeSwitch value={settings.theme} onChange={setTheme} />
+      </Row>
 
       <Row
         title="Iniciar con Windows"

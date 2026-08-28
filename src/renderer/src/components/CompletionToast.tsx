@@ -36,8 +36,8 @@ export default function CompletionToast({
         compact ? 'bottom-3 w-[calc(100%-24px)]' : 'bottom-6 w-auto max-w-sm'
       }`}
     >
-      <div className="glass-strong flex items-center gap-3 rounded-chip px-4 py-3 shadow-glass">
-        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-orange text-ink">
+      <div className="glass-strong flex items-center gap-3 rounded-chip px-4 py-3">
+        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-orange text-onaccent">
           <Check size={13} strokeWidth={3} />
         </span>
         <div className="min-w-0">

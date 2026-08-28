@@ -4,7 +4,8 @@ import {
   TODAY_PROJECT_ID,
   type PersistedState,
   type Project,
-  type Task
+  type Task,
+  type ThemePref
 } from '@shared/types'
 import { toISODate } from '@shared/date'
 import { rolloverIfNeeded } from '@shared/rollover'
@@ -25,6 +26,8 @@ interface AppState extends PersistedState {
   screen: Screen
   /** proyecto abierto en la pantalla Proyectos. */
   activeProjectId: string | null
+  /** lista que muestra el modo mini: TODAY_PROJECT_ID o el id de un proyecto. */
+  miniTargetId: string
   /** última tarea completada con tiempo — la muestra el toast, luego se limpia. */
   recentCompletion: CompletionReveal | null
 
@@ -33,6 +36,7 @@ interface AppState extends PersistedState {
   applyRemote: (state: PersistedState) => void
   setScreen: (s: Screen) => void
   setActiveProject: (id: string | null) => void
+  setMiniTarget: (id: string) => void
   clearRecentCompletion: () => void
   checkRollover: () => void
 
@@ -54,6 +58,7 @@ interface AppState extends PersistedState {
   setLaunchOnStartup: (on: boolean) => void
   setGlobalShortcut: (accelerator: string) => void
   setMultitaskNudges: (on: boolean) => void
+  setTheme: (pref: ThemePref) => void
 }
 
 /** Solo los campos que van a disco. También sirve de selector para lógica pura. */
@@ -107,6 +112,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   hydrated: false,
   screen: 'today',
   activeProjectId: null,
+  miniTargetId: TODAY_PROJECT_ID,
   recentCompletion: null,
 
   hydrate: async () => {
@@ -137,6 +143,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setScreen: (screen) => set({ screen }),
   setActiveProject: (activeProjectId) => set({ activeProjectId }),
+  setMiniTarget: (miniTargetId) => set({ miniTargetId }),
   clearRecentCompletion: () => set({ recentCompletion: null }),
 
   checkRollover: () => {
@@ -248,7 +255,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((s) => ({ settings: { ...s.settings, globalShortcut: accelerator } })),
 
   setMultitaskNudges: (on) =>
-    set((s) => ({ settings: { ...s.settings, multitaskNudges: on } }))
+    set((s) => ({ settings: { ...s.settings, multitaskNudges: on } })),
+
+  setTheme: (pref) => set((s) => ({ settings: { ...s.settings, theme: pref } }))
 }))
 
 if (import.meta.env.DEV) {
@@ -270,4 +279,14 @@ export const projectProgress = (
   const total = p.tasks.length
   const done = p.tasks.filter((t) => t.done).length
   return { done, total, pct: total === 0 ? 0 : done / total }
+}
+
+/** Lista y nombre para un "target" del mini (Hoy o un proyecto). */
+export function targetView(s: AppState): { id: string; name: string; tasks: Task[] } {
+  if (s.miniTargetId === TODAY_PROJECT_ID) {
+    return { id: TODAY_PROJECT_ID, name: 'Hoy', tasks: s.todayTasks }
+  }
+  const p = s.projects.find((x) => x.id === s.miniTargetId)
+  if (!p) return { id: TODAY_PROJECT_ID, name: 'Hoy', tasks: s.todayTasks }
+  return { id: p.id, name: p.name, tasks: p.tasks }
 }

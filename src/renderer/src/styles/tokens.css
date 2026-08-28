@@ -3,21 +3,66 @@
 @tailwind utilities;
 
 /*
- * MODO CREADOR - Productividad — capa base (PLAN.md §3)
- * Glass sobre negro: transparencia + blur, nunca blanco sólido.
+ * MODO CREADOR - Productividad — sistema de diseño (PLAN.md §3 + feedback usuario).
+ * Tema claro por defecto (soft UI: fondo cálido, cards suaves, muy redondeado),
+ * con variante oscura. El acento naranja es el único color de marca.
  */
 
-:root {
-  --ink: #070707;
-  --ink-2: #0d0d0c;
-  --ink-glass: rgba(244, 243, 239, 0.045);
-  --ink-glass-strong: rgba(244, 243, 239, 0.075);
-  --border: rgba(244, 243, 239, 0.1);
-  --border-hi: rgba(244, 243, 239, 0.16);
+:root,
+:root[data-theme='light'] {
+  --ink: #e9e7e0; /* fondo de la app (cálido, no blanco puro) */
+  --ink-glass: #fbfaf6; /* card */
+  --ink-glass-strong: #ffffff; /* card elevada */
+  --frost: rgba(251, 250, 246, 0.7); /* mini flotante translúcido */
+  --border: rgba(28, 25, 20, 0.07);
+  --border-hi: rgba(28, 25, 20, 0.13);
+  --paper: #211f1b; /* texto principal */
+  --paper-dim: rgba(33, 31, 27, 0.5); /* texto secundario */
+  --orange: #ec7a00;
+  --orange-soft: rgba(236, 122, 0, 0.12);
+  --orange-glow: rgba(236, 122, 0, 0.16);
+  --on-accent: #1c1a16; /* texto sobre naranja */
+  --shadow-card: 0 1px 2px rgba(28, 25, 20, 0.04), 0 14px 34px -14px rgba(28, 25, 20, 0.14);
+  --shadow-float: 0 8px 20px rgba(28, 25, 20, 0.1), 0 30px 60px -20px rgba(28, 25, 20, 0.28);
+  --hi-inset: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --ink: #100f0e;
+    --ink-glass: #1a1917;
+    --ink-glass-strong: #222020;
+    --frost: rgba(24, 23, 21, 0.62);
+    --border: rgba(244, 243, 239, 0.08);
+    --border-hi: rgba(244, 243, 239, 0.15);
+    --paper: #f4f3ef;
+    --paper-dim: rgba(244, 243, 239, 0.54);
+    --orange: #ff8c00;
+    --orange-soft: rgba(255, 140, 0, 0.13);
+    --orange-glow: rgba(255, 140, 0, 0.2);
+    --on-accent: #100f0e;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 16px 40px -16px rgba(0, 0, 0, 0.6);
+    --shadow-float: 0 10px 26px rgba(0, 0, 0, 0.45), 0 40px 80px -24px rgba(0, 0, 0, 0.7);
+    --hi-inset: inset 0 1px 0 rgba(244, 243, 239, 0.05);
+  }
+}
+
+:root[data-theme='dark'] {
+  --ink: #100f0e;
+  --ink-glass: #1a1917;
+  --ink-glass-strong: #222020;
+  --frost: rgba(24, 23, 21, 0.62);
+  --border: rgba(244, 243, 239, 0.08);
+  --border-hi: rgba(244, 243, 239, 0.15);
   --paper: #f4f3ef;
-  --paper-dim: rgba(244, 243, 239, 0.55);
+  --paper-dim: rgba(244, 243, 239, 0.54);
   --orange: #ff8c00;
-  --orange-glow: rgba(255, 140, 0, 0.18);
+  --orange-soft: rgba(255, 140, 0, 0.13);
+  --orange-glow: rgba(255, 140, 0, 0.2);
+  --on-accent: #100f0e;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 16px 40px -16px rgba(0, 0, 0, 0.6);
+  --shadow-float: 0 10px 26px rgba(0, 0, 0, 0.45), 0 40px 80px -24px rgba(0, 0, 0, 0.7);
+  --hi-inset: inset 0 1px 0 rgba(244, 243, 239, 0.05);
 }
 
 @layer base {
@@ -29,9 +74,8 @@
 
   body {
     margin: 0;
-    /* fondo real de la app: casi opaco (la ventana Electron es transparente solo
-       para las esquinas redondeadas; el contenido NO debe dejar ver el escritorio) */
-    background: var(--ink);
+    /* la ventana Electron es transparente solo para las esquinas redondeadas */
+    background: transparent;
     color: var(--paper);
     font-family: theme('fontFamily.body');
     -webkit-font-smoothing: antialiased;
@@ -45,52 +89,46 @@
   h3 {
     font-family: theme('fontFamily.display');
     font-weight: 700;
+    letter-spacing: -0.01em;
   }
 }
 
 @layer components {
-  /* Superficie glass estándar de card: relleno translúcido + luz sutil arriba
-     + sombra para dar profundidad sobre el negro. */
+  /* Card estándar: superficie suave, muy redondeada, sombra ambiental. */
   .glass {
     background: var(--ink-glass);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border);
-    box-shadow:
-      inset 0 1px 0 rgba(244, 243, 239, 0.05),
-      0 1px 2px rgba(0, 0, 0, 0.4),
-      0 12px 32px -12px rgba(0, 0, 0, 0.55);
+    box-shadow: var(--hi-inset), var(--shadow-card);
   }
 
   .glass-strong {
     background: var(--ink-glass-strong);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border-hi);
-    box-shadow:
-      inset 0 1px 0 rgba(244, 243, 239, 0.06),
-      0 1px 2px rgba(0, 0, 0, 0.4),
-      0 12px 32px -12px rgba(0, 0, 0, 0.6);
+    box-shadow: var(--hi-inset), var(--shadow-card);
   }
 
-  /* resplandor ambiente naranja detrás del elemento de firma */
+  /* Burbuja flotante del modo mini: translúcida de verdad. */
+  .frost {
+    background: var(--frost);
+    backdrop-filter: blur(30px) saturate(1.6);
+    -webkit-backdrop-filter: blur(30px) saturate(1.6);
+    border: 1px solid var(--border-hi);
+    box-shadow: var(--shadow-float);
+  }
+
   .ring-halo {
-    background: radial-gradient(circle at center, var(--orange-glow), transparent 62%);
+    background: radial-gradient(circle at center, var(--orange-glow), transparent 64%);
   }
 
-  /* Región arrastrable del marco propio */
   .drag {
     -webkit-app-region: drag;
   }
-
   .no-drag {
     -webkit-app-region: no-drag;
   }
 }
 
 @layer utilities {
-  /* Entrada del sistema MODO: quieto -> el contenido entra con precisión.
-     600–900ms, curva suave, sin rebote (Brand OS §40). */
   @keyframes modo-rise {
     from {
       opacity: 0;
@@ -101,7 +139,6 @@
       transform: translateY(0);
     }
   }
-
   .animate-rise {
     animation: modo-rise 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
@@ -114,12 +151,10 @@
       opacity: 1;
     }
   }
-
   .animate-fade {
     animation: modo-fade 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  /* check al completar una tarea: aparece con precisión, sin rebote */
   @keyframes modo-pop {
     from {
       opacity: 0;
@@ -130,12 +165,10 @@
       transform: scale(1);
     }
   }
-
   .animate-pop {
     animation: modo-pop 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  /* entrada escalonada de las cards del bento al abrir una pantalla */
   .stagger > * {
     animation: modo-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
@@ -153,6 +186,15 @@
   }
   .stagger > *:nth-child(n + 5) {
     animation-delay: 180ms;
+  }
+
+  /* scrollbar discreto */
+  .overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+  }
+  .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: var(--border-hi);
+    border-radius: 999px;
   }
 
   @media (prefers-reduced-motion: reduce) {
