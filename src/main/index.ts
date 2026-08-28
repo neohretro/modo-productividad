@@ -13,6 +13,7 @@ import {
 import { createTray, refreshTrayMenu } from './tray'
 import { notifyMultitask } from './notifications'
 import { syncReminders } from './reminders'
+import { initAuth, registerAuthIpc } from './supabase'
 import { applyGlobalShortcut, applyLoginItem, unregisterAllShortcuts } from './system'
 import {
   checkForUpdates,
@@ -52,6 +53,7 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.on('updater:install', () => quitAndInstall())
 
     registerStoreIpc(onSettingsChange, () => syncReminders())
+    registerAuthIpc()
 
     // --- estado nativo inicial desde settings persistidas ---
     const { settings } = getState()
@@ -69,6 +71,7 @@ if (!app.requestSingleInstanceLock()) {
     createTray()
     initUpdater()
     syncReminders()
+    void initAuth()
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createMiniWindow({ show: true })

@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type { PersistedState } from '../shared/types'
 import type { UpdateStatus } from '../shared/update'
+import type { AuthResult, AuthState } from '../shared/auth'
 
 /** API expuesta al renderer. */
 const api = {
@@ -36,6 +37,21 @@ const api = {
       const listener = (_e: unknown, s: UpdateStatus): void => cb(s)
       ipcRenderer.on('updater:status', listener)
       return () => ipcRenderer.removeListener('updater:status', listener)
+    }
+  },
+
+  // cuenta / sincronización (opcional)
+  auth: {
+    getState: (): Promise<AuthState> => ipcRenderer.invoke('auth:state'),
+    requestCode: (email: string): Promise<AuthResult> =>
+      ipcRenderer.invoke('auth:requestCode', email),
+    verifyCode: (email: string, code: string, consent: boolean): Promise<AuthResult> =>
+      ipcRenderer.invoke('auth:verifyCode', email, code, consent),
+    signOut: (): Promise<void> => ipcRenderer.invoke('auth:signOut'),
+    onChange: (cb: (s: AuthState) => void): (() => void) => {
+      const listener = (_e: unknown, s: AuthState): void => cb(s)
+      ipcRenderer.on('auth:changed', listener)
+      return () => ipcRenderer.removeListener('auth:changed', listener)
     }
   }
 }

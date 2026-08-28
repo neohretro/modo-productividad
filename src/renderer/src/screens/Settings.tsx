@@ -13,6 +13,7 @@ import {
 import type { ThemePref } from '@shared/types'
 import { useAppStore } from '../store/useAppStore'
 import { useUpdate } from '../hooks/useUpdate'
+import AccountSection from '../components/AccountSection'
 
 const THEMES: { value: ThemePref; label: string; Icon: LucideIcon }[] = [
   { value: 'light', label: 'Claro', Icon: Sun },
@@ -120,6 +121,8 @@ export default function Settings(): React.JSX.Element {
           </button>
         </Card>
       </Group>
+
+      <AccountSection />
 
       <Group label="Acerca de">
         <Card
