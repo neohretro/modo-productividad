@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useShallow } from 'zustand/react/shallow'
-import { ChevronDown, Maximize2 } from 'lucide-react'
+import { Maximize2 } from 'lucide-react'
 import { TODAY_PROJECT_ID } from '@shared/types'
 import { targetView, useAppStore } from '../store/useAppStore'
 import ProgressRing from './ProgressRing'
@@ -8,6 +8,7 @@ import FocusTaskRow from './FocusTaskRow'
 import MultitaskNudge from './MultitaskNudge'
 import CompletionToast from './CompletionToast'
 import AddTask from './AddTask'
+import Dropdown from './Dropdown'
 
 // El rollover diario lo maneja solo la ventana principal; el mini recibe el
 // estado ya actualizado por el broadcast store:changed.
@@ -37,26 +38,16 @@ export default function MiniFloating(): React.JSX.Element {
   return (
     <div className="drag flex h-screen w-screen p-2.5">
       <div className="frost relative flex h-full w-full flex-col overflow-hidden rounded-[26px]">
-        <header className="flex items-center justify-between gap-2 px-3.5 pb-1.5 pt-3">
-          <div className="no-drag relative min-w-0 flex-1">
-            <select
-              value={miniTargetId}
-              onChange={(e) => setMiniTarget(e.target.value)}
-              className="w-full cursor-pointer appearance-none rounded-chip bg-transparent py-1 pl-1 pr-6 text-sm font-medium text-paper outline-none"
-            >
-              <option value={TODAY_PROJECT_ID}>Hoy</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              size={13}
-              strokeWidth={2}
-              className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-paper-dim"
-            />
-          </div>
+        <header className="flex items-center justify-between gap-2 px-3 pb-1.5 pt-2.5">
+          <Dropdown
+            className="min-w-0 flex-1"
+            value={miniTargetId}
+            onChange={setMiniTarget}
+            options={[
+              { value: TODAY_PROJECT_ID, label: 'Hoy' },
+              ...projects.map((p) => ({ value: p.id, label: p.name }))
+            ]}
+          />
           <button
             aria-label="Abrir ventana completa"
             onClick={() => window.modo?.exitMiniMode()}

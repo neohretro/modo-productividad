@@ -93,13 +93,13 @@ export default function Today(): React.JSX.Element {
             <div className="flex h-11 items-end gap-1.5">
               {last7.map((d) => (
                 <div key={d.date} className="flex flex-1 flex-col items-center gap-1">
-                  <div className="flex h-full w-full items-end">
+                  <div className="flex h-full w-full items-end rounded-[3px] bg-ink">
                     <div
                       className={`w-full rounded-[3px] ${
-                        d.isToday ? 'bg-orange' : 'bg-orange/45'
+                        d.hasData ? (d.isToday ? 'bg-orange' : 'bg-orange/55') : 'bg-transparent'
                       }`}
-                      style={{ height: `${Math.max(6, d.rate * 100)}%` }}
-                      title={`${d.date} · ${Math.round(d.rate * 100)}%`}
+                      style={{ height: d.hasData ? `${Math.max(8, d.rate * 100)}%` : '100%' }}
+                      title={`${d.date} · ${d.hasData ? Math.round(d.rate * 100) + '%' : 'sin datos'}`}
                     />
                   </div>
                   <span className="text-[8px] uppercase text-paper-dim">
@@ -143,15 +143,20 @@ export default function Today(): React.JSX.Element {
 
 function buildLast7(
   snapshots: { date: string; completionRate: number }[]
-): { date: string; rate: number; isToday: boolean }[] {
+): { date: string; rate: number; isToday: boolean; hasData: boolean }[] {
   const today = toISODate()
-  const out: { date: string; rate: number; isToday: boolean }[] = []
+  const out: { date: string; rate: number; isToday: boolean; hasData: boolean }[] = []
   for (let i = 6; i >= 0; i--) {
     const d = new Date()
     d.setDate(d.getDate() - i)
     const iso = toISODate(d)
     const snap = snapshots.find((s) => s.date === iso)
-    out.push({ date: iso, rate: snap ? snap.completionRate : 0, isToday: iso === today })
+    out.push({
+      date: iso,
+      rate: snap ? snap.completionRate : 0,
+      isToday: iso === today,
+      hasData: !!snap
+    })
   }
   return out
 }
