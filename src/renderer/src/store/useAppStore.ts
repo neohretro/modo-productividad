@@ -12,7 +12,7 @@ import { rolloverIfNeeded } from '@shared/rollover'
 import { activeFocusTasks, commitFocus, normalizeState } from '@shared/focus'
 import { activateDue } from '@shared/schedule'
 
-type Screen = 'today' | 'projects' | 'summary' | 'settings'
+type Screen = 'today' | 'week' | 'projects' | 'summary' | 'settings'
 
 /** Aviso efímero al completar una tarea con tiempo registrado. */
 export interface CompletionReveal {
@@ -47,6 +47,8 @@ interface AppState extends PersistedState {
   checkRollover: () => void
 
   addTask: (text: string, projectId: string) => void
+  /** Agrega una tarea a un día concreto (hoy/pasado → Hoy; futuro → programada). */
+  addTaskOn: (text: string, dateISO: string) => void
   toggleTask: (id: string) => void
   deleteTask: (id: string) => void
   editTask: (id: string, text: string) => void
@@ -199,6 +201,21 @@ export const useAppStore = create<AppState>((set, get) => ({
         projects: s.projects.map((p) =>
           p.id === projectId ? { ...p, tasks: [...p.tasks, t] } : p
         )
+      }))
+    }
+  },
+
+  addTaskOn: (text, dateISO) => {
+    if (!text.trim()) return
+    const today = toISODate()
+    if (dateISO <= today) {
+      set((s) => ({ todayTasks: [...s.todayTasks, newTask(text, TODAY_PROJECT_ID)] }))
+    } else {
+      set((s) => ({
+        scheduledTasks: [
+          ...s.scheduledTasks,
+          { ...newTask(text, TODAY_PROJECT_ID), scheduledDate: dateISO }
+        ]
       }))
     }
   },

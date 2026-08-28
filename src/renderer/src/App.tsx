@@ -7,6 +7,7 @@ import CompletionToast from './components/CompletionToast'
 import FlashToast from './components/FlashToast'
 import UpdateBanner from './components/UpdateBanner'
 import Today from './screens/Today'
+import Calendar from './screens/Calendar'
 import Projects from './screens/Projects'
 import Summary from './screens/Summary'
 import Settings from './screens/Settings'
@@ -33,6 +34,7 @@ function WindowControls(): React.JSX.Element {
 
 const SCREENS = {
   today: Today,
+  week: Calendar,
   projects: Projects,
   summary: Summary,
   settings: Settings
