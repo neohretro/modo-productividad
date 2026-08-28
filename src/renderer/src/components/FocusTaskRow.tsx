@@ -7,7 +7,8 @@ import { useTaskMenu } from '../hooks/useTaskMenu'
 /**
  * Fila de tarea con enfoque: ▶ para empezar / ⏸ para pausar (el tiempo se
  * acumula entre tramos, la pausa no cuenta), ✓ para completar.
- * El fondo de la fila es zona de arrastre del mini; solo los botones no lo son.
+ * La fila NO es zona de arrastre: así funcionan el clic derecho y seleccionar
+ * texto. El mini se arrastra desde todo lo demás (cabecera, anillo, huecos).
  */
 export default function FocusTaskRow({ task }: { task: Task }): React.JSX.Element {
   const toggleTask = useAppStore((s) => s.toggleTask)
@@ -22,7 +23,7 @@ export default function FocusTaskRow({ task }: { task: Task }): React.JSX.Elemen
   return (
     <li
       onContextMenu={onContextMenu}
-      className={`drag flex animate-fade items-start gap-2 rounded-chip border px-2.5 py-2 transition-colors ${
+      className={`no-drag flex animate-fade items-start gap-2 rounded-chip border px-2.5 py-2 transition-colors ${
         running ? 'border-orange/50 bg-orange-glow' : 'border-border bg-ink-soft'
       }`}
     >
@@ -64,7 +65,7 @@ export default function FocusTaskRow({ task }: { task: Task }): React.JSX.Elemen
               setDraft(task.text)
               setEditingTask(task.id)
             }}
-            className="text-xs leading-snug text-paper"
+            className="select-text text-xs leading-snug text-paper selection:bg-orange/30"
           >
             {task.text}
           </p>
