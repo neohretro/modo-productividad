@@ -23,6 +23,8 @@ export function initUpdater(): void {
 
   autoUpdater.autoDownload = false // pedimos permiso antes de bajar
   autoUpdater.autoInstallOnAppQuit = true
+  // silencioso: los errores de red/404 ya se manejan y no deben ensuciar la consola
+  autoUpdater.logger = null
 
   autoUpdater.on('checking-for-update', () => broadcast({ state: 'checking' }))
   autoUpdater.on('update-available', (info) =>
