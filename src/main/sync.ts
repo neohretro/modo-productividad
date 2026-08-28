@@ -72,6 +72,7 @@ let status: SyncStatus = { phase: 'off', lastSyncedAt: null }
 
 function setStatus(next: Partial<SyncStatus>): void {
   status = { ...status, ...next }
+  if (import.meta.env.DEV) console.log('[sync]', status.phase, status.message ?? '')
   bus.emit('change', status)
 }
 
@@ -139,6 +140,7 @@ async function cycle(kind: 'pull' | 'push'): Promise<void> {
     else await push()
     setStatus({ phase: 'synced', lastSyncedAt: Date.now(), message: undefined })
   } catch (e) {
+    if (import.meta.env.DEV) console.error('[sync] error', e)
     setStatus({ phase: 'error', message: friendly((e as Error).message) })
   } finally {
     running = false
