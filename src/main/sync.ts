@@ -15,7 +15,7 @@ import { EventEmitter } from 'node:events'
 import { BrowserWindow, ipcMain } from 'electron'
 import Store from 'electron-store'
 import { normalizeState } from '../shared/focus'
-import { mergeStates, stateFingerprint, type SyncStatus } from '../shared/sync'
+import { isPristine, mergeStates, stateFingerprint, type SyncStatus } from '../shared/sync'
 import type { PersistedState } from '../shared/types'
 import { getSupabase, getAuthState } from './supabase'
 import { broadcastState, getState, setState } from './store'
@@ -26,6 +26,8 @@ const PUSH_DEBOUNCE_MS = 2_000
 const PULL_INTERVAL_MS = 60_000
 
 interface SyncMeta {
+  /** a qué cuenta pertenecen `lastPulledRev` / `lastSyncedFingerprint`. */
+  userId: string
   lastPulledRev: number
   lastSyncedFingerprint: string
   deviceId: string
@@ -33,8 +35,19 @@ interface SyncMeta {
 
 const meta = new Store<SyncMeta>({
   name: 'modo-sync',
-  defaults: { lastPulledRev: 0, lastSyncedFingerprint: '', deviceId: '' }
+  defaults: { userId: '', lastPulledRev: 0, lastSyncedFingerprint: '', deviceId: '' }
 })
+
+/** ¿El progreso de sync guardado es de otra cuenta (o no hay)? */
+function isFreshIdentity(userId: string): boolean {
+  return meta.get('userId') !== userId
+}
+
+function resetMetaFor(userId: string): void {
+  meta.set('userId', userId)
+  meta.set('lastPulledRev', 0)
+  meta.set('lastSyncedFingerprint', '')
+}
 
 function deviceId(): string {
   let id = meta.get('deviceId')
@@ -73,6 +86,7 @@ export function onSyncStatusChange(cb: (s: SyncStatus) => void): () => void {
 
 // --- ciclo de vida ---------------------------------------------------------
 let activeUserId: string | null = null
+let freshStart = false
 let pushTimer: ReturnType<typeof setTimeout> | undefined
 let pullTimer: ReturnType<typeof setInterval> | undefined
 let running = false
@@ -82,6 +96,10 @@ export function startSync(): void {
   const user = getAuthState().user
   if (!user || !getSupabase()) return
   if (activeUserId === user.id) return // ya sincronizando a esta cuenta
+
+  // Cambió la cuenta (o es la primera vez): el progreso de sync anterior no aplica.
+  freshStart = isFreshIdentity(user.id)
+  if (freshStart) resetMetaFor(user.id)
 
   activeUserId = user.id
   setStatus({ phase: 'idle' })
@@ -146,22 +164,37 @@ async function pull(): Promise<void> {
   if (error) throw new Error(error.message)
 
   if (!data) {
+    // No hay nada en la nube: sube lo local (flujo "usé la app offline y ahora entro").
     await insertInitial()
+    freshStart = false
     return
   }
 
   const remoteRev = Number(data.rev)
+  const remote = normalizeState(data.state as Partial<PersistedState>)
+
+  // Primera vez en este equipo con esta cuenta: la nube manda.
+  if (freshStart) {
+    freshStart = false
+    if (isPristine(getState())) {
+      applyRemote(remote, remoteRev) // equipo limpio → copia la nube tal cual
+    } else {
+      const merged = mergeStates(getState(), remote) // había trabajo offline → conserva ambos
+      applyRemote(merged, remoteRev)
+      await push()
+    }
+    return
+  }
+
   if (remoteRev === meta.get('lastPulledRev')) return // nada nuevo remoto
 
-  const remote = normalizeState(data.state as Partial<PersistedState>)
   const localDirty = stateFingerprint(getState()) !== meta.get('lastSyncedFingerprint')
-
   if (!localDirty) {
     applyRemote(remote, remoteRev)
     return
   }
 
-  // Dos equipos cambiaron: fusiona y vuelve a subir.
+  // Dos equipos cambiaron entre sincronizaciones: fusiona y vuelve a subir.
   const merged = mergeStates(getState(), remote)
   applyRemote(merged, remoteRev)
   await push()

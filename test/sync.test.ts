@@ -1,7 +1,7 @@
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { INITIAL_STATE, type PersistedState, type Task } from '@shared/types'
-import { mergeStates, stateFingerprint } from '@shared/sync'
+import { isPristine, mergeStates, stateFingerprint } from '@shared/sync'
 
 function task(over: Partial<Task> = {}): Task {
   return {
@@ -23,6 +23,15 @@ function task(over: Partial<Task> = {}): Task {
 function state(over: Partial<PersistedState> = {}): PersistedState {
   return { ...structuredClone(INITIAL_STATE), ...over }
 }
+
+test('isPristine: estado inicial sí, con una tarea no', () => {
+  assert.equal(isPristine(state()), true)
+  assert.equal(isPristine(state({ todayTasks: [task()] })), false)
+  assert.equal(
+    isPristine(state({ streak: { current: 2, best: 2, lastCountedDate: null, freezesAvailable: 1 } })),
+    false
+  )
+})
 
 test('stateFingerprint ignora cambios no sincronizables y es estable', () => {
   const a = state({ todayTasks: [task({ id: 'x', text: 'hola' })] })

@@ -24,6 +24,23 @@ export interface SyncStatus {
   message?: string
 }
 
+/**
+ * true si el estado local no tiene nada del usuario (recién instalado / nunca
+ * tocado). Sirve para decidir, al entrar por primera vez en un equipo, si la
+ * nube reemplaza lo local (equipo limpio) o se fusiona (había trabajo offline).
+ */
+export function isPristine(s: PersistedState): boolean {
+  return (
+    s.todayTasks.length === 0 &&
+    s.scheduledTasks.length === 0 &&
+    s.archivedTasks.length === 0 &&
+    s.projects.length === 0 &&
+    s.snapshots.length === 0 &&
+    s.streak.current === 0 &&
+    s.streak.best === 0
+  )
+}
+
 /** Huella estable del estado sincronizable (para detectar cambios locales sin subir). */
 export function stateFingerprint(s: PersistedState): string {
   return JSON.stringify([
