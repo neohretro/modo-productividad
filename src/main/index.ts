@@ -1,15 +1,16 @@
 import { join } from 'path'
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { registerStoreIpc } from './store'
 
 let mainWindow: BrowserWindow | null = null
 
 function createMainWindow(): void {
   mainWindow = new BrowserWindow({
-    width: 980,
-    height: 720,
-    minWidth: 880,
-    minHeight: 640,
+    width: 1000,
+    height: 780,
+    minWidth: 900,
+    minHeight: 680,
     show: false,
     frame: false,
     transparent: true,
@@ -19,7 +20,7 @@ function createMainWindow(): void {
     // en macOS deja los semáforos flotando sobre el glass
     trafficLightPosition: { x: 16, y: 16 },
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: join(__dirname, '../preload/index.mjs'),
       sandbox: false
     }
   })
@@ -52,6 +53,7 @@ app.whenReady().then(() => {
   ipcMain.on('window:close', () => mainWindow?.close())
   ipcMain.handle('app:getVersion', () => app.getVersion())
 
+  registerStoreIpc()
   createMainWindow()
 
   app.on('activate', () => {

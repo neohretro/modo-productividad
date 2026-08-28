@@ -27,9 +27,22 @@ export default defineConfig({
     root: 'src/renderer',
     resolve: {
       alias: {
-        '@renderer': resolve('src/renderer/src'),
-        '@shared': resolve('src/shared')
-      }
+        '@renderer': resolve(__dirname, 'src/renderer/src'),
+        '@shared': resolve(__dirname, 'src/shared')
+      },
+      dedupe: ['react', 'react-dom']
+    },
+    optimizeDeps: {
+      include: [
+        'react',
+        'react-dom',
+        'react-dom/client',
+        'react/jsx-runtime',
+        'motion',
+        'motion/react',
+        'zustand',
+        'lucide-react'
+      ]
     },
     build: {
       rollupOptions: {

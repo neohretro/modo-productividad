@@ -18,7 +18,7 @@ export interface Task {
   completedDate: string | null
   /**
    * Solo aplica a tareas de "Hoy": cuántos días lleva pendiente sin cerrarse.
-   * 0 el día que se crea, +1 cada vez que cierra un día con la tarea abierta.
+   * 0 el día que se crea, +N cada vez que cierran días con la tarea abierta.
    */
   daysRolled: number
 }
@@ -63,7 +63,10 @@ export interface AppSettings {
 /** Forma completa del estado persistido en disco (electron-store). */
 export interface PersistedState {
   version: number
+  /** Lista continua de "Hoy" (pendientes + completadas del día en curso). */
   todayTasks: Task[]
+  /** Tareas de "Hoy" ya archivadas al cerrar su día. Historial para el Resumen. */
+  archivedTasks: Task[]
   projects: Project[]
   snapshots: DailySnapshot[]
   streak: StreakState
@@ -81,6 +84,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
 export const INITIAL_STATE: PersistedState = {
   version: 1,
   todayTasks: [],
+  archivedTasks: [],
   projects: [],
   snapshots: [],
   streak: { current: 0, best: 0, lastCountedDate: null, freezesAvailable: 1 },

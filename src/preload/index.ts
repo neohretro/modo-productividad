@@ -1,11 +1,17 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import type { PersistedState } from '../shared/types'
 
-/** API mínima expuesta al renderer para Fase 0 (controles de ventana). */
+/** API expuesta al renderer. */
 const api = {
+  // ventana sin marco
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   closeWindow: () => ipcRenderer.send('window:close'),
-  getAppVersion: (): Promise<string> => ipcRenderer.invoke('app:getVersion')
+  getAppVersion: (): Promise<string> => ipcRenderer.invoke('app:getVersion'),
+  // persistencia
+  loadState: (): Promise<PersistedState> => ipcRenderer.invoke('store:load'),
+  saveState: (state: PersistedState): Promise<void> =>
+    ipcRenderer.invoke('store:save', state)
 }
 
 export type ModoApi = typeof api
