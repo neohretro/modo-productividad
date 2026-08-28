@@ -3,6 +3,7 @@ import { electronAPI } from '@electron-toolkit/preload'
 import type { PersistedState } from '../shared/types'
 import type { UpdateStatus } from '../shared/update'
 import type { AuthResult, AuthState } from '../shared/auth'
+import type { SyncStatus } from '../shared/sync'
 
 /** API expuesta al renderer. */
 const api = {
@@ -52,6 +53,16 @@ const api = {
       const listener = (_e: unknown, s: AuthState): void => cb(s)
       ipcRenderer.on('auth:changed', listener)
       return () => ipcRenderer.removeListener('auth:changed', listener)
+    }
+  },
+
+  sync: {
+    getStatus: (): Promise<SyncStatus> => ipcRenderer.invoke('sync:status'),
+    now: (): Promise<void> => ipcRenderer.invoke('sync:now'),
+    onStatus: (cb: (s: SyncStatus) => void): (() => void) => {
+      const listener = (_e: unknown, s: SyncStatus): void => cb(s)
+      ipcRenderer.on('sync:status', listener)
+      return () => ipcRenderer.removeListener('sync:status', listener)
     }
   }
 }

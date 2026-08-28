@@ -13,7 +13,8 @@ import {
 import { createTray, refreshTrayMenu } from './tray'
 import { notifyMultitask } from './notifications'
 import { syncReminders } from './reminders'
-import { initAuth, registerAuthIpc } from './supabase'
+import { initAuth, onAuthStateChange, registerAuthIpc } from './supabase'
+import { notifyLocalChange, registerSyncIpc, startSync, stopSync } from './sync'
 import { applyGlobalShortcut, applyLoginItem, unregisterAllShortcuts } from './system'
 import {
   checkForUpdates,
@@ -52,8 +53,15 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.on('updater:download', () => void downloadUpdate())
     ipcMain.on('updater:install', () => quitAndInstall())
 
-    registerStoreIpc(onSettingsChange, () => syncReminders())
+    registerStoreIpc(onSettingsChange, () => {
+      syncReminders()
+      notifyLocalChange()
+    })
     registerAuthIpc()
+    registerSyncIpc()
+
+    // La sesión abierta arranca el sync; cerrarla lo detiene.
+    onAuthStateChange((s) => (s.user ? startSync() : stopSync()))
 
     // --- estado nativo inicial desde settings persistidas ---
     const { settings } = getState()

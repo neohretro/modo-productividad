@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Check, CloudCheck, LogOut, Mail } from 'lucide-react'
+import { Check, CloudCheck, CloudOff, LogOut, Mail, RefreshCw } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { useSync } from '../hooks/useSync'
 
 /**
  * Sección "Cuenta" de Ajustes. El login es opcional: solo habilita la
@@ -29,32 +30,66 @@ export default function AccountSection(): React.JSX.Element | null {
 
 function SignedIn({ email }: { email: string }): React.JSX.Element {
   const [busy, setBusy] = useState(false)
+  const sync = useSync()
+
+  const error = sync.phase === 'error'
+  const line =
+    sync.phase === 'syncing'
+      ? 'Sincronizando…'
+      : error
+        ? (sync.message ?? 'Error al sincronizar')
+        : sync.lastSyncedAt
+          ? `Sincronizado ${relative(sync.lastSyncedAt)}`
+          : 'Sincronización activada. Tus tareas se guardan en la nube.'
 
   return (
     <div className="flex items-center gap-4">
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] bg-orange-soft text-orange">
-        <CloudCheck size={17} strokeWidth={1.75} />
+        {error ? <CloudOff size={17} strokeWidth={1.75} /> : <CloudCheck size={17} strokeWidth={1.75} />}
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm text-paper">{email}</p>
-        <p className="text-xs leading-snug text-paper-dim">
-          Sincronización activada. Tus tareas se guardan en la nube.
-        </p>
+        <p className={`text-xs leading-snug ${error ? 'text-orange' : 'text-paper-dim'}`}>{line}</p>
       </div>
-      <button
-        onClick={async () => {
-          setBusy(true)
-          await window.modo?.auth.signOut()
-          setBusy(false)
-        }}
-        disabled={busy}
-        className="flex shrink-0 items-center gap-1.5 rounded-chip border border-border-hi px-3 py-1.5 text-xs text-paper-dim transition-colors hover:border-orange hover:text-orange disabled:opacity-60"
-      >
-        <LogOut size={13} strokeWidth={2} />
-        Salir
-      </button>
+      <div className="flex shrink-0 items-center gap-1.5">
+        <button
+          onClick={() => window.modo?.sync.now()}
+          disabled={sync.phase === 'syncing'}
+          aria-label="Sincronizar ahora"
+          className="grid h-7 w-7 place-items-center rounded-lg text-paper-dim transition-colors hover:bg-ink-soft hover:text-paper disabled:opacity-50"
+        >
+          <RefreshCw
+            size={13}
+            strokeWidth={2}
+            className={sync.phase === 'syncing' ? 'animate-spin' : ''}
+          />
+        </button>
+        <button
+          onClick={async () => {
+            setBusy(true)
+            await window.modo?.auth.signOut()
+            setBusy(false)
+          }}
+          disabled={busy}
+          className="flex items-center gap-1.5 rounded-chip border border-border-hi px-3 py-1.5 text-xs text-paper-dim transition-colors hover:border-orange hover:text-orange disabled:opacity-60"
+        >
+          <LogOut size={13} strokeWidth={2} />
+          Salir
+        </button>
+      </div>
     </div>
   )
+}
+
+function relative(ts: number): string {
+  const s = Math.round((Date.now() - ts) / 1000)
+  if (s < 10) return 'ahora'
+  if (s < 60) return `hace ${s} s`
+  const m = Math.round(s / 60)
+  if (m < 60) return `hace ${m} min`
+  const h = Math.round(m / 60)
+  if (h < 24) return `hace ${h} h`
+  return `hace ${Math.round(h / 24)} d`
 }
 
 function SignInForm(): React.JSX.Element {
