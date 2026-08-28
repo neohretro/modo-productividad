@@ -12,6 +12,7 @@ publish:
   provider: github
   owner: neohretro
   repo: modo-productividad
+  releaseType: release # publica el release directo (no como borrador)
 
 files:
   - out/**
