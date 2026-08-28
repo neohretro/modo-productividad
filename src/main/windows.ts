@@ -10,17 +10,16 @@ let mainWindow: BrowserWindow | null = null
 let miniWindow: BrowserWindow | null = null
 /** El mini es la ventana principal; la completa se abre bajo demanda. */
 let activeKind: 'main' | 'mini' = 'mini'
-/** Color de fondo de las ventanas según el tema (evita bordes/negros raros). */
+/** Color de fondo de la ventana completa según el tema (evita bordes raros). */
 let bgColor = '#100f0e'
 
-const MINI_SIZE = { width: 320, height: 540 }
+const MINI_SIZE = { width: 300, height: 470 }
 
-/** El renderer avisa el tema resuelto; pintamos el fondo de las ventanas igual. */
+/** El renderer avisa el tema resuelto; pintamos el fondo de la ventana completa igual.
+ * El mini es transparente (vidrio real), no se le toca el fondo. */
 export function setWindowsBackground(theme: 'light' | 'dark'): void {
   bgColor = theme === 'dark' ? '#100f0e' : '#e9e7e0'
-  for (const w of [mainWindow, miniWindow]) {
-    if (w && !w.isDestroyed()) w.setBackgroundColor(bgColor)
-  }
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.setBackgroundColor(bgColor)
 }
 
 function loadRoute(win: BrowserWindow, route: 'index' | 'mini'): void {
@@ -87,10 +86,9 @@ export function createMiniWindow(opts: { show?: boolean } = {}): BrowserWindow {
     y: saved?.y ?? fallback.y,
     show: false,
     frame: false,
-    backgroundColor: bgColor,
-    // Vidrio esmerilado real de Windows 11 (sin los artefactos de transparent:true)
-    backgroundMaterial: 'acrylic',
-    roundedCorners: true,
+    transparent: true,
+    backgroundColor: '#00000000',
+    hasShadow: false,
     resizable: false,
     maximizable: false,
     minimizable: false,

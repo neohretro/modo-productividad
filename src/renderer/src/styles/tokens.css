@@ -13,7 +13,7 @@
   --ink: #e9e7e0; /* fondo de la app (cálido, no blanco puro) */
   --ink-glass: #fbfaf6; /* card */
   --ink-glass-strong: #ffffff; /* card elevada */
-  --frost: rgba(251, 250, 246, 0.44); /* tinte sobre el acrylic de Windows */
+  --frost: rgba(250, 249, 245, 0.72);
   --border: rgba(28, 25, 20, 0.07);
   --border-hi: rgba(28, 25, 20, 0.13);
   --paper: #211f1b; /* texto principal */
@@ -33,7 +33,7 @@
     --ink: #100f0e;
     --ink-glass: #1a1917;
     --ink-glass-strong: #222020;
-    --frost: rgba(20, 19, 18, 0.34);
+    --frost: rgba(22, 21, 19, 0.68);
     --border: rgba(244, 243, 239, 0.08);
     --border-hi: rgba(244, 243, 239, 0.15);
     --paper: #f4f3ef;
@@ -52,7 +52,7 @@
   --ink: #100f0e;
   --ink-glass: #1a1917;
   --ink-glass-strong: #222020;
-  --frost: rgba(20, 19, 18, 0.34);
+  --frost: rgba(22, 21, 19, 0.68);
   --border: rgba(244, 243, 239, 0.08);
   --border-hi: rgba(244, 243, 239, 0.15);
   --paper: #f4f3ef;
@@ -95,6 +95,16 @@
 }
 
 @layer components {
+  /* Burbuja flotante del modo mini: vidrio translúcido de verdad.
+     Sin box-shadow grande: el poco margen transparente de la ventana lo
+     recortaría en un rectángulo (el "cuadro negro"). */
+  .frost {
+    background: var(--frost);
+    backdrop-filter: blur(26px) saturate(1.7);
+    -webkit-backdrop-filter: blur(26px) saturate(1.7);
+    border: 1px solid var(--border-hi);
+  }
+
   /* Card estándar: superficie suave, muy redondeada, sombra ambiental. */
   .glass {
     background: var(--ink-glass);

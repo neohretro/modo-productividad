@@ -37,13 +37,13 @@ export default function MiniFloating(): React.JSX.Element {
   )
 
   return (
-    <div className="drag relative flex h-screen w-screen flex-col overflow-hidden bg-frost">
-      {/* resplandor detrás del anillo — caja cuadrada, se desvanece dentro de sí */}
-      <div
-        className="ring-halo pointer-events-none absolute left-1/2 top-[116px] h-[210px] w-[210px] -translate-x-1/2 -translate-y-1/2"
-        aria-hidden
-      />
-      <div className="relative flex h-full w-full flex-col">
+    <div className="drag flex h-screen w-screen p-2">
+      <div className="frost relative flex h-full w-full flex-col overflow-hidden rounded-[22px]">
+        {/* resplandor detrás del anillo — caja cuadrada, se desvanece dentro de sí */}
+        <div
+          className="ring-halo pointer-events-none absolute left-1/2 top-[112px] h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2"
+          aria-hidden
+        />
         <header className="relative flex items-center justify-between gap-2 px-3 pb-1.5 pt-2.5">
           <Dropdown
             className="min-w-0 flex-1"
