@@ -93,8 +93,8 @@ derecha de la card principal.
      [Hoy] [Proyectos] [Resumen] [Ajustes]       ← nav inferior, ícono naranja en activo
 ```
 
-**Modo mini (flotante):** el anillo de avance solo, en una burbuja de vidrio arrastrable,
-`alwaysOnTop`, con el punto orbitando.
+**Modo mini (flotante):** burbuja de vidrio arrastrable, `alwaysOnTop`, con la lista de
+tareas de "Hoy" y el cronómetro de enfoque por tarea (ver §4.3).
 
 ### 4.1 Dos modelos de progreso: Hoy vs. Proyectos
 
@@ -119,10 +119,28 @@ a los proyectos.**
 Ver [`src/shared/types.ts`](src/shared/types.ts). Resumen:
 
 ```ts
-Task { id, text, done, projectId, createdDate, completedDate, daysRolled }
+Task { id, text, done, projectId, createdDate, completedDate, daysRolled,
+       timeSpentMs, focusStartedAt }   // enfoque: ver §4.3
 DailySnapshot { date, totalTasks, completedTasks, completionRate, tasksCarriedOver }
 Project { id, name, tasks: Task[], createdDate }   // progreso acumulado, nunca resetea solo
 ```
+
+### 4.3 Modo enfoque y aviso de multitasking ✅
+
+El **modo mini** no es solo el anillo: lista las tareas de "Hoy" y, por cada una,
+un botón ▶ para empezar a trabajarla. Al iniciar, corre un **cronómetro** (guardado
+como `focusStartedAt`, un timestamp — así todas las ventanas calculan el mismo tiempo
+y sobrevive a un cierre). Al **completar** la tarea, el cronómetro se cierra y el
+tiempo se suma a `timeSpentMs` → alimenta el Resumen ("cuánto te tomó cada tarea").
+
+Se pueden enfocar **varias tareas a la vez** (no se bloquea), pero al cruzar 2+ aparece
+un **aviso suave**: banner en pantalla + notificación nativa (con la cita de la APA
+sobre el costo de cambiar de tarea, ~40%, y link). Configurable en Ajustes
+(`settings.multitaskNudges`). El cronómetro también está en la lista de "Hoy" de la
+ventana completa (prop `focusable`).
+
+`normalizeState` (en `src/shared/focus.ts`) migra estados de versiones anteriores y
+cierra tramos de enfoque que quedaron colgados (> 4 h = app estuvo cerrada).
 
 ### 4.2 Resumen: datos y sugerencias
 
