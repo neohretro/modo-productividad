@@ -189,14 +189,18 @@ modo-productividad/
 - [x] Tokens de color/tipografía en `tailwind.config.ts` + `tokens.css`.
 - [x] Ventana principal sin bordes nativos, con glass funcionando.
 
-### Fase 1 — Core funcional (paridad con el prototipo web)
+### Fase 1 — Core funcional (paridad con el prototipo web) ✅
 
-- [ ] Estado global de proyectos y tareas (Zustand + electron-store).
-- [ ] `ProgressRing` con el punto orbitando (Framer Motion).
-- [ ] Lista de tareas: checkbox glass, agregar/borrar.
-- [ ] Selector de proyectos (chips) + crear proyecto.
-- [ ] Lógica "Hoy" continua + rollover diario + `DailySnapshot` (§4.1).
-- [ ] Racha con corte por fecha.
+- [x] Estado global de proyectos y tareas (Zustand + electron-store en disco vía IPC).
+- [x] `ProgressRing` con el punto orbitando (transición CSS + count-up, ease modo ~850ms).
+- [x] Lista de tareas: checkbox glass, agregar/completar/borrar/editar (doble clic).
+- [x] Selector de proyectos (chips) + crear/renombrar/eliminar proyecto.
+- [x] Lógica "Hoy" continua + rollover diario + `DailySnapshot` (`src/shared/rollover.ts`).
+- [x] Racha con corte por fecha + protector de racha (freeze). 7 tests en vitest.
+
+Nota: la animación del anillo se hace por transición CSS, no por Framer Motion — es la
+pieza más visible y así es 100% fiable. Framer Motion (`motion`) queda para microinteracciones
+de Fase 3 (entrada de cards, etc.).
 
 ### Fase 2 — Comportamiento nativo
 
