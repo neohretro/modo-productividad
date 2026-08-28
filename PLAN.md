@@ -148,7 +148,7 @@ sugerencias en lenguaje natural. Para v1 no hace falta.
 | Build | **electron-vite** |
 | UI | **React + TypeScript** |
 | Estilos | **Tailwind CSS** con los tokens de §3 en `tailwind.config.ts` |
-| Animación | **Framer Motion** (`motion`) — curvas suaves 600–900ms, sin rebotes |
+| Animación | **CSS** `@keyframes` + transiciones — curva `cubic-bezier(0.22,1,0.36,1)`, 250–850ms, sin rebotes (Framer Motion se descartó por bugs de bundling con Vite/Electron) |
 | Estado | **Zustand** |
 | Persistencia | **electron-store** (JSON en disco, sin backend) |
 | Empaquetado | **electron-builder** (.exe Windows; .dmg Mac más adelante) |
@@ -202,12 +202,17 @@ Nota: la animación del anillo se hace por transición CSS, no por Framer Motion
 pieza más visible y así es 100% fiable. Framer Motion (`motion`) queda para microinteracciones
 de Fase 3 (entrada de cards, etc.).
 
-### Fase 2 — Comportamiento nativo
+### Fase 2 — Comportamiento nativo ✅
 
-- [ ] Modo mini flotante (`BrowserWindow` independiente, `alwaysOnTop`, arrastrable, recuerda posición).
-- [ ] System tray + menú contextual.
-- [ ] Atajo global de teclado.
-- [ ] Persistencia real en disco.
+- [x] Modo mini flotante (`BrowserWindow` aparte, `alwaysOnTop`, arrastrable, recuerda posición).
+- [x] System tray + menú contextual (Mostrar / Ventana completa / Modo mini / Autostart / Salir).
+- [x] Atajo global de teclado (configurable, default `Ctrl+Shift+M`).
+- [x] Persistencia real en disco + sync main↔mini (`store:changed`).
+- [x] Cerrar = a la bandeja; instancia única; inicio con Windows en segundo plano.
+- [x] Pantalla de Ajustes funcional.
+
+Nota: se quitó `motion` (Framer Motion) del renderer por bugs de bundling con Vite.
+Animaciones por CSS `@keyframes` con la curva del Brand OS. Reevaluar en Fase 3 si hace falta.
 
 ### Fase 3 — Pulido UX/UI (bento grid completo)
 
