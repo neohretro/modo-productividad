@@ -162,9 +162,9 @@ function SignInForm(): React.JSX.Element {
             autoFocus
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-            onKeyDown={(e) => e.key === 'Enter' && code.length >= 6 && !busy && void verify()}
+            onKeyDown={(e) => e.key === 'Enter' && code.length === 6 && !busy && void verify()}
             placeholder="000000"
-            className="w-full rounded-chip border border-border-hi bg-ink px-3 py-2 text-center text-lg tracking-[0.4em] text-paper outline-none focus:border-orange"
+            className="w-full rounded-chip border border-border-hi bg-ink px-3 py-2 text-center text-lg tracking-[0.4em] text-paper outline-none placeholder:tracking-[0.4em] placeholder:text-paper-dim/50 focus:border-orange"
           />
           <label className="flex cursor-pointer items-start gap-2 text-xs text-paper-dim">
             <button

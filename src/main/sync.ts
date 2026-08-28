@@ -104,10 +104,10 @@ export function startSync(): void {
 
   activeUserId = user.id
   setStatus({ phase: 'idle' })
-  void cycle('pull')
+  void cycle('sync')
 
   clearInterval(pullTimer)
-  pullTimer = setInterval(() => void cycle('pull'), PULL_INTERVAL_MS)
+  pullTimer = setInterval(() => void cycle('sync', true), PULL_INTERVAL_MS)
 }
 
 export function stopSync(): void {
@@ -127,17 +127,22 @@ export function notifyLocalChange(): void {
 }
 
 // --- núcleo --------------------------------------------------------------
-async function cycle(kind: 'pull' | 'push'): Promise<void> {
+async function cycle(kind: 'pull' | 'push' | 'sync', silent = false): Promise<void> {
   if (!activeUserId) return
   if (running) {
     dirtyWhileRunning = true
     return
   }
   running = true
-  setStatus({ phase: 'syncing' })
+  // El chequeo periódico no debe parpadear "Sincronizando…" en la UI cada minuto.
+  if (!silent) setStatus({ phase: 'syncing' })
   try {
     if (kind === 'pull') await pull()
-    else await push()
+    else if (kind === 'push') await push()
+    else {
+      await pull()
+      await push() // sube cambios locales que quedaron pendientes (p. ej. tras un corte)
+    }
     setStatus({ phase: 'synced', lastSyncedAt: Date.now(), message: undefined })
   } catch (e) {
     if (import.meta.env.DEV) console.error('[sync] error', e)
@@ -278,7 +283,7 @@ function friendly(msg: string): string {
 // --- IPC -----------------------------------------------------------------
 export function registerSyncIpc(): void {
   ipcMain.handle('sync:status', () => getSyncStatus())
-  ipcMain.handle('sync:now', () => cycle('pull'))
+  ipcMain.handle('sync:now', () => cycle('sync'))
 
   onSyncStatusChange((s) => {
     for (const win of BrowserWindow.getAllWindows()) {
