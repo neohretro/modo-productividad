@@ -95,11 +95,20 @@ try {
   console.log('  Nota: revisa que el release en GitHub no haya quedado como borrador.')
 }
 
-// 7. Ahora sí: commit + etiqueta + subir
+// 7. Ahora sí: commit + subir main
 sh('git add package.json')
 sh(`git commit -m "v${version}"`)
-sh(`git tag v${version}`)
 sh('git push')
+
+// 8. Re-apuntar la etiqueta al commit del bump.
+//    electron-builder ya creó `v${version}` en GitHub (apuntando al commit
+//    anterior) al dejar de ser borrador. La movemos al commit "v${version}".
+try {
+  sh(`git push origin :refs/tags/v${version}`) // borra la remota
+} catch {
+  /* puede no existir aún */
+}
+sh(`git tag -f v${version}`)
 sh(`git push origin v${version}`)
 
 console.log(`\n  ✓ Versión ${version} publicada.`)
