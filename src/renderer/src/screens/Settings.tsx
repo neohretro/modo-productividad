@@ -7,10 +7,12 @@ import {
   Moon,
   PictureInPicture2,
   Power,
+  RefreshCw,
   Sun
 } from 'lucide-react'
 import type { ThemePref } from '@shared/types'
 import { useAppStore } from '../store/useAppStore'
+import { useUpdate } from '../hooks/useUpdate'
 
 const THEMES: { value: ThemePref; label: string; Icon: LucideIcon }[] = [
   { value: 'light', label: 'Claro', Icon: Sun },
@@ -119,10 +121,52 @@ export default function Settings(): React.JSX.Element {
         </Card>
       </Group>
 
+      <Group label="Acerca de">
+        <Card
+          Icon={RefreshCw}
+          title="Actualizaciones"
+          desc={`Estás en la versión ${version}. La app se actualiza sola.`}
+        >
+          <UpdateControl />
+        </Card>
+      </Group>
+
       <p className="pt-2 text-center text-[11px] text-paper-dim/70">
         MODO CREADOR - Productividad · v{version}
       </p>
     </div>
+  )
+}
+
+function UpdateControl(): React.JSX.Element {
+  const u = useUpdate()
+  const label =
+    u.state === 'checking'
+      ? 'Comprobando…'
+      : u.state === 'available'
+        ? `Descargar ${u.version}`
+        : u.state === 'downloading'
+          ? `Descargando ${u.percent}%`
+          : u.state === 'ready'
+            ? 'Reiniciar e instalar'
+            : u.state === 'none'
+              ? 'Estás al día'
+              : 'Buscar actualizaciones'
+
+  const onClick = (): void => {
+    if (u.state === 'available') window.modo?.updater.download()
+    else if (u.state === 'ready') window.modo?.updater.install()
+    else window.modo?.updater.check()
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={u.state === 'checking' || u.state === 'downloading'}
+      className="rounded-chip border border-border-hi px-3 py-1.5 text-xs text-paper-dim transition-colors hover:border-orange hover:text-orange disabled:opacity-60"
+    >
+      {label}
+    </button>
   )
 }
 

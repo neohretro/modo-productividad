@@ -10,6 +10,7 @@ import CompletionToast from './CompletionToast'
 import FlashToast from './FlashToast'
 import AddTask from './AddTask'
 import Dropdown from './Dropdown'
+import UpdateBanner from './UpdateBanner'
 
 // El rollover diario lo maneja solo la ventana principal; el mini recibe el
 // estado ya actualizado por el broadcast store:changed.
@@ -62,6 +63,8 @@ export default function MiniFloating(): React.JSX.Element {
             <Maximize2 size={13} strokeWidth={1.75} />
           </button>
         </header>
+
+        <UpdateBanner compact />
 
         <div className="relative grid place-items-center pb-3 pt-1">
           <ProgressRing

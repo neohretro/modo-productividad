@@ -5,6 +5,7 @@ import { useTheme } from './theme'
 import BottomNav from './components/BottomNav'
 import CompletionToast from './components/CompletionToast'
 import FlashToast from './components/FlashToast'
+import UpdateBanner from './components/UpdateBanner'
 import Today from './screens/Today'
 import Projects from './screens/Projects'
 import Summary from './screens/Summary'
@@ -70,6 +71,8 @@ export default function App(): React.JSX.Element {
         </span>
         <WindowControls />
       </header>
+
+      <UpdateBanner />
 
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {hydrated ? (

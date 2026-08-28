@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type { PersistedState } from '../shared/types'
+import type { UpdateStatus } from '../shared/update'
 
 /** API expuesta al renderer. */
 const api = {
@@ -23,6 +24,19 @@ const api = {
     const listener = (_e: unknown, state: PersistedState): void => cb(state)
     ipcRenderer.on('store:changed', listener)
     return () => ipcRenderer.removeListener('store:changed', listener)
+  },
+
+  // actualizaciones
+  updater: {
+    getStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke('updater:status'),
+    check: () => ipcRenderer.send('updater:check'),
+    download: () => ipcRenderer.send('updater:download'),
+    install: () => ipcRenderer.send('updater:install'),
+    onStatus: (cb: (s: UpdateStatus) => void): (() => void) => {
+      const listener = (_e: unknown, s: UpdateStatus): void => cb(s)
+      ipcRenderer.on('updater:status', listener)
+      return () => ipcRenderer.removeListener('updater:status', listener)
+    }
   }
 }
 

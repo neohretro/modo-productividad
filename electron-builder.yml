@@ -6,6 +6,13 @@ directories:
   buildResources: build
   output: dist
 
+# Dónde se publican los releases y desde dónde se auto-actualiza la app.
+# Cambia owner/repo si el repositorio queda bajo otra cuenta u organización.
+publish:
+  provider: github
+  owner: neohretro
+  repo: modo-productividad
+
 files:
   - out/**
   - package.json

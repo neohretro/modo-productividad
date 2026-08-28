@@ -13,6 +13,13 @@ import {
 import { createTray, refreshTrayMenu } from './tray'
 import { notifyMultitask } from './notifications'
 import { applyGlobalShortcut, applyLoginItem, unregisterAllShortcuts } from './system'
+import {
+  checkForUpdates,
+  downloadUpdate,
+  getUpdateStatus,
+  initUpdater,
+  quitAndInstall
+} from './updater'
 import type { AppSettings } from '../shared/types'
 
 // Instancia única: si ya hay una corriendo, enfocarla y salir.
@@ -37,6 +44,12 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.on('theme:set', (_e, t: 'light' | 'dark') => setWindowsBackground(t))
     ipcMain.handle('app:getVersion', () => app.getVersion())
 
+    // --- actualizaciones ---
+    ipcMain.handle('updater:status', () => getUpdateStatus())
+    ipcMain.on('updater:check', () => void checkForUpdates())
+    ipcMain.on('updater:download', () => void downloadUpdate())
+    ipcMain.on('updater:install', () => quitAndInstall())
+
     registerStoreIpc(onSettingsChange)
 
     // --- estado nativo inicial desde settings persistidas ---
@@ -53,6 +66,7 @@ if (!app.requestSingleInstanceLock()) {
 
     startApp()
     createTray()
+    initUpdater()
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createMiniWindow({ show: true })
