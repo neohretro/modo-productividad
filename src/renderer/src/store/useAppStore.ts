@@ -18,6 +18,8 @@ interface AppState extends PersistedState {
   activeProjectId: string | null
 
   hydrate: () => Promise<void>
+  /** Aplica un estado llegado de otra ventana sin re-guardarlo. */
+  applyRemote: (state: PersistedState) => void
   setScreen: (s: Screen) => void
   setActiveProject: (id: string | null) => void
   checkRollover: () => void
@@ -30,6 +32,9 @@ interface AppState extends PersistedState {
   addProject: (name: string) => string
   renameProject: (id: string, name: string) => void
   deleteProject: (id: string) => void
+
+  setLaunchOnStartup: (on: boolean) => void
+  setGlobalShortcut: (accelerator: string) => void
 }
 
 /** Solo los campos que van a disco. */
@@ -73,6 +78,9 @@ function mapTaskEverywhere(
   }
 }
 
+/** true mientras aplicamos un estado remoto (otra ventana): no rebotar el guardado. */
+let applyingRemote = false
+
 export const useAppStore = create<AppState>((set, get) => ({
   ...INITIAL_STATE,
   hydrated: false,
@@ -88,6 +96,20 @@ export const useAppStore = create<AppState>((set, get) => ({
       activeProjectId: rolled.projects[0]?.id ?? null
     })
     if (rolled !== loaded) void window.modo?.saveState(persisted(get()))
+
+    window.modo?.onStateChanged((remote) => get().applyRemote(remote))
+  },
+
+  applyRemote: (remote) => {
+    applyingRemote = true
+    set((s) => ({
+      ...remote,
+      activeProjectId:
+        remote.projects.some((p) => p.id === s.activeProjectId)
+          ? s.activeProjectId
+          : (remote.projects[0]?.id ?? null)
+    }))
+    applyingRemote = false
   },
 
   setScreen: (screen) => set({ screen }),
@@ -163,7 +185,13 @@ export const useAppStore = create<AppState>((set, get) => ({
         activeProjectId:
           s.activeProjectId === id ? (projects[0]?.id ?? null) : s.activeProjectId
       }
-    })
+    }),
+
+  setLaunchOnStartup: (on) =>
+    set((s) => ({ settings: { ...s.settings, launchOnStartup: on } })),
+
+  setGlobalShortcut: (accelerator) =>
+    set((s) => ({ settings: { ...s.settings, globalShortcut: accelerator } }))
 }))
 
 if (import.meta.env.DEV) {
@@ -173,7 +201,7 @@ if (import.meta.env.DEV) {
 // --- persistencia automática (debounced) ---
 let saveTimer: ReturnType<typeof setTimeout> | undefined
 useAppStore.subscribe((s) => {
-  if (!s.hydrated) return
+  if (!s.hydrated || applyingRemote) return
   clearTimeout(saveTimer)
   saveTimer = setTimeout(() => void window.modo?.saveState(persisted(s)), 350)
 })

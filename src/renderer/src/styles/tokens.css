@@ -70,3 +70,35 @@
     -webkit-app-region: no-drag;
   }
 }
+
+@layer utilities {
+  /* Entrada del sistema MODO: quieto -> el contenido entra con precisión.
+     600–900ms, curva suave, sin rebote (Brand OS §40). */
+  @keyframes modo-rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-rise {
+    animation: modo-rise 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes modo-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .animate-fade {
+    animation: modo-fade 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}

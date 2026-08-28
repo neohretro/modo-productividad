@@ -7,11 +7,21 @@ const api = {
   // ventana sin marco
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   closeWindow: () => ipcRenderer.send('window:close'),
+  enterMiniMode: () => ipcRenderer.send('window:enterMini'),
+  exitMiniMode: () => ipcRenderer.send('window:exitMini'),
   getAppVersion: (): Promise<string> => ipcRenderer.invoke('app:getVersion'),
+
   // persistencia
   loadState: (): Promise<PersistedState> => ipcRenderer.invoke('store:load'),
   saveState: (state: PersistedState): Promise<void> =>
-    ipcRenderer.invoke('store:save', state)
+    ipcRenderer.invoke('store:save', state),
+
+  /** Notifica cuando OTRA ventana guardó cambios (sync main <-> mini). */
+  onStateChanged: (cb: (state: PersistedState) => void): (() => void) => {
+    const listener = (_e: unknown, state: PersistedState): void => cb(state)
+    ipcRenderer.on('store:changed', listener)
+    return () => ipcRenderer.removeListener('store:changed', listener)
+  }
 }
 
 export type ModoApi = typeof api

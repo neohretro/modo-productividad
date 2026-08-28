@@ -33,21 +33,13 @@ export default defineConfig({
       dedupe: ['react', 'react-dom']
     },
     optimizeDeps: {
-      include: [
-        'react',
-        'react-dom',
-        'react-dom/client',
-        'react/jsx-runtime',
-        'motion',
-        'motion/react',
-        'zustand',
-        'lucide-react'
-      ]
+      include: ['react', 'react-dom', 'react-dom/client', 'react/jsx-runtime', 'zustand', 'lucide-react']
     },
     build: {
       rollupOptions: {
         input: {
-          index: resolve(__dirname, 'src/renderer/index.html')
+          index: resolve(__dirname, 'src/renderer/index.html'),
+          mini: resolve(__dirname, 'src/renderer/mini.html')
         }
       }
     },

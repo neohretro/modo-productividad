@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
 import { Check, Trash2 } from 'lucide-react'
 import type { Task } from '@shared/types'
 import { useAppStore } from '../store/useAppStore'
@@ -25,11 +24,9 @@ export default function TaskList({ tasks, showRolled, emptyHint }: Props): React
 
   return (
     <ul className="flex flex-col gap-1.5">
-      <AnimatePresence initial={false}>
-        {ordered.map((t) => (
-          <TaskItem key={t.id} task={t} showRolled={showRolled} />
-        ))}
-      </AnimatePresence>
+      {ordered.map((t) => (
+        <TaskItem key={t.id} task={t} showRolled={showRolled} />
+      ))}
     </ul>
   )
 }
@@ -42,14 +39,7 @@ function TaskItem({ task, showRolled }: { task: Task; showRolled?: boolean }): R
   const [draft, setDraft] = useState(task.text)
 
   return (
-    <motion.li
-      layout
-      initial={{ opacity: 0, y: -6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-      className="no-drag group flex items-center gap-3 rounded-chip border border-border bg-ink-glass px-3 py-2.5"
-    >
+    <li className="no-drag group flex animate-fade items-center gap-3 rounded-chip border border-border bg-ink-glass px-3 py-2.5">
       <button
         aria-label={task.done ? 'Marcar pendiente' : 'Completar'}
         onClick={() => toggleTask(task.id)}
@@ -107,6 +97,6 @@ function TaskItem({ task, showRolled }: { task: Task; showRolled?: boolean }): R
       >
         <Trash2 size={15} strokeWidth={1.75} />
       </button>
-    </motion.li>
+    </li>
   )
 }

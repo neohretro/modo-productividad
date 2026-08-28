@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { motion } from 'motion/react'
+import { Minus, PictureInPicture2, X } from 'lucide-react'
 import { useAppStore } from './store/useAppStore'
 import BottomNav from './components/BottomNav'
 import Today from './screens/Today'
@@ -8,18 +8,23 @@ import Summary from './screens/Summary'
 import Settings from './screens/Settings'
 
 function WindowControls(): React.JSX.Element {
+  const btn =
+    'no-drag grid h-6 w-6 place-items-center rounded-md text-paper-dim transition-colors duration-200 hover:bg-ink-glass-strong hover:text-paper'
   return (
-    <div className="no-drag flex items-center gap-2">
-      <button
-        aria-label="Minimizar"
-        onClick={() => window.modo?.minimizeWindow()}
-        className="h-3 w-3 rounded-full bg-paper-dim transition-colors duration-200 hover:bg-paper"
-      />
+    <div className="no-drag flex items-center gap-1">
+      <button aria-label="Modo mini" className={btn} onClick={() => window.modo?.enterMiniMode()}>
+        <PictureInPicture2 size={14} strokeWidth={1.75} />
+      </button>
+      <button aria-label="Minimizar" className={btn} onClick={() => window.modo?.minimizeWindow()}>
+        <Minus size={15} strokeWidth={1.75} />
+      </button>
       <button
         aria-label="Cerrar"
+        className={`${btn} hover:!bg-orange hover:!text-ink`}
         onClick={() => window.modo?.closeWindow()}
-        className="h-3 w-3 rounded-full bg-paper-dim transition-colors duration-200 hover:bg-orange"
-      />
+      >
+        <X size={15} strokeWidth={1.75} />
+      </button>
     </div>
   )
 }
@@ -66,15 +71,9 @@ export default function App(): React.JSX.Element {
 
       <main className="flex flex-1 flex-col overflow-hidden p-2">
         {hydrated ? (
-          <motion.div
-            key={screen}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-1 flex-col overflow-hidden"
-          >
+          <div key={screen} className="flex flex-1 animate-rise flex-col overflow-hidden">
             <Screen />
-          </motion.div>
+          </div>
         ) : (
           <div className="grid flex-1 place-items-center text-sm text-paper-dim">Cargando…</div>
         )}
