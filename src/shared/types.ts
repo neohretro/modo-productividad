@@ -96,7 +96,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   globalShortcut: 'CommandOrControl+Shift+M',
   miniWindowBounds: null,
   multitaskNudges: true,
-  theme: 'light'
+  theme: 'system'
 }
 
 export const STATE_VERSION = 2
