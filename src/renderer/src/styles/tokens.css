@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * MODO CREADOR - Productividad — capa base (PLAN.md §3)
+ * Glass sobre negro: transparencia + blur, nunca blanco sólido.
+ */
+
+:root {
+  --ink: #070707;
+  --ink-glass: rgba(244, 243, 239, 0.04);
+  --ink-glass-strong: rgba(244, 243, 239, 0.07);
+  --border: rgba(244, 243, 239, 0.1);
+  --paper: #f4f3ef;
+  --paper-dim: rgba(244, 243, 239, 0.55);
+  --orange: #ff8c00;
+  --orange-glow: rgba(255, 140, 0, 0.18);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    /* la ventana Electron es transparente: el fondo real vive aquí */
+    background: transparent;
+    color: var(--paper);
+    font-family: theme('fontFamily.body');
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    user-select: none;
+    cursor: default;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: theme('fontFamily.display');
+    font-weight: 700;
+  }
+}
+
+@layer components {
+  /* Superficie glass estándar de card */
+  .glass {
+    background: var(--ink-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+  }
+
+  .glass-strong {
+    background: var(--ink-glass-strong);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+  }
+
+  /* Región arrastrable del marco propio */
+  .drag {
+    -webkit-app-region: drag;
+  }
+
+  .no-drag {
+    -webkit-app-region: no-drag;
+  }
+}
