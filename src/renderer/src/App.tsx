@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
-import { Minus, PictureInPicture2, X } from 'lucide-react'
+import { Minimize2, Minus } from 'lucide-react'
 import { useAppStore } from './store/useAppStore'
 import { useTheme } from './theme'
 import BottomNav from './components/BottomNav'
 import CompletionToast from './components/CompletionToast'
+import FlashToast from './components/FlashToast'
 import Today from './screens/Today'
 import Projects from './screens/Projects'
 import Summary from './screens/Summary'
@@ -11,21 +12,19 @@ import Settings from './screens/Settings'
 
 function WindowControls(): React.JSX.Element {
   const btn =
-    'no-drag grid h-6 w-6 place-items-center rounded-md text-paper-dim transition-colors duration-200 hover:bg-ink-glass-strong hover:text-paper'
+    'no-drag grid h-7 w-7 place-items-center rounded-lg text-paper-dim transition-colors duration-200 hover:bg-ink-glass-strong hover:text-paper'
   return (
     <div className="no-drag flex items-center gap-1">
-      <button aria-label="Modo mini" className={btn} onClick={() => window.modo?.enterMiniMode()}>
-        <PictureInPicture2 size={14} strokeWidth={1.75} />
-      </button>
       <button aria-label="Minimizar" className={btn} onClick={() => window.modo?.minimizeWindow()}>
         <Minus size={15} strokeWidth={1.75} />
       </button>
       <button
-        aria-label="Cerrar"
-        className={`${btn} hover:!bg-orange hover:!text-onaccent`}
+        aria-label="Volver al mini"
+        title="Volver al mini"
+        className={btn}
         onClick={() => window.modo?.closeWindow()}
       >
-        <X size={15} strokeWidth={1.75} />
+        <Minimize2 size={13} strokeWidth={1.75} />
       </button>
     </div>
   )
@@ -84,6 +83,7 @@ export default function App(): React.JSX.Element {
 
       <BottomNav />
       <CompletionToast />
+      <FlashToast />
     </div>
   )
 }

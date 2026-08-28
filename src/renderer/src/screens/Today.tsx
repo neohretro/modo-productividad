@@ -1,6 +1,7 @@
-import { Flame, Snowflake } from 'lucide-react'
+import { CalendarClock, ClipboardList, Flame, Snowflake } from 'lucide-react'
 import { TODAY_PROJECT_ID } from '@shared/types'
 import { toISODate, weekdayShortES } from '@shared/date'
+import { scheduleLabel } from '@shared/schedule'
 import { useAppStore } from '../store/useAppStore'
 import ProgressRing from '../components/ProgressRing'
 import TaskList from '../components/TaskList'
@@ -17,15 +18,29 @@ function greeting(): string {
 
 export default function Today(): React.JSX.Element {
   const todayTasks = useAppStore((s) => s.todayTasks)
+  const scheduledTasks = useAppStore((s) => s.scheduledTasks)
   const streak = useAppStore((s) => s.streak)
   const snapshots = useAppStore((s) => s.snapshots)
   const addTask = useAppStore((s) => s.addTask)
+  const unscheduleTask = useAppStore((s) => s.unscheduleTask)
+  const deleteTask = useAppStore((s) => s.deleteTask)
+  const setFlash = useAppStore((s) => s.setFlash)
 
   const total = todayTasks.length
   const done = todayTasks.filter((t) => t.done).length
   const pct = total === 0 ? 0 : done / total
   const focusingCount = todayTasks.filter((t) => t.focusStartedAt !== null && !t.done).length
   const last7 = buildLast7(snapshots)
+
+  const copyList = (): void => {
+    const lines = todayTasks
+      .filter((t) => !t.done)
+      .map((t) => `- ${t.text}`)
+      .join('\n')
+    if (!lines) return
+    navigator.clipboard?.writeText(lines).catch(() => undefined)
+    setFlash('Lista copiada')
+  }
 
   return (
     <div className="stagger flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
@@ -114,11 +129,21 @@ export default function Today(): React.JSX.Element {
 
       {/* lista de hoy — ocupa el resto, scroll interno */}
       <section className="glass flex min-h-0 flex-1 flex-col rounded-card p-5">
-        <div className="mb-2.5 flex items-baseline justify-between">
+        <div className="mb-2.5 flex items-center justify-between">
           <h2 className="text-base">Hoy</h2>
-          <span className="text-[10px] uppercase tracking-wide text-paper-dim">
-            lista continua
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] uppercase tracking-wide text-paper-dim">lista continua</span>
+            {todayTasks.some((t) => !t.done) && (
+              <button
+                onClick={copyList}
+                title="Copiar la lista de pendientes"
+                className="flex items-center gap-1 rounded-chip border border-border-hi px-2 py-1 text-[10px] text-paper-dim transition-colors hover:border-orange hover:text-orange"
+              >
+                <ClipboardList size={11} strokeWidth={1.75} />
+                Copiar lista
+              </button>
+            )}
+          </div>
         </div>
         {focusingCount >= 2 && (
           <div className="mb-2.5">
@@ -132,6 +157,46 @@ export default function Today(): React.JSX.Element {
             focusable
             emptyHint="Sin tareas hoy. Agrega la primera abajo."
           />
+
+          {scheduledTasks.length > 0 && (
+            <div className="mt-3 border-t border-border pt-2.5">
+              <p className="mb-1.5 flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-paper-dim">
+                <CalendarClock size={11} strokeWidth={1.75} />
+                Programadas ({scheduledTasks.length})
+              </p>
+              <ul className="flex flex-col gap-1">
+                {[...scheduledTasks]
+                  .sort((a, b) => (a.scheduledDate ?? '').localeCompare(b.scheduledDate ?? ''))
+                  .map((t) => (
+                    <li
+                      key={t.id}
+                      className="flex items-center gap-2 rounded-chip border border-border bg-ink-glass px-3 py-2 text-xs"
+                    >
+                      <span className="min-w-0 flex-1 select-text truncate text-paper-dim">
+                        {t.text}
+                      </span>
+                      <span className="shrink-0 rounded-full bg-orange-soft px-2 py-0.5 text-[10px] capitalize text-orange">
+                        {t.scheduledDate ? scheduleLabel(t.scheduledDate) : ''}
+                      </span>
+                      <button
+                        onClick={() => unscheduleTask(t.id)}
+                        className="shrink-0 text-[10px] text-paper-dim hover:text-paper"
+                        title="Traer a Hoy ahora"
+                      >
+                        a Hoy
+                      </button>
+                      <button
+                        onClick={() => deleteTask(t.id)}
+                        className="shrink-0 text-paper-dim hover:text-orange"
+                        title="Eliminar"
+                      >
+                        ✕
+                      </button>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          )}
         </div>
         <div className="mt-3 shrink-0">
           <AddTask onAdd={(t) => addTask(t, TODAY_PROJECT_ID)} placeholder="¿Qué vas a crear hoy?" />

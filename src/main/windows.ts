@@ -8,10 +8,10 @@ const RENDERER_DIR = join(__dirname, '../renderer')
 
 let mainWindow: BrowserWindow | null = null
 let miniWindow: BrowserWindow | null = null
-/** Qué ventana es la "cara" actual de la app (para tray / atajo global). */
-let activeKind: 'main' | 'mini' = 'main'
+/** El mini es la ventana principal; la completa se abre bajo demanda. */
+let activeKind: 'main' | 'mini' = 'mini'
 
-const MINI_SIZE = { width: 300, height: 468 }
+const MINI_SIZE = { width: 304, height: 508 }
 
 function loadRoute(win: BrowserWindow, route: 'index' | 'mini'): void {
   const file = route === 'index' ? 'index.html' : 'mini.html'
@@ -24,6 +24,11 @@ function loadRoute(win: BrowserWindow, route: 'index' | 'mini'): void {
 
 export function getMainWindow(): BrowserWindow | null {
   return mainWindow
+}
+
+/** Arranque: el mini es lo primero que ve el usuario. */
+export function startApp(): void {
+  createMiniWindow({ show: true })
 }
 
 export function createMainWindow(opts: { show?: boolean } = {}): BrowserWindow {
@@ -60,8 +65,9 @@ export function createMainWindow(opts: { show?: boolean } = {}): BrowserWindow {
   return mainWindow
 }
 
-export function createMiniWindow(): BrowserWindow {
+export function createMiniWindow(opts: { show?: boolean } = {}): BrowserWindow {
   if (miniWindow && !miniWindow.isDestroyed()) return miniWindow
+  const autoShow = opts.show ?? true
 
   const saved = getState().settings.miniWindowBounds
   const fallback = defaultMiniPosition()
@@ -85,7 +91,9 @@ export function createMiniWindow(): BrowserWindow {
   })
 
   miniWindow.setAlwaysOnTop(true, 'floating')
-  miniWindow.on('ready-to-show', () => miniWindow?.show())
+  miniWindow.on('ready-to-show', () => {
+    if (autoShow) miniWindow?.show()
+  })
   miniWindow.on('closed', () => {
     miniWindow = null
   })

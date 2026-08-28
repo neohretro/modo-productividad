@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Trash2 } from 'lucide-react'
+import { Check, Pencil, Trash2 } from 'lucide-react'
 import { useAppStore, projectProgress } from '../store/useAppStore'
 import ProgressRing from '../components/ProgressRing'
 import ProjectChips from '../components/ProjectChips'
@@ -39,20 +39,35 @@ export default function Projects(): React.JSX.Element {
             </div>
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
               {renaming ? (
-                <input
-                  autoFocus
-                  defaultValue={active.name}
-                  onBlur={(e) => {
-                    renameProject(active.id, e.target.value)
-                    setRenaming(false)
-                  }}
-                  onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-                  className="w-full rounded-chip border border-border-hi bg-transparent px-3 py-1.5 text-lg outline-none"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    autoFocus
+                    defaultValue={active.name}
+                    onBlur={(e) => {
+                      renameProject(active.id, e.target.value)
+                      setRenaming(false)
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') e.currentTarget.blur()
+                      if (e.key === 'Escape') setRenaming(false)
+                    }}
+                    className="min-w-0 flex-1 rounded-chip border border-orange bg-transparent px-3 py-1.5 text-xl outline-none"
+                  />
+                  <Check size={16} strokeWidth={2} className="shrink-0 text-orange" />
+                </div>
               ) : (
-                <h2 className="truncate text-2xl" onDoubleClick={() => setRenaming(true)}>
-                  {active.name}
-                </h2>
+                <button
+                  onClick={() => setRenaming(true)}
+                  className="group flex items-center gap-2 text-left"
+                  title="Cambiar nombre"
+                >
+                  <h2 className="truncate text-2xl">{active.name}</h2>
+                  <Pencil
+                    size={14}
+                    strokeWidth={1.75}
+                    className="shrink-0 text-paper-dim opacity-0 transition-opacity group-hover:opacity-100"
+                  />
+                </button>
               )}
               <p className="text-xs text-paper-dim">
                 Creado el {active.createdDate} · progreso acumulado, nunca se reinicia

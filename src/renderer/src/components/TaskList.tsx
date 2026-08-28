@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Check, Pause, Play, Trash2 } from 'lucide-react'
 import type { Task } from '@shared/types'
 import { useAppStore } from '../store/useAppStore'
+import { useTaskMenu } from '../hooks/useTaskMenu'
 
 interface Props {
   tasks: Task[]
@@ -52,15 +53,18 @@ function TaskItem({
   const toggleFocus = useAppStore((s) => s.toggleFocus)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(task.text)
+  const { onContextMenu, menu } = useTaskMenu(task)
 
   const running = task.focusStartedAt !== null
 
   return (
     <li
+      onContextMenu={onContextMenu}
       className={`no-drag group flex animate-fade items-start gap-3 rounded-chip border px-3 py-2.5 transition-colors ${
         running ? 'border-orange/50 bg-orange-glow' : 'border-border bg-ink-glass'
       }`}
     >
+      {menu}
       <button
         aria-label={task.done ? 'Marcar pendiente' : 'Completar'}
         onClick={() => toggleTask(task.id)}
@@ -97,12 +101,16 @@ function TaskItem({
             setDraft(task.text)
             setEditing(true)
           }}
-          className={`min-w-0 flex-1 py-0.5 text-sm leading-snug ${
+          className={`min-w-0 flex-1 select-text py-0.5 text-sm leading-snug selection:bg-orange/30 ${
             task.done ? 'text-paper-dim line-through' : 'text-paper'
           }`}
         >
           {task.text}
-          {running && <span className="ml-2 text-[10px] uppercase text-orange no-underline">· en curso</span>}
+          {running && (
+            <span className="ml-2 select-none text-[10px] uppercase text-orange no-underline">
+              · en curso
+            </span>
+          )}
         </span>
       )}
 

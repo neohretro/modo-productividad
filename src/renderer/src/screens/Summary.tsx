@@ -22,6 +22,7 @@ export default function Summary(): React.JSX.Element {
         {
           version: 2,
           todayTasks,
+          scheduledTasks: [],
           archivedTasks,
           projects,
           snapshots,

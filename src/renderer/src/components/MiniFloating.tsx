@@ -7,6 +7,7 @@ import ProgressRing from './ProgressRing'
 import FocusTaskRow from './FocusTaskRow'
 import MultitaskNudge from './MultitaskNudge'
 import CompletionToast from './CompletionToast'
+import FlashToast from './FlashToast'
 import AddTask from './AddTask'
 import Dropdown from './Dropdown'
 
@@ -83,6 +84,7 @@ export default function MiniFloating(): React.JSX.Element {
         </div>
 
         <CompletionToast compact />
+        <FlashToast />
       </div>
     </div>
   )

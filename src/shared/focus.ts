@@ -59,7 +59,8 @@ function normalizeTask(t: Partial<Task>): Task {
     completedDate: t.completedDate ?? null,
     daysRolled: t.daysRolled ?? 0,
     timeSpentMs: t.timeSpentMs ?? 0,
-    focusStartedAt: t.focusStartedAt ?? null
+    focusStartedAt: t.focusStartedAt ?? null,
+    scheduledDate: t.scheduledDate ?? null
   }
 }
 
@@ -81,6 +82,7 @@ export function normalizeState(
   return {
     version: STATE_VERSION,
     todayTasks: (loaded.todayTasks ?? []).map((t) => closeStale(normalizeTask(t))),
+    scheduledTasks: (loaded.scheduledTasks ?? []).map(normalizeTask),
     archivedTasks: (loaded.archivedTasks ?? []).map(normalizeTask),
     projects: (loaded.projects ?? []).map((p) => ({
       id: p.id ?? crypto.randomUUID(),

@@ -25,6 +25,8 @@ export interface Task {
   timeSpentMs: number
   /** epoch ms del tramo de enfoque activo, o null si la tarea no está en curso. */
   focusStartedAt: number | null
+  /** ISO date a la que está programada; null = activa ahora. Vive en `scheduledTasks`. */
+  scheduledDate: string | null
 }
 
 export interface Project {
@@ -75,6 +77,8 @@ export interface PersistedState {
   version: number
   /** Lista continua de "Hoy" (pendientes + completadas del día en curso). */
   todayTasks: Task[]
+  /** Tareas programadas para una fecha futura; se activan a "Hoy" ese día. */
+  scheduledTasks: Task[]
   /** Tareas de "Hoy" ya archivadas al cerrar su día. Historial para el Resumen. */
   archivedTasks: Task[]
   projects: Project[]
@@ -86,7 +90,9 @@ export interface PersistedState {
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
-  launchOnStartup: false,
+  // Por defecto activos (pedido del usuario): la app arranca con Windows en
+  // segundo plano y avisa cuando enfocas varias tareas a la vez.
+  launchOnStartup: true,
   globalShortcut: 'CommandOrControl+Shift+M',
   miniWindowBounds: null,
   multitaskNudges: true,
@@ -98,6 +104,7 @@ export const STATE_VERSION = 2
 export const INITIAL_STATE: PersistedState = {
   version: STATE_VERSION,
   todayTasks: [],
+  scheduledTasks: [],
   archivedTasks: [],
   projects: [],
   snapshots: [],

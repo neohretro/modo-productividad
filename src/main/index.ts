@@ -2,27 +2,23 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { getState, registerStoreIpc } from './store'
 import {
-  createMainWindow,
+  createMiniWindow,
   enterMiniMode,
   exitMiniMode,
   getMainWindow,
-  toggleVisibility
+  showActiveWindow,
+  startApp
 } from './windows'
 import { createTray, refreshTrayMenu } from './tray'
 import { notifyMultitask } from './notifications'
-import {
-  applyGlobalShortcut,
-  applyLoginItem,
-  startedHidden,
-  unregisterAllShortcuts
-} from './system'
+import { applyGlobalShortcut, applyLoginItem, unregisterAllShortcuts } from './system'
 import type { AppSettings } from '../shared/types'
 
 // Instancia única: si ya hay una corriendo, enfocarla y salir.
 if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
-  app.on('second-instance', () => toggleVisibility())
+  app.on('second-instance', () => showActiveWindow())
 
   app.whenReady().then(() => {
     electronApp.setAppUserModelId('com.modocreador.productividad')
@@ -33,7 +29,7 @@ if (!app.requestSingleInstanceLock()) {
 
     // --- IPC ---
     ipcMain.on('window:minimize', () => getMainWindow()?.minimize())
-    ipcMain.on('window:close', () => getMainWindow()?.hide()) // cerrar = a la bandeja
+    ipcMain.on('window:close', () => enterMiniMode()) // cerrar la completa = volver al mini
     ipcMain.on('window:enterMini', () => enterMiniMode())
     ipcMain.on('window:exitMini', () => exitMiniMode())
     ipcMain.on('notify:multitask', (_e, count: number) => notifyMultitask(count))
@@ -46,11 +42,11 @@ if (!app.requestSingleInstanceLock()) {
     applyLoginItem(settings.launchOnStartup)
     applyGlobalShortcut(settings.globalShortcut)
 
-    createMainWindow({ show: !startedHidden() })
+    startApp()
     createTray()
 
     app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
+      if (BrowserWindow.getAllWindows().length === 0) createMiniWindow({ show: true })
     })
   })
 
