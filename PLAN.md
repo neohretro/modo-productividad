@@ -246,12 +246,19 @@ Animaciones por CSS `@keyframes` con la curva del Brand OS. Reevaluar en Fase 3 
       (`.stagger`), `prefers-reduced-motion` respetado.
 - [x] 6 tests de insights (20 en total).
 
-### Fase 4 — Empaquetado y distribución
+### Fase 4 — Empaquetado y distribución ✅
 
-- [ ] electron-builder → instalador `.exe` Windows.
-- [ ] Ícono de la app (isotipo MODO con la esquina naranja).
-- [ ] Firma/notarización — evaluar interno vs. público.
-- [ ] Auto-actualización (`electron-updater`) — stretch, no bloqueante.
+- [x] electron-builder → instalador `.exe` Windows (NSIS). `npm run dist:win`.
+      Salida: `dist/MODO-Creador-Productividad-<version>-setup.exe`.
+- [x] Ícono de la app: `build/icon.ico` multi-resolución (16–256), generado por
+      `scripts/gen-icons.mjs` sin dependencias. Isotipo MODO con esquina naranja.
+- [x] Instalador verificado: la app empaquetada arranca y muestra el mini.
+- [ ] Firma de código: **sin firmar** por ahora (beta). SmartScreen avisará en la
+      primera ejecución. Requiere certificado OV/EV comprado para producción pública.
+- [ ] Auto-actualización (`electron-updater`) — stretch, no bloqueante. Pendiente.
+
+**Cómo generar el instalador:** `npm run dist:win` (corre `electron-vite build` +
+`electron-builder --win`). Para Mac: `npm run dist:mac` (desde una Mac).
 
 ### Fase 5 — Stretch (post-beta)
 
