@@ -5,6 +5,7 @@ import {
   CalendarPlus,
   Copy,
   CopyPlus,
+  Pencil,
   Trash2
 } from 'lucide-react'
 import { TODAY_PROJECT_ID, type Task } from '@shared/types'
@@ -42,6 +43,11 @@ export default function TaskContextMenu({
     <ContextMenu pos={pos} onClose={onClose}>
       {mode === 'root' && (
         <>
+          <MenuItem
+            Icon={Pencil}
+            label="Editar"
+            onClick={() => done(() => s.setEditingTask(task.id))}
+          />
           <MenuItem Icon={Copy} label="Copiar texto" onClick={copy} />
           <MenuItem
             Icon={CopyPlus}

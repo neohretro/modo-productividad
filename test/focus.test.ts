@@ -32,6 +32,20 @@ test('elapsedMs suma el tramo activo', () => {
   assert.equal(elapsedMs(t, now), 8_000)
 })
 
+test('play/pausa/play acumula: el total = suma de tramos, la pausa no cuenta', () => {
+  const HORA = 3_600_000
+  // tramo 1: 1 hora, luego pausa
+  let t = task({ focusStartedAt: 0 })
+  t = commitFocus(t, HORA) // pausa a la hora
+  assert.equal(t.timeSpentMs, HORA)
+  assert.equal(t.focusStartedAt, null)
+  // pausado 2 horas, luego play de nuevo
+  t = { ...t, focusStartedAt: 3 * HORA }
+  // trabaja 30 min y completa
+  t = commitFocus(t, 3 * HORA + HORA / 2)
+  assert.equal(t.timeSpentMs, HORA + HORA / 2, '1h + 0.5h = 1.5h; las 2h de pausa no cuentan')
+})
+
 test('commitFocus cierra el tramo y suma el tiempo', () => {
   const now = 1_000_000
   const t = task({ timeSpentMs: 1_000, focusStartedAt: now - 60_000 })

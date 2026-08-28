@@ -73,7 +73,7 @@ export default function MiniFloating(): React.JSX.Element {
           />
         </div>
 
-        <div className="no-drag relative min-h-0 flex-1 space-y-1.5 overflow-y-auto px-3 pt-1">
+        <div className="relative min-h-0 flex-1 space-y-1.5 overflow-y-auto px-3 pt-1">
           {hydrated && focusing.length >= 2 && <MultitaskNudge count={focusing.length} />}
 
           {hydrated && ordered.length === 0 ? (
@@ -89,9 +89,9 @@ export default function MiniFloating(): React.JSX.Element {
           )}
         </div>
 
-        <div className="no-drag px-3 pb-2.5 pt-1">
+        <div className="px-3 pb-2.5 pt-1">
           <AddTask
-            collapsible
+            compact
             onAdd={(text) => addTask(text, view.id)}
             placeholder={`Agregar a ${view.name}`}
           />

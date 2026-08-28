@@ -17,7 +17,7 @@ export const STALE_FOCUS_MS = 4 * 60 * 60 * 1000
 
 /** Tiempo total de una tarea = acumulado + tramo activo. */
 export function elapsedMs(task: Task, now: number = Date.now()): number {
-  const live = task.focusStartedAt ? Math.max(0, now - task.focusStartedAt) : 0
+  const live = task.focusStartedAt === null ? 0 : Math.max(0, now - task.focusStartedAt)
   return task.timeSpentMs + live
 }
 
@@ -43,7 +43,7 @@ export function formatDurationLong(ms: number): string {
 
 /** Cierra un tramo de enfoque sumando el tiempo transcurrido (con tope anti-basura). */
 export function commitFocus(task: Task, now: number = Date.now()): Task {
-  if (!task.focusStartedAt) return task
+  if (task.focusStartedAt === null) return task
   const delta = now - task.focusStartedAt
   const add = delta > 0 && delta < STALE_FOCUS_MS ? delta : 0
   return { ...task, timeSpentMs: task.timeSpentMs + add, focusStartedAt: null }
@@ -73,7 +73,7 @@ export function normalizeState(
   now: number = Date.now()
 ): PersistedState {
   const closeStale = (t: Task): Task => {
-    if (!t.focusStartedAt) return t
+    if (t.focusStartedAt === null) return t
     const open = now - t.focusStartedAt
     if (open >= STALE_FOCUS_MS) return { ...t, focusStartedAt: null }
     return t

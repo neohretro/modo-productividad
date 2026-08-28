@@ -51,10 +51,15 @@ function TaskItem({
   const deleteTask = useAppStore((s) => s.deleteTask)
   const editTask = useAppStore((s) => s.editTask)
   const toggleFocus = useAppStore((s) => s.toggleFocus)
-  const [editing, setEditing] = useState(false)
+  const editing = useAppStore((s) => s.editingTaskId === task.id)
+  const setEditingTask = useAppStore((s) => s.setEditingTask)
   const [draft, setDraft] = useState(task.text)
   const { onContextMenu, menu } = useTaskMenu(task)
 
+  const startEdit = (): void => {
+    setDraft(task.text)
+    setEditingTask(task.id)
+  }
   const running = task.focusStartedAt !== null
 
   return (
@@ -84,23 +89,20 @@ function TaskItem({
           onChange={(e) => setDraft(e.target.value)}
           onBlur={() => {
             editTask(task.id, draft)
-            setEditing(false)
+            setEditingTask(null)
           }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') e.currentTarget.blur()
             if (e.key === 'Escape') {
               setDraft(task.text)
-              setEditing(false)
+              setEditingTask(null)
             }
           }}
-          className="flex-1 bg-transparent text-sm outline-none"
+          className="flex-1 rounded-md bg-transparent text-sm outline-none ring-1 ring-orange/60"
         />
       ) : (
         <span
-          onDoubleClick={() => {
-            setDraft(task.text)
-            setEditing(true)
-          }}
+          onDoubleClick={startEdit}
           className={`min-w-0 flex-1 select-text py-0.5 text-sm leading-snug selection:bg-orange/30 ${
             task.done ? 'text-paper-dim line-through' : 'text-paper'
           }`}

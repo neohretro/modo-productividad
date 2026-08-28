@@ -33,6 +33,8 @@ interface AppState extends PersistedState {
   recentCompletion: CompletionReveal | null
   /** mensaje efímero ("copiado", "movida a mañana"…). */
   flash: string | null
+  /** tarea en modo edición inline (doble clic o menú "Editar"). */
+  editingTaskId: string | null
 
   hydrate: () => Promise<void>
   /** Aplica un estado llegado de otra ventana sin re-guardarlo. */
@@ -48,6 +50,7 @@ interface AppState extends PersistedState {
   toggleTask: (id: string) => void
   deleteTask: (id: string) => void
   editTask: (id: string, text: string) => void
+  setEditingTask: (id: string | null) => void
   duplicateTask: (id: string) => void
   /** Programa una tarea de Hoy para una fecha (ISO). Fecha pasada/hoy = la activa ya. */
   moveTaskToDate: (id: string, dateISO: string) => void
@@ -137,6 +140,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   miniTargetId: TODAY_PROJECT_ID,
   recentCompletion: null,
   flash: null,
+  editingTaskId: null,
 
   hydrate: async () => {
     const loaded = (await window.modo?.loadState()) ?? INITIAL_STATE
@@ -225,9 +229,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     })),
 
   editTask: (id, text) => {
-    if (!text.trim()) return
-    set((s) => mapTaskEverywhere(s, id, (t) => ({ ...t, text: text.trim() })))
+    if (text.trim()) {
+      set((s) => mapTaskEverywhere(s, id, (t) => ({ ...t, text: text.trim() })))
+    }
   },
+
+  setEditingTask: (editingTaskId) => set({ editingTaskId }),
 
   duplicateTask: (id) =>
     set((s) => {
@@ -336,9 +343,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((s) => mapTaskEverywhere(s, id, (t) => commitFocus(t))),
 
   toggleFocus: (id) => {
-    const task = [...get().todayTasks, ...get().projects.flatMap((p) => p.tasks)].find(
-      (t) => t.id === id
-    )
+    // Play/pausa con el mismo botón. Pausar cierra el tramo (suma su tiempo);
+    // volver a play abre otro tramo. El total al completar = suma de todos.
+    const task = findTask(get(), id)
     if (task?.focusStartedAt) get().stopFocus(id)
     else get().startFocus(id)
   },
