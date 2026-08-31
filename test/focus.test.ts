@@ -4,6 +4,7 @@ import type { PersistedState, Task } from '@shared/types'
 import { INITIAL_STATE } from '@shared/types'
 import {
   activeFocusTasks,
+  activeProjectFocusTasks,
   commitFocus,
   elapsedMs,
   formatDuration,
@@ -108,4 +109,25 @@ test('activeFocusTasks ignora completadas y sin enfoque', () => {
     ]
   }
   assert.equal(activeFocusTasks(s).length, 2)
+})
+
+test('activeProjectFocusTasks solo trae tareas de proyecto en curso (no de Hoy, no hechas)', () => {
+  const s: PersistedState = {
+    ...INITIAL_STATE,
+    todayTasks: [task({ focusStartedAt: 1 })],
+    projects: [
+      {
+        id: 'p',
+        name: 'P',
+        createdDate: '2026-08-01',
+        tasks: [
+          task({ id: 'en-curso', focusStartedAt: 5 }),
+          task({ id: 'pausada', focusStartedAt: null }),
+          task({ id: 'hecha', focusStartedAt: 6, done: true })
+        ]
+      }
+    ]
+  }
+  const out = activeProjectFocusTasks(s)
+  assert.deepEqual(out.map((t) => t.id), ['en-curso'])
 })

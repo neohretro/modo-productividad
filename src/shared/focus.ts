@@ -108,3 +108,14 @@ export function activeFocusTasks(state: PersistedState): Task[] {
   const all = [...state.todayTasks, ...state.projects.flatMap((p) => p.tasks)]
   return all.filter((t) => t.focusStartedAt !== null && !t.done)
 }
+
+/**
+ * Tareas DE PROYECTO que están en curso ahora mismo. Se muestran también en
+ * "Hoy" (con su etiqueta de proyecto) para poder cerrarlas sin salir de ahí:
+ * lo que estás haciendo hoy vive en un solo lugar.
+ */
+export function activeProjectFocusTasks(state: Pick<PersistedState, 'projects'>): Task[] {
+  return state.projects
+    .flatMap((p) => p.tasks)
+    .filter((t) => t.focusStartedAt !== null && !t.done)
+}

@@ -413,6 +413,12 @@ export const projectProgress = (
   return { done, total, pct: total === 0 ? 0 : done / total }
 }
 
+/** Nombre del proyecto de una tarea, o null si es de la lista "Hoy". */
+export function projectNameOf(s: AppState, task: Task): string | null {
+  if (task.projectId === TODAY_PROJECT_ID) return null
+  return s.projects.find((p) => p.id === task.projectId)?.name ?? null
+}
+
 /** Lista y nombre para un "target" del mini (Hoy o un proyecto). */
 export function targetView(s: AppState): { id: string; name: string; tasks: Task[] } {
   if (s.miniTargetId === TODAY_PROJECT_ID) {

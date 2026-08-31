@@ -1,7 +1,9 @@
+import { useMemo } from 'react'
 import { CalendarClock, ClipboardList, Flame, Snowflake } from 'lucide-react'
 import { TODAY_PROJECT_ID } from '@shared/types'
 import { toISODate, weekdayShortES } from '@shared/date'
 import { scheduleLabel } from '@shared/schedule'
+import { activeProjectFocusTasks } from '@shared/focus'
 import { useAppStore } from '../store/useAppStore'
 import ProgressRing from '../components/ProgressRing'
 import TaskList from '../components/TaskList'
@@ -19,6 +21,7 @@ function greeting(): string {
 export default function Today(): React.JSX.Element {
   const todayTasks = useAppStore((s) => s.todayTasks)
   const scheduledTasks = useAppStore((s) => s.scheduledTasks)
+  const projects = useAppStore((s) => s.projects)
   const streak = useAppStore((s) => s.streak)
   const snapshots = useAppStore((s) => s.snapshots)
   const addTask = useAppStore((s) => s.addTask)
@@ -26,10 +29,16 @@ export default function Today(): React.JSX.Element {
   const deleteTask = useAppStore((s) => s.deleteTask)
   const setFlash = useAppStore((s) => s.setFlash)
 
+  // Tareas de proyecto en curso: se muestran también aquí (con su etiqueta) para
+  // cerrarlas sin salir de Hoy.
+  const activeProject = useMemo(() => activeProjectFocusTasks({ projects }), [projects])
+  const hoyList = useMemo(() => [...activeProject, ...todayTasks], [activeProject, todayTasks])
+
   const total = todayTasks.length
   const done = todayTasks.filter((t) => t.done).length
   const pct = total === 0 ? 0 : done / total
-  const focusingCount = todayTasks.filter((t) => t.focusStartedAt !== null && !t.done).length
+  const focusingCount =
+    todayTasks.filter((t) => t.focusStartedAt !== null && !t.done).length + activeProject.length
   const last7 = buildLast7(snapshots)
 
   const copyList = (): void => {
@@ -152,7 +161,7 @@ export default function Today(): React.JSX.Element {
         )}
         <div className="-mr-1.5 min-h-0 flex-1 overflow-y-auto pr-1.5">
           <TaskList
-            tasks={todayTasks}
+            tasks={hoyList}
             showRolled
             focusable
             emptyHint="Sin tareas hoy. Agrega la primera abajo."

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Bell, Check, Pause, Play, Trash2 } from 'lucide-react'
 import type { Task } from '@shared/types'
-import { useAppStore } from '../store/useAppStore'
+import { projectNameOf, useAppStore } from '../store/useAppStore'
 import { useTaskMenu } from '../hooks/useTaskMenu'
+import ProjectChip from './ProjectChip'
 
 interface Props {
   tasks: Task[]
@@ -53,6 +54,7 @@ function TaskItem({
   const toggleFocus = useAppStore((s) => s.toggleFocus)
   const editing = useAppStore((s) => s.editingTaskId === task.id)
   const setEditingTask = useAppStore((s) => s.setEditingTask)
+  const projectName = useAppStore((s) => projectNameOf(s, task))
   const [draft, setDraft] = useState(task.text)
   const { onContextMenu, menu } = useTaskMenu(task)
 
@@ -108,6 +110,9 @@ function TaskItem({
           }`}
         >
           {task.text}
+          {projectName && (
+            <ProjectChip name={projectName} className="ml-2 -translate-y-px align-middle no-underline" />
+          )}
           {running && (
             <span className="ml-2 select-none text-[10px] uppercase text-orange no-underline">
               · en curso

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Bell, Check, Pause, Play } from 'lucide-react'
 import type { Task } from '@shared/types'
-import { useAppStore } from '../store/useAppStore'
+import { projectNameOf, useAppStore } from '../store/useAppStore'
 import { useTaskMenu } from '../hooks/useTaskMenu'
+import ProjectChip from './ProjectChip'
 
 /**
  * Fila de tarea con enfoque: ▶ para empezar / ⏸ para pausar (el tiempo se
@@ -16,6 +17,7 @@ export default function FocusTaskRow({ task }: { task: Task }): React.JSX.Elemen
   const editTask = useAppStore((s) => s.editTask)
   const editing = useAppStore((s) => s.editingTaskId === task.id)
   const setEditingTask = useAppStore((s) => s.setEditingTask)
+  const projectName = useAppStore((s) => projectNameOf(s, task))
   const { onContextMenu, menu } = useTaskMenu(task)
   const [draft, setDraft] = useState(task.text)
   const running = task.focusStartedAt !== null
@@ -70,7 +72,8 @@ export default function FocusTaskRow({ task }: { task: Task }): React.JSX.Elemen
             {task.text}
           </p>
         )}
-        <div className="mt-0.5 flex items-center gap-2 text-[10px] text-orange">
+        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-orange">
+          {projectName && <ProjectChip name={projectName} />}
           {running && <span>en curso</span>}
           {task.remindAt && !task.done && (
             <span className="flex items-center gap-1">
