@@ -49,7 +49,9 @@ export function ContextMenu({
       ref={ref}
       onPointerDown={(e) => e.stopPropagation()}
       style={{ position: 'fixed', left: adj.x, top: adj.y }}
-      className="glass-strong z-50 min-w-[196px] animate-fade rounded-chip p-1.5"
+      // `no-drag`: sin esto, en el mini (ventana sin marco) la zona del menú
+      // cuenta como zona de arrastre de ventana y los clics no llegan a los items.
+      className="no-drag glass-strong z-50 min-w-[196px] animate-fade rounded-chip p-1.5"
     >
       {children}
     </div>,
