@@ -48,7 +48,8 @@ donde quieras. Muestra:
 - **El anillo de avance del día** — el % de tareas completadas.
 - **Un selector** para ver las tareas de "Hoy" o las de cualquier proyecto.
 - **La lista de tareas**, cada una con: ▶ para ponerte a trabajarla, ⏸ para
-  pausar, ✓ para completarla.
+  pausar, ✓ para completarla. Las pausadas se marcan como tal, con el tiempo que
+  llevas.
 - **Un campo para agregar tareas** sin salir del mini.
 - **Clic derecho en una tarea**: editar, copiar el texto, duplicar, moverla a
   mañana o a otra fecha, moverla a un proyecto, ponerle un **recordatorio**
@@ -104,6 +105,14 @@ Eliges una tarea y le das ▶. Corre un cronómetro **invisible**. Puedes pausar
 reanudar (con el mismo botón): el tiempo se acumula entre tramos, la pausa no
 cuenta. Al completar la tarea, ves un aviso breve con lo que te tomó, y ese tiempo
 queda en el Resumen agrupado por proyecto.
+
+Una tarea pausada se ve distinta de una que no has empezado: muestra "en pausa" y
+el tiempo que ya llevas, para que te acuerdes de retomarla.
+
+**Las tareas de proyecto que trabajas hoy aparecen también en "Hoy".** Si le das ▶
+a una tarea de un proyecto, se suma a tu lista de Hoy (con una etiqueta que dice de
+qué proyecto es) y se queda ahí todo el día, aunque la pauses, hasta que la cierres
+o cambie el día. Así lo que estás haciendo hoy vive en un solo lugar.
 
 Si enfocas dos o más tareas a la vez, aparece el aviso de multitasking (banner en
 la app + notificación de Windows). Es suave y con cooldown; puedes seguir si
@@ -169,7 +178,7 @@ Ajustes.
   muestra un aviso azul la primera vez ("Windows protegió tu PC"). Se resuelve con
   **"Más información" → "Ejecutar de todas formas"**. (Se quitará al comprar un
   certificado de firma para la versión pública.)
-- **Versión actual:** 0.3.0
+- **Versión actual:** 0.4.0
 
 ## Privacidad
 
