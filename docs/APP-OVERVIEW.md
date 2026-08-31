@@ -114,9 +114,9 @@ a una tarea de un proyecto, se suma a tu lista de Hoy (con una etiqueta que dice
 qué proyecto es) y se queda ahí todo el día, aunque la pauses, hasta que la cierres
 o cambie el día. Así lo que estás haciendo hoy vive en un solo lugar.
 
-Si enfocas dos o más tareas a la vez, aparece el aviso de multitasking (banner en
-la app + notificación de Windows). Es suave y con cooldown; puedes seguir si
-quieres.
+Si enfocas dos o más tareas a la vez, aparece el aviso de multitasking: una
+notificación de Windows con el dato completo, y en la app un recordatorio
+discreto de una línea. Es suave y con cooldown; puedes seguir si quieres.
 
 ### Recordatorios
 
@@ -178,7 +178,7 @@ Ajustes.
   muestra un aviso azul la primera vez ("Windows protegió tu PC"). Se resuelve con
   **"Más información" → "Ejecutar de todas formas"**. (Se quitará al comprar un
   certificado de firma para la versión pública.)
-- **Versión actual:** 0.4.0
+- **Versión actual:** 0.4.1
 
 ## Privacidad
 
