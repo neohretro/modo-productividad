@@ -13,6 +13,12 @@ const MAX_DELAY = 2_147_483_647
 
 const timers = new Map<string, NodeJS.Timeout>()
 
+/** Cancela todos los temporizadores pendientes (al salir de la app). */
+export function clearReminders(): void {
+  for (const t of timers.values()) clearTimeout(t)
+  timers.clear()
+}
+
 /**
  * Re-agenda todos los recordatorios a partir del estado actual. Idempotente:
  * llámalo al arrancar y cada vez que el estado se guarde.

@@ -12,8 +12,8 @@ import {
 } from './windows'
 import { createTray, refreshTrayMenu } from './tray'
 import { notifyMultitask } from './notifications'
-import { syncReminders } from './reminders'
-import { initAuth, onAuthStateChange, registerAuthIpc } from './supabase'
+import { clearReminders, syncReminders } from './reminders'
+import { initAuth, onAuthStateChange, registerAuthIpc, shutdownSupabase } from './supabase'
 import { notifyLocalChange, registerSyncIpc, startSync, stopSync } from './sync'
 import { applyGlobalShortcut, applyLoginItem, unregisterAllShortcuts } from './system'
 import {
@@ -89,6 +89,15 @@ if (!app.requestSingleInstanceLock()) {
   // No salir al cerrar ventanas: la app vive en la bandeja.
   app.on('window-all-closed', () => {
     // en macOS es lo normal; en Windows mantenemos el proceso vivo por el tray
+  })
+
+  // Al salir (incluida la instalación de una actualización): apaga los
+  // temporizadores de fondo para que el proceso muera rápido y el instalador no
+  // se tope con la app "todavía abierta".
+  app.on('before-quit', () => {
+    stopSync()
+    clearReminders()
+    shutdownSupabase()
   })
 
   app.on('will-quit', () => unregisterAllShortcuts())

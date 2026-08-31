@@ -68,7 +68,19 @@ export async function downloadUpdate(): Promise<void> {
   }
 }
 
-/** Cierra la app e instala. Solo si el estado es 'ready'. */
+/**
+ * Cierra la app e instala. Solo si el estado es 'ready'.
+ *
+ * `isSilent = true`: el instalador NSIS corre en modo silencioso, que cierra la
+ * instancia en ejecución por su cuenta en vez de mostrar el diálogo
+ * "No se puede cerrar la aplicación... Reintentar". `isForceRunAfter = true`:
+ * relanza la app al terminar. Antes de lanzarlo, destruimos las ventanas para
+ * que no queden procesos de render bloqueando archivos.
+ */
 export function quitAndInstall(): void {
-  if (status.state === 'ready') autoUpdater.quitAndInstall()
+  if (status.state !== 'ready') return
+  for (const w of BrowserWindow.getAllWindows()) {
+    if (!w.isDestroyed()) w.destroy()
+  }
+  autoUpdater.quitAndInstall(true, true)
 }

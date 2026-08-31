@@ -212,6 +212,15 @@ function friendly(msg: string): string {
   return msg
 }
 
+/** Detiene el refresco de sesión en segundo plano (al salir de la app). */
+export function shutdownSupabase(): void {
+  try {
+    void client?.auth.stopAutoRefresh()
+  } catch {
+    /* nada */
+  }
+}
+
 // --- IPC ------------------------------------------------------------------
 export function registerAuthIpc(): void {
   ipcMain.handle('auth:state', () => getAuthState())
