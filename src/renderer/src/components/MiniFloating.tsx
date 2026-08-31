@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { Maximize2 } from 'lucide-react'
 import { TODAY_PROJECT_ID } from '@shared/types'
-import { todayProjectTasks } from '@shared/focus'
+import { focusSortRank, todayProjectTasks } from '@shared/focus'
 import { targetView, useAppStore } from '../store/useAppStore'
 import ProgressRing from './ProgressRing'
 import FocusTaskRow from './FocusTaskRow'
@@ -42,10 +42,8 @@ export default function MiniFloating(): React.JSX.Element {
 
   const focusing = [...pending, ...extra].filter((t) => t.focusStartedAt !== null)
 
-  const byFocusFirst = (a: (typeof pending)[number], b: (typeof pending)[number]): number =>
-    Number(Boolean(b.focusStartedAt)) - Number(Boolean(a.focusStartedAt))
-
-  const ordered = [...[...extra].sort(byFocusFirst), ...[...pending].sort(byFocusFirst)]
+  // En curso primero (venga de Hoy o de un proyecto), luego en pausa, luego el resto.
+  const ordered = [...extra, ...pending].sort((a, b) => focusSortRank(a) - focusSortRank(b))
 
   return (
     <div className="drag flex h-screen w-screen p-2">

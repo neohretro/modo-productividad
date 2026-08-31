@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Bell, Check, Pause, Play, Trash2 } from 'lucide-react'
 import type { Task } from '@shared/types'
-import { focusPhase, formatDurationLong } from '@shared/focus'
+import { focusPhase, focusSortRank, formatDurationLong } from '@shared/focus'
 import { projectNameOf, useAppStore } from '../store/useAppStore'
 import { useTaskMenu } from '../hooks/useTaskMenu'
 import ProjectChip from './ProjectChip'
@@ -29,7 +29,8 @@ export default function TaskList({
     )
   }
 
-  const ordered = [...tasks].sort((a, b) => Number(a.done) - Number(b.done))
+  // En curso primero, luego en pausa, luego sin empezar, y lo hecho al final.
+  const ordered = [...tasks].sort((a, b) => focusSortRank(a) - focusSortRank(b))
 
   return (
     <ul className="flex flex-col gap-1.5">

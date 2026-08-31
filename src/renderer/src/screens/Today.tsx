@@ -3,7 +3,7 @@ import { CalendarClock, ClipboardList, Flame, Snowflake } from 'lucide-react'
 import { TODAY_PROJECT_ID } from '@shared/types'
 import { toISODate, weekdayShortES } from '@shared/date'
 import { scheduleLabel } from '@shared/schedule'
-import { focusPhase, todayProjectTasks } from '@shared/focus'
+import { todayProjectTasks } from '@shared/focus'
 import { useAppStore } from '../store/useAppStore'
 import ProgressRing from '../components/ProgressRing'
 import TaskList from '../components/TaskList'
@@ -31,13 +31,9 @@ export default function Today(): React.JSX.Element {
 
   // Tareas de proyecto que trabajas hoy: se muestran también aquí (con su
   // etiqueta) para cerrarlas sin salir de Hoy. Se quedan todo el día aunque las
-  // pauses, hasta cerrarlas o hasta que cambie el día.
-  const projectToday = useMemo(() => {
-    const list = todayProjectTasks({ projects })
-    const rank = (t: (typeof list)[number]): number =>
-      focusPhase(t) === 'running' ? 0 : focusPhase(t) === 'paused' ? 1 : 2
-    return [...list].sort((a, b) => rank(a) - rank(b))
-  }, [projects])
+  // pauses, hasta cerrarlas o hasta que cambie el día. TaskList las ordena
+  // (en curso primero) junto con las de Hoy.
+  const projectToday = useMemo(() => todayProjectTasks({ projects }), [projects])
   const hoyList = useMemo(() => [...projectToday, ...todayTasks], [projectToday, todayTasks])
 
   const total = todayTasks.length
@@ -145,27 +141,28 @@ export default function Today(): React.JSX.Element {
 
       {/* lista de hoy — ocupa el resto, scroll interno */}
       <section className="glass flex min-h-0 flex-1 flex-col rounded-card p-5">
-        <div className="mb-2.5 flex items-center justify-between">
-          <h2 className="text-base">Hoy</h2>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wide text-paper-dim">lista continua</span>
-            {todayTasks.some((t) => !t.done) && (
-              <button
-                onClick={copyList}
-                title="Copiar la lista de pendientes"
-                className="flex items-center gap-1 rounded-chip border border-border-hi px-2 py-1 text-[10px] text-paper-dim transition-colors hover:border-orange hover:text-orange"
-              >
-                <ClipboardList size={11} strokeWidth={1.75} />
-                Copiar lista
-              </button>
+        <div className="mb-2.5 flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <h2 className="shrink-0 text-base">Hoy</h2>
+            {focusingCount >= 2 ? (
+              <MultitaskNudge count={focusingCount} />
+            ) : (
+              <span className="text-[10px] uppercase tracking-wide text-paper-dim">
+                lista continua
+              </span>
             )}
           </div>
+          {todayTasks.some((t) => !t.done) && (
+            <button
+              onClick={copyList}
+              title="Copiar la lista de pendientes"
+              className="flex shrink-0 items-center gap-1 rounded-chip border border-border-hi px-2 py-1 text-[10px] text-paper-dim transition-colors hover:border-orange hover:text-orange"
+            >
+              <ClipboardList size={11} strokeWidth={1.75} />
+              Copiar lista
+            </button>
+          )}
         </div>
-        {focusingCount >= 2 && (
-          <div className="mb-2.5">
-            <MultitaskNudge count={focusingCount} />
-          </div>
-        )}
         <div className="-mr-1.5 min-h-0 flex-1 overflow-y-auto pr-1.5">
           <TaskList
             tasks={hoyList}

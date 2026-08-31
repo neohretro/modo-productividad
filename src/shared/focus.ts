@@ -121,6 +121,16 @@ export function focusPhase(task: Task): FocusPhase {
 }
 
 /**
+ * Orden en la lista: primero lo que está en curso, luego lo pausado, luego lo
+ * que no has empezado, y al final lo hecho. Estable dentro de cada grupo.
+ */
+export function focusSortRank(task: Task): number {
+  if (task.done) return 3
+  const p = focusPhase(task)
+  return p === 'running' ? 0 : p === 'paused' ? 1 : 2
+}
+
+/**
  * Tareas DE PROYECTO que estás trabajando hoy (les diste "play" en algún momento
  * del día). Se muestran también en "Hoy", con su etiqueta de proyecto, todo el
  * día, aunque las pauses, hasta cerrarlas o hasta que cambie el día. Así lo que

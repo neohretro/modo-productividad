@@ -7,6 +7,7 @@ import {
   commitFocus,
   elapsedMs,
   focusPhase,
+  focusSortRank,
   formatDuration,
   normalizeState,
   STALE_FOCUS_MS,
@@ -135,6 +136,15 @@ test('todayProjectTasks: tareas de proyecto trabajadas hoy (en curso o en pausa)
   }
   const out = todayProjectTasks(s, now)
   assert.deepEqual(new Set(out.map((t) => t.id)), new Set(['en-curso', 'pausada-hoy']))
+})
+
+test('focusSortRank: en curso < en pausa < sin empezar < hecha', () => {
+  const running = task({ focusStartedAt: 1 })
+  const paused = task({ focusStartedAt: null, timeSpentMs: 5000 })
+  const idle = task()
+  const done = task({ done: true })
+  const sorted = [idle, done, paused, running].sort((a, b) => focusSortRank(a) - focusSortRank(b))
+  assert.deepEqual(sorted, [running, paused, idle, done])
 })
 
 test('focusPhase: idle / running / paused', () => {

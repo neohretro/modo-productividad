@@ -1,26 +1,25 @@
 import { AlertTriangle } from 'lucide-react'
 
 /**
- * Aviso en pantalla mientras hay varias tareas en enfoque (PLAN.md §4.3).
- * Nudge, no bloqueo: el usuario puede seguir si quiere.
+ * Aviso compacto (una línea) mientras hay varias tareas en enfoque. El texto
+ * completo va en la notificación de Windows; aquí solo un recordatorio discreto
+ * que no le quita espacio a la lista. Toca para leer el estudio.
  */
 export default function MultitaskNudge({ count }: { count: number }): React.JSX.Element {
   return (
-    <div className="no-drag flex animate-fade items-start gap-2 rounded-chip border border-orange/40 bg-orange-glow p-3 text-[11px] leading-snug text-paper">
-      <AlertTriangle size={14} strokeWidth={1.75} className="mt-0.5 shrink-0 text-orange" />
-      <p>
-        {count} tareas en enfoque. El multitasking puede bajar tu productividad hasta ~40% por el
-        costo de cambiar de tarea (
-        <a
-          href="https://www.apa.org/topics/research/multitasking"
-          target="_blank"
-          rel="noreferrer"
-          className="underline decoration-orange/60 underline-offset-2 hover:text-orange"
-        >
-          American Psychological Association
-        </a>
-        ). Avanzas más rápido con una sola — pero tú decides.
-      </p>
-    </div>
+    <a
+      href="https://www.apa.org/topics/research/multitasking"
+      target="_blank"
+      rel="noreferrer"
+      title={
+        `${count} tareas en enfoque a la vez. El multitasking puede bajar la ` +
+        'productividad hasta ~40% por el costo de cambiar de tarea ' +
+        '(American Psychological Association). Toca para leer más.'
+      }
+      className="no-drag flex w-fit max-w-full animate-fade items-center gap-1.5 rounded-full border border-orange/40 bg-orange-glow px-2.5 py-0.5 text-[10px] text-orange transition-colors hover:bg-orange-soft"
+    >
+      <AlertTriangle size={10} strokeWidth={2.25} className="shrink-0" />
+      <span className="truncate">{count} a la vez · cambiar cuesta ~40%</span>
+    </a>
   )
 }
