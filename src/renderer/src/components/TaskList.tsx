@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Bell, Check, Pause, Play, Trash2 } from 'lucide-react'
 import type { Task } from '@shared/types'
+import { focusPhase, formatDurationLong } from '@shared/focus'
 import { projectNameOf, useAppStore } from '../store/useAppStore'
 import { useTaskMenu } from '../hooks/useTaskMenu'
 import ProjectChip from './ProjectChip'
@@ -62,13 +63,19 @@ function TaskItem({
     setDraft(task.text)
     setEditingTask(task.id)
   }
-  const running = task.focusStartedAt !== null
+  const phase = focusPhase(task)
+  const running = phase === 'running'
+  const paused = phase === 'paused'
 
   return (
     <li
       onContextMenu={onContextMenu}
       className={`no-drag group flex animate-fade items-start gap-3 rounded-chip border px-3 py-2.5 transition-colors ${
-        running ? 'border-orange/50 bg-orange-glow' : 'border-border bg-ink-soft'
+        running
+          ? 'border-orange/50 bg-orange-glow'
+          : paused
+            ? 'border-orange/25 bg-ink-soft'
+            : 'border-border bg-ink-soft'
       }`}
     >
       {menu}
@@ -118,6 +125,11 @@ function TaskItem({
               · en curso
             </span>
           )}
+          {paused && (
+            <span className="ml-2 select-none text-[10px] uppercase text-paper-dim no-underline">
+              · en pausa{task.timeSpentMs >= 1000 ? ` · ${formatDurationLong(task.timeSpentMs)}` : ''}
+            </span>
+          )}
         </span>
       )}
 
@@ -134,12 +146,14 @@ function TaskItem({
 
         {focusable && !task.done && (
           <button
-            aria-label={running ? 'Pausar' : 'Trabajar en esta tarea'}
+            aria-label={running ? 'Pausar' : paused ? 'Reanudar' : 'Trabajar en esta tarea'}
             onClick={() => toggleFocus(task.id)}
             className={`grid h-6 w-6 place-items-center rounded-full border transition-colors ${
               running
                 ? 'border-orange bg-orange text-onaccent'
-                : 'border-border-hi text-paper-dim opacity-0 hover:border-orange hover:text-orange group-hover:opacity-100'
+                : paused
+                  ? 'border-orange/60 text-orange hover:bg-orange hover:text-onaccent'
+                  : 'border-border-hi text-paper-dim opacity-0 hover:border-orange hover:text-orange group-hover:opacity-100'
             }`}
           >
             {running ? <Pause size={11} strokeWidth={2.5} /> : <Play size={11} strokeWidth={2.5} />}

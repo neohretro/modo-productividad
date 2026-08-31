@@ -16,6 +16,7 @@ function task(over: Partial<Task> = {}): Task {
     focusStartedAt: null,
     scheduledDate: null,
     remindAt: null,
+    lastFocusedDate: null,
     ...over
   }
 }
@@ -64,6 +65,13 @@ test('mergeStates: tiempo trabajado y recordatorio se conservan', () => {
   const out = mergeStates(local, remote)
   assert.equal(out.todayTasks[0].timeSpentMs, 5000)
   assert.equal(out.todayTasks[0].remindAt, '2026-08-29T09:00:00')
+})
+
+test('mergeStates: lastFocusedDate se queda con la fecha más reciente', () => {
+  const local = state({ projects: [{ id: 'p', name: 'P', createdDate: '2026-08-01', tasks: [task({ id: 'a', lastFocusedDate: '2026-08-27' })] }] })
+  const remote = state({ projects: [{ id: 'p', name: 'P', createdDate: '2026-08-01', tasks: [task({ id: 'a', lastFocusedDate: '2026-08-28' })] }] })
+  const out = mergeStates(local, remote)
+  assert.equal(out.projects[0].tasks[0].lastFocusedDate, '2026-08-28')
 })
 
 test('mergeStates: proyectos se unen y sus tareas también', () => {

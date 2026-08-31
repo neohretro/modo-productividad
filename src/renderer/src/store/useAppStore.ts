@@ -106,7 +106,8 @@ function newTask(text: string, projectId: string): Task {
     timeSpentMs: 0,
     focusStartedAt: null,
     scheduledDate: null,
-    remindAt: null
+    remindAt: null,
+    lastFocusedDate: null
   }
 }
 
@@ -359,7 +360,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   startFocus: (id) => {
     set((s) =>
       mapTaskEverywhere(s, id, (t) =>
-        t.focusStartedAt || t.done ? t : { ...t, focusStartedAt: Date.now() }
+        t.focusStartedAt || t.done
+          ? t
+          : { ...t, focusStartedAt: Date.now(), lastFocusedDate: toISODate() }
       )
     )
     // nudge de multitasking: se dispara desde la ventana que inició el enfoque

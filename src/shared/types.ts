@@ -29,6 +29,12 @@ export interface Task {
   scheduledDate: string | null
   /** ISO datetime del recordatorio (notificación nativa), o null. Se limpia al dispararse. */
   remindAt: string | null
+  /**
+   * ISO date del último día en que se enfocó (se puso "play"). Sirve para que una
+   * tarea de proyecto que estás trabajando hoy aparezca también en "Hoy" todo el
+   * día, aunque la pauses, hasta cerrarla o hasta que cambie el día.
+   */
+  lastFocusedDate: string | null
 }
 
 export interface Project {
@@ -101,7 +107,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system'
 }
 
-export const STATE_VERSION = 3
+export const STATE_VERSION = 4
 
 export const INITIAL_STATE: PersistedState = {
   version: STATE_VERSION,

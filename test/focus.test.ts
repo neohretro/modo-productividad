@@ -4,12 +4,13 @@ import type { PersistedState, Task } from '@shared/types'
 import { INITIAL_STATE } from '@shared/types'
 import {
   activeFocusTasks,
-  activeProjectFocusTasks,
   commitFocus,
   elapsedMs,
+  focusPhase,
   formatDuration,
   normalizeState,
-  STALE_FOCUS_MS
+  STALE_FOCUS_MS,
+  todayProjectTasks
 } from '@shared/focus'
 
 function task(over: Partial<Task> = {}): Task {
@@ -76,7 +77,8 @@ test('normalizeState rellena campos nuevos y sube la versión', () => {
   } as unknown as Partial<PersistedState>
 
   const out = normalizeState(legacy, 1_000_000)
-  assert.equal(out.version, 3)
+  assert.equal(out.version, 4)
+  assert.equal(out.todayTasks[0].lastFocusedDate, null)
   assert.equal(out.todayTasks[0].timeSpentMs, 0)
   assert.equal(out.todayTasks[0].focusStartedAt, null)
   assert.equal(out.projects[0].tasks[0].timeSpentMs, 0)
@@ -111,23 +113,34 @@ test('activeFocusTasks ignora completadas y sin enfoque', () => {
   assert.equal(activeFocusTasks(s).length, 2)
 })
 
-test('activeProjectFocusTasks solo trae tareas de proyecto en curso (no de Hoy, no hechas)', () => {
+test('todayProjectTasks: tareas de proyecto trabajadas hoy (en curso o en pausa), no hechas', () => {
+  const now = new Date('2026-08-28T15:00:00')
   const s: PersistedState = {
     ...INITIAL_STATE,
-    todayTasks: [task({ focusStartedAt: 1 })],
+    todayTasks: [task({ focusStartedAt: 1, lastFocusedDate: '2026-08-28' })],
     projects: [
       {
         id: 'p',
         name: 'P',
         createdDate: '2026-08-01',
         tasks: [
-          task({ id: 'en-curso', focusStartedAt: 5 }),
-          task({ id: 'pausada', focusStartedAt: null }),
-          task({ id: 'hecha', focusStartedAt: 6, done: true })
+          task({ id: 'en-curso', focusStartedAt: 5, lastFocusedDate: '2026-08-28' }),
+          task({ id: 'pausada-hoy', focusStartedAt: null, timeSpentMs: 60_000, lastFocusedDate: '2026-08-28' }),
+          task({ id: 'ayer', focusStartedAt: null, timeSpentMs: 60_000, lastFocusedDate: '2026-08-27' }),
+          task({ id: 'nunca', focusStartedAt: null, lastFocusedDate: null }),
+          task({ id: 'hecha-hoy', done: true, lastFocusedDate: '2026-08-28' })
         ]
       }
     ]
   }
-  const out = activeProjectFocusTasks(s)
-  assert.deepEqual(out.map((t) => t.id), ['en-curso'])
+  const out = todayProjectTasks(s, now)
+  assert.deepEqual(new Set(out.map((t) => t.id)), new Set(['en-curso', 'pausada-hoy']))
+})
+
+test('focusPhase: idle / running / paused', () => {
+  assert.equal(focusPhase(task()), 'idle')
+  assert.equal(focusPhase(task({ focusStartedAt: 123 })), 'running')
+  assert.equal(focusPhase(task({ focusStartedAt: null, timeSpentMs: 5000 })), 'paused')
+  assert.equal(focusPhase(task({ focusStartedAt: null, timeSpentMs: 5000, done: true })), 'idle')
+  assert.equal(focusPhase(task({ focusStartedAt: null, timeSpentMs: 200 })), 'idle', 'sub-segundo no cuenta')
 })

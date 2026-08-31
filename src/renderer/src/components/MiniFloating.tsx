@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { Maximize2 } from 'lucide-react'
 import { TODAY_PROJECT_ID } from '@shared/types'
-import { activeProjectFocusTasks } from '@shared/focus'
+import { todayProjectTasks } from '@shared/focus'
 import { targetView, useAppStore } from '../store/useAppStore'
 import ProgressRing from './ProgressRing'
 import FocusTaskRow from './FocusTaskRow'
@@ -33,21 +33,19 @@ export default function MiniFloating(): React.JSX.Element {
   const done = view.tasks.length - pending.length
   const pct = view.tasks.length === 0 ? 0 : done / view.tasks.length
 
-  // En "Hoy", suma las tareas de proyecto en curso (con su etiqueta) para
-  // poder cerrarlas sin cambiar de lista.
+  // En "Hoy", suma las tareas de proyecto que trabajas hoy (con su etiqueta)
+  // para poder cerrarlas sin cambiar de lista.
   const extra = useMemo(
-    () => (miniTargetId === TODAY_PROJECT_ID ? activeProjectFocusTasks({ projects }) : []),
+    () => (miniTargetId === TODAY_PROJECT_ID ? todayProjectTasks({ projects }) : []),
     [miniTargetId, projects]
   )
 
   const focusing = [...pending, ...extra].filter((t) => t.focusStartedAt !== null)
 
-  const ordered = [
-    ...extra,
-    ...[...pending].sort(
-      (a, b) => Number(Boolean(b.focusStartedAt)) - Number(Boolean(a.focusStartedAt))
-    )
-  ]
+  const byFocusFirst = (a: (typeof pending)[number], b: (typeof pending)[number]): number =>
+    Number(Boolean(b.focusStartedAt)) - Number(Boolean(a.focusStartedAt))
+
+  const ordered = [...[...extra].sort(byFocusFirst), ...[...pending].sort(byFocusFirst)]
 
   return (
     <div className="drag flex h-screen w-screen p-2">

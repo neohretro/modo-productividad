@@ -11,6 +11,7 @@ import {
   type PersistedState,
   type Task
 } from './types'
+import { toISODate } from './date'
 
 /** Si un tramo de enfoque quedó abierto más de esto (app cerrada), se descarta. */
 export const STALE_FOCUS_MS = 4 * 60 * 60 * 1000
@@ -61,7 +62,8 @@ function normalizeTask(t: Partial<Task>): Task {
     timeSpentMs: t.timeSpentMs ?? 0,
     focusStartedAt: t.focusStartedAt ?? null,
     scheduledDate: t.scheduledDate ?? null,
-    remindAt: t.remindAt ?? null
+    remindAt: t.remindAt ?? null,
+    lastFocusedDate: t.lastFocusedDate ?? null
   }
 }
 
@@ -109,13 +111,27 @@ export function activeFocusTasks(state: PersistedState): Task[] {
   return all.filter((t) => t.focusStartedAt !== null && !t.done)
 }
 
+/** Estado de enfoque de una tarea, para diferenciarlas visualmente. */
+export type FocusPhase = 'idle' | 'running' | 'paused'
+
+export function focusPhase(task: Task): FocusPhase {
+  if (task.focusStartedAt !== null) return 'running'
+  if (!task.done && task.timeSpentMs >= 1000) return 'paused'
+  return 'idle'
+}
+
 /**
- * Tareas DE PROYECTO que están en curso ahora mismo. Se muestran también en
- * "Hoy" (con su etiqueta de proyecto) para poder cerrarlas sin salir de ahí:
- * lo que estás haciendo hoy vive en un solo lugar.
+ * Tareas DE PROYECTO que estás trabajando hoy (les diste "play" en algún momento
+ * del día). Se muestran también en "Hoy", con su etiqueta de proyecto, todo el
+ * día, aunque las pauses, hasta cerrarlas o hasta que cambie el día. Así lo que
+ * estás haciendo hoy vive en un solo lugar.
  */
-export function activeProjectFocusTasks(state: Pick<PersistedState, 'projects'>): Task[] {
+export function todayProjectTasks(
+  state: Pick<PersistedState, 'projects'>,
+  now: Date = new Date()
+): Task[] {
+  const today = toISODate(now)
   return state.projects
     .flatMap((p) => p.tasks)
-    .filter((t) => t.focusStartedAt !== null && !t.done)
+    .filter((t) => !t.done && t.lastFocusedDate === today)
 }

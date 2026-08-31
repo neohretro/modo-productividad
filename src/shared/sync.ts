@@ -65,7 +65,9 @@ function mergeTask(a: Task, b: Task): Task {
     daysRolled: Math.max(a.daysRolled, b.daysRolled),
     remindAt: a.remindAt ?? b.remindAt,
     focusStartedAt: a.focusStartedAt ?? b.focusStartedAt,
-    completedDate: a.completedDate ?? b.completedDate
+    completedDate: a.completedDate ?? b.completedDate,
+    lastFocusedDate:
+      (a.lastFocusedDate ?? '') >= (b.lastFocusedDate ?? '') ? a.lastFocusedDate : b.lastFocusedDate
   }
 }
 

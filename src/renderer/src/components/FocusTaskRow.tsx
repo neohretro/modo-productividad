@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Bell, Check, Pause, Play } from 'lucide-react'
 import type { Task } from '@shared/types'
+import { focusPhase, formatDurationLong } from '@shared/focus'
 import { projectNameOf, useAppStore } from '../store/useAppStore'
 import { useTaskMenu } from '../hooks/useTaskMenu'
 import ProjectChip from './ProjectChip'
@@ -20,23 +21,31 @@ export default function FocusTaskRow({ task }: { task: Task }): React.JSX.Elemen
   const projectName = useAppStore((s) => projectNameOf(s, task))
   const { onContextMenu, menu } = useTaskMenu(task)
   const [draft, setDraft] = useState(task.text)
-  const running = task.focusStartedAt !== null
+  const phase = focusPhase(task)
+  const running = phase === 'running'
+  const paused = phase === 'paused'
 
   return (
     <li
       onContextMenu={onContextMenu}
       className={`no-drag flex animate-fade items-start gap-2 rounded-chip border px-2.5 py-2 transition-colors ${
-        running ? 'border-orange/50 bg-orange-glow' : 'border-border bg-ink-soft'
+        running
+          ? 'border-orange/50 bg-orange-glow'
+          : paused
+            ? 'border-orange/25 bg-ink-soft'
+            : 'border-border bg-ink-soft'
       }`}
     >
       {menu}
       <button
-        aria-label={running ? 'Pausar' : 'Trabajar en esta tarea'}
+        aria-label={running ? 'Pausar' : paused ? 'Reanudar' : 'Trabajar en esta tarea'}
         onClick={() => toggleFocus(task.id)}
         className={`no-drag mt-0.5 grid h-7 w-7 shrink-0 place-items-center self-start rounded-full border transition-colors ${
           running
             ? 'border-orange bg-orange text-onaccent'
-            : 'border-border-hi text-paper-dim hover:border-orange hover:text-orange'
+            : paused
+              ? 'border-orange/60 text-orange hover:bg-orange hover:text-onaccent'
+              : 'border-border-hi text-paper-dim hover:border-orange hover:text-orange'
         }`}
       >
         {running ? <Pause size={13} strokeWidth={2.5} /> : <Play size={13} strokeWidth={2.5} />}
@@ -72,11 +81,16 @@ export default function FocusTaskRow({ task }: { task: Task }): React.JSX.Elemen
             {task.text}
           </p>
         )}
-        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-orange">
+        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px]">
           {projectName && <ProjectChip name={projectName} />}
-          {running && <span>en curso</span>}
+          {running && <span className="text-orange">en curso</span>}
+          {paused && (
+            <span className="text-paper-dim">
+              en pausa{task.timeSpentMs >= 1000 ? ` · ${formatDurationLong(task.timeSpentMs)}` : ''}
+            </span>
+          )}
           {task.remindAt && !task.done && (
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1 text-orange">
               <Bell size={9} strokeWidth={2.5} /> recordatorio
             </span>
           )}

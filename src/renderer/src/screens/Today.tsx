@@ -3,7 +3,7 @@ import { CalendarClock, ClipboardList, Flame, Snowflake } from 'lucide-react'
 import { TODAY_PROJECT_ID } from '@shared/types'
 import { toISODate, weekdayShortES } from '@shared/date'
 import { scheduleLabel } from '@shared/schedule'
-import { activeProjectFocusTasks } from '@shared/focus'
+import { focusPhase, todayProjectTasks } from '@shared/focus'
 import { useAppStore } from '../store/useAppStore'
 import ProgressRing from '../components/ProgressRing'
 import TaskList from '../components/TaskList'
@@ -29,16 +29,23 @@ export default function Today(): React.JSX.Element {
   const deleteTask = useAppStore((s) => s.deleteTask)
   const setFlash = useAppStore((s) => s.setFlash)
 
-  // Tareas de proyecto en curso: se muestran también aquí (con su etiqueta) para
-  // cerrarlas sin salir de Hoy.
-  const activeProject = useMemo(() => activeProjectFocusTasks({ projects }), [projects])
-  const hoyList = useMemo(() => [...activeProject, ...todayTasks], [activeProject, todayTasks])
+  // Tareas de proyecto que trabajas hoy: se muestran también aquí (con su
+  // etiqueta) para cerrarlas sin salir de Hoy. Se quedan todo el día aunque las
+  // pauses, hasta cerrarlas o hasta que cambie el día.
+  const projectToday = useMemo(() => {
+    const list = todayProjectTasks({ projects })
+    const rank = (t: (typeof list)[number]): number =>
+      focusPhase(t) === 'running' ? 0 : focusPhase(t) === 'paused' ? 1 : 2
+    return [...list].sort((a, b) => rank(a) - rank(b))
+  }, [projects])
+  const hoyList = useMemo(() => [...projectToday, ...todayTasks], [projectToday, todayTasks])
 
   const total = todayTasks.length
   const done = todayTasks.filter((t) => t.done).length
   const pct = total === 0 ? 0 : done / total
   const focusingCount =
-    todayTasks.filter((t) => t.focusStartedAt !== null && !t.done).length + activeProject.length
+    todayTasks.filter((t) => t.focusStartedAt !== null && !t.done).length +
+    projectToday.filter((t) => t.focusStartedAt !== null).length
   const last7 = buildLast7(snapshots)
 
   const copyList = (): void => {
