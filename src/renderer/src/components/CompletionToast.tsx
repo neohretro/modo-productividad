@@ -30,21 +30,25 @@ export default function CompletionToast({
 
   if (!shown) return null
 
+  // El div externo centra y fija los márgenes; el interno anima. Separados porque
+  // `animate-rise` usa `transform: translateY`, que pisaría un `-translate-x-1/2`.
   return (
     <div
-      className={`no-drag pointer-events-none absolute left-1/2 z-20 -translate-x-1/2 animate-rise ${
-        compact ? 'bottom-3 w-[calc(100%-24px)]' : 'bottom-6 w-auto max-w-sm'
+      className={`no-drag pointer-events-none absolute inset-x-0 z-20 flex justify-center px-3 ${
+        compact ? 'bottom-3' : 'bottom-6'
       }`}
     >
-      <div className="glass-strong flex items-center gap-3 rounded-chip px-4 py-3">
-        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-orange text-onaccent">
-          <Check size={13} strokeWidth={3} />
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-sm text-paper">{shown.text}</p>
-          <p className="text-xs text-paper-dim">
-            Te tomó <span className="text-orange">{formatDurationLong(shown.ms)}</span>
-          </p>
+      <div className={`animate-rise ${compact ? 'w-full' : 'max-w-sm'}`}>
+        <div className="glass-strong flex items-center gap-3 rounded-chip px-4 py-3">
+          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-orange text-onaccent">
+            <Check size={13} strokeWidth={3} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm text-paper">{shown.text}</p>
+            <p className="truncate text-xs text-paper-dim">
+              Te tomó <span className="text-orange">{formatDurationLong(shown.ms)}</span>
+            </p>
+          </div>
         </div>
       </div>
     </div>
