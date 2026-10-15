@@ -1,13 +1,13 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { CalendarClock, ClipboardList, Flame, Snowflake } from 'lucide-react'
-import { TODAY_PROJECT_ID } from '@shared/types'
 import { toISODate, weekdayShortES } from '@shared/date'
-import { scheduleLabel } from '@shared/schedule'
-import { todayProjectTasks } from '@shared/focus'
+import { dayLabel, projectNameFor, scheduledAhead, todayList } from '@shared/tasks'
 import { useAppStore } from '../store/useAppStore'
 import ProgressRing from '../components/ProgressRing'
 import TaskList from '../components/TaskList'
 import AddTask from '../components/AddTask'
+import ProjectPicker from '../components/ProjectPicker'
+import ProjectChip from '../components/ProjectChip'
 import MultitaskNudge from '../components/MultitaskNudge'
 
 function greeting(): string {
@@ -19,29 +19,25 @@ function greeting(): string {
 }
 
 export default function Today(): React.JSX.Element {
-  const todayTasks = useAppStore((s) => s.todayTasks)
-  const scheduledTasks = useAppStore((s) => s.scheduledTasks)
+  const tasks = useAppStore((s) => s.tasks)
   const projects = useAppStore((s) => s.projects)
   const streak = useAppStore((s) => s.streak)
   const snapshots = useAppStore((s) => s.snapshots)
   const addTask = useAppStore((s) => s.addTask)
-  const unscheduleTask = useAppStore((s) => s.unscheduleTask)
+  const assignDay = useAppStore((s) => s.assignDay)
   const deleteTask = useAppStore((s) => s.deleteTask)
   const setFlash = useAppStore((s) => s.setFlash)
+  // Etiqueta de proyecto con la que se crean las tareas nuevas (opcional).
+  const [newProject, setNewProject] = useState<string | null>(null)
 
-  // Tareas de proyecto que trabajas hoy: se muestran también aquí (con su
-  // etiqueta) para cerrarlas sin salir de Hoy. Se quedan todo el día aunque las
-  // pauses, hasta cerrarlas o hasta que cambie el día. TaskList las ordena
-  // (en curso primero) junto con las de Hoy.
-  const projectToday = useMemo(() => todayProjectTasks({ projects }), [projects])
-  const hoyList = useMemo(() => [...projectToday, ...todayTasks], [projectToday, todayTasks])
+  // "Hoy" = todas las tareas con día asignado hoy o antes (de cualquier proyecto).
+  const todayTasks = useMemo(() => todayList({ tasks }), [tasks])
+  const scheduledTasks = useMemo(() => scheduledAhead({ tasks }), [tasks])
 
   const total = todayTasks.length
   const done = todayTasks.filter((t) => t.done).length
   const pct = total === 0 ? 0 : done / total
-  const focusingCount =
-    todayTasks.filter((t) => t.focusStartedAt !== null && !t.done).length +
-    projectToday.filter((t) => t.focusStartedAt !== null).length
+  const focusingCount = todayTasks.filter((t) => t.focusStartedAt !== null && !t.done).length
   const last7 = buildLast7(snapshots)
 
   const copyList = (): void => {
@@ -165,7 +161,7 @@ export default function Today(): React.JSX.Element {
         </div>
         <div className="-mr-1.5 min-h-0 flex-1 overflow-y-auto pr-1.5">
           <TaskList
-            tasks={hoyList}
+            tasks={todayTasks}
             showRolled
             focusable
             emptyHint="Sin tareas hoy. Agrega la primera abajo."
@@ -178,9 +174,9 @@ export default function Today(): React.JSX.Element {
                 Programadas ({scheduledTasks.length})
               </p>
               <ul className="flex flex-col gap-1">
-                {[...scheduledTasks]
-                  .sort((a, b) => (a.scheduledDate ?? '').localeCompare(b.scheduledDate ?? ''))
-                  .map((t) => (
+                {scheduledTasks.map((t) => {
+                  const project = projectNameFor(projects, t)
+                  return (
                     <li
                       key={t.id}
                       className="flex items-center gap-2 rounded-chip border border-border bg-ink-soft px-3 py-2 text-xs"
@@ -188,11 +184,12 @@ export default function Today(): React.JSX.Element {
                       <span className="min-w-0 flex-1 select-text truncate text-paper-dim">
                         {t.text}
                       </span>
+                      {project && <ProjectChip name={project} />}
                       <span className="shrink-0 rounded-full bg-orange-soft px-2 py-0.5 text-[10px] capitalize text-orange">
-                        {t.scheduledDate ? scheduleLabel(t.scheduledDate) : ''}
+                        {t.scheduledDate ? dayLabel(t.scheduledDate) : ''}
                       </span>
                       <button
-                        onClick={() => unscheduleTask(t.id)}
+                        onClick={() => assignDay(t.id, toISODate())}
                         className="shrink-0 text-[10px] text-paper-dim hover:text-paper"
                         title="Traer a Hoy ahora"
                       >
@@ -206,13 +203,23 @@ export default function Today(): React.JSX.Element {
                         ✕
                       </button>
                     </li>
-                  ))}
+                  )
+                })}
               </ul>
             </div>
           )}
         </div>
-        <div className="mt-3 shrink-0">
-          <AddTask onAdd={(t) => addTask(t, TODAY_PROJECT_ID)} placeholder="¿Qué vas a crear hoy?" />
+        <div className="mt-3 flex shrink-0 flex-col gap-1.5">
+          <AddTask
+            onAdd={(t) => addTask(t, { projectId: newProject, date: toISODate() })}
+            placeholder="¿Qué vas a crear hoy?"
+          />
+          {projects.length > 0 && (
+            <div className="flex items-center gap-2 px-1 text-[10px] text-paper-dim">
+              <span>Etiqueta:</span>
+              <ProjectPicker value={newProject} onChange={setNewProject} />
+            </div>
+          )}
         </div>
       </section>
     </div>

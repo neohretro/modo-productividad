@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import {
+  ALL_TASKS_ID,
   INITIAL_STATE,
   TODAY_PROJECT_ID,
   type PersistedState,
@@ -10,7 +11,7 @@ import {
 import { toISODate } from '@shared/date'
 import { rolloverIfNeeded } from '@shared/rollover'
 import { activeFocusTasks, commitFocus, normalizeState } from '@shared/focus'
-import { activateDue } from '@shared/schedule'
+import { projectNameFor, projectTasks, todayList } from '@shared/tasks'
 
 type Screen = 'today' | 'week' | 'projects' | 'summary' | 'settings'
 
@@ -25,9 +26,9 @@ export interface CompletionReveal {
 interface AppState extends PersistedState {
   hydrated: boolean
   screen: Screen
-  /** proyecto abierto en la pantalla Proyectos. */
-  activeProjectId: string | null
-  /** lista que muestra el modo mini: TODAY_PROJECT_ID o el id de un proyecto. */
+  /** vista abierta en Proyectos: ALL_TASKS_ID (Todas las tareas) o el id de un proyecto. */
+  activeProjectId: string
+  /** vista del mini: TODAY_PROJECT_ID (Hoy), ALL_TASKS_ID o el id de un proyecto. */
   miniTargetId: string
   /** última tarea completada con tiempo — la muestra el toast, luego se limpia. */
   recentCompletion: CompletionReveal | null
@@ -40,15 +41,17 @@ interface AppState extends PersistedState {
   /** Aplica un estado llegado de otra ventana sin re-guardarlo. */
   applyRemote: (state: PersistedState) => void
   setScreen: (s: Screen) => void
-  setActiveProject: (id: string | null) => void
+  setActiveProject: (id: string) => void
   setMiniTarget: (id: string) => void
   clearRecentCompletion: () => void
   setFlash: (msg: string) => void
   checkRollover: () => void
 
-  addTask: (text: string, projectId: string) => void
-  /** Agrega una tarea a un día concreto (hoy/pasado → Hoy; futuro → programada). */
-  addTaskOn: (text: string, dateISO: string) => void
+  /**
+   * Crea una tarea. `projectId` = etiqueta de proyecto (null = sin proyecto).
+   * `date` = día asignado: null = suelta (sin día), hoy o pasado = Hoy, futuro = ese día.
+   */
+  addTask: (text: string, opts?: { projectId?: string | null; date?: string | null }) => void
   toggleTask: (id: string) => void
   deleteTask: (id: string) => void
   editTask: (id: string, text: string) => void
@@ -56,18 +59,16 @@ interface AppState extends PersistedState {
   duplicateTask: (id: string) => void
   /** Pone (o quita, con null) el recordatorio de una tarea. ISO datetime. */
   setReminder: (id: string, remindAt: string | null) => void
-  /** Programa una tarea de Hoy para una fecha (ISO). Fecha pasada/hoy = la activa ya. */
-  moveTaskToDate: (id: string, dateISO: string) => void
-  /** Trae una tarea programada de vuelta a Hoy ahora. */
-  unscheduleTask: (id: string) => void
-  /** Mueve una tarea entre Hoy y un proyecto. */
-  moveTaskToProject: (id: string, projectId: string) => void
+  /** Asigna la tarea a un día (hoy o pasado = Hoy) o la deja suelta (null). */
+  assignDay: (id: string, dateISO: string | null) => void
+  /** Cambia la etiqueta de proyecto de la tarea (null = sin proyecto). */
+  setTaskProject: (id: string, projectId: string | null) => void
 
   addProject: (name: string) => string
   renameProject: (id: string, name: string) => void
   deleteProject: (id: string) => void
 
-  /** Inicia el cronómetro de enfoque de una tarea. */
+  /** Inicia el cronómetro de enfoque de una tarea (y la pasa a Hoy). */
   startFocus: (id: string) => void
   /** Detiene el cronómetro y suma el tiempo del tramo. */
   stopFocus: (id: string) => void
@@ -83,8 +84,7 @@ interface AppState extends PersistedState {
 export function persisted(s: AppState): PersistedState {
   return {
     version: s.version,
-    todayTasks: s.todayTasks,
-    scheduledTasks: s.scheduledTasks,
+    tasks: s.tasks,
     archivedTasks: s.archivedTasks,
     projects: s.projects,
     snapshots: s.snapshots,
@@ -94,7 +94,14 @@ export function persisted(s: AppState): PersistedState {
   }
 }
 
-function newTask(text: string, projectId: string): Task {
+/** Día efectivo de una asignación: hoy o pasado = hoy; futuro = ese día; null = suelta. */
+function effectiveDay(dateISO: string | null | undefined): string | null {
+  if (!dateISO) return null
+  const today = toISODate()
+  return dateISO <= today ? today : dateISO
+}
+
+function newTask(text: string, projectId: string | null, date: string | null): Task {
   return {
     id: crypto.randomUUID(),
     text: text.trim(),
@@ -105,34 +112,20 @@ function newTask(text: string, projectId: string): Task {
     daysRolled: 0,
     timeSpentMs: 0,
     focusStartedAt: null,
-    scheduledDate: null,
+    scheduledDate: effectiveDay(date),
     remindAt: null,
     lastFocusedDate: null
   }
 }
 
-/** Busca una tarea viva por id (Hoy, programadas o proyectos). */
+/** Busca una tarea viva por id. */
 function findTask(s: AppState, id: string): Task | undefined {
-  return (
-    s.todayTasks.find((t) => t.id === id) ??
-    s.scheduledTasks.find((t) => t.id === id) ??
-    s.projects.flatMap((p) => p.tasks).find((t) => t.id === id)
-  )
+  return s.tasks.find((t) => t.id === id)
 }
 
-/** Aplica `fn` a la tarea `id` viva donde sea que esté (Hoy o un proyecto). */
-function mapTaskEverywhere(
-  s: AppState,
-  id: string,
-  fn: (t: Task) => Task
-): Pick<AppState, 'todayTasks' | 'projects'> {
-  return {
-    todayTasks: s.todayTasks.map((t) => (t.id === id ? fn(t) : t)),
-    projects: s.projects.map((p) => ({
-      ...p,
-      tasks: p.tasks.map((t) => (t.id === id ? fn(t) : t))
-    }))
-  }
+/** Aplica `fn` a la tarea viva `id`. */
+function mapTask(s: AppState, id: string, fn: (t: Task) => Task): Pick<AppState, 'tasks'> {
+  return { tasks: s.tasks.map((t) => (t.id === id ? fn(t) : t)) }
 }
 
 /** true mientras aplicamos un estado remoto (otra ventana): no rebotar el guardado. */
@@ -142,7 +135,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   ...INITIAL_STATE,
   hydrated: false,
   screen: 'today',
-  activeProjectId: null,
+  activeProjectId: ALL_TASKS_ID,
   miniTargetId: TODAY_PROJECT_ID,
   recentCompletion: null,
   flash: null,
@@ -150,12 +143,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   hydrate: async () => {
     const loaded = (await window.modo?.loadState()) ?? INITIAL_STATE
-    const ready = activateDue(rolloverIfNeeded(normalizeState(loaded)))
-    set({
-      ...ready,
-      hydrated: true,
-      activeProjectId: ready.projects[0]?.id ?? null
-    })
+    const ready = rolloverIfNeeded(normalizeState(loaded))
+    set({ ...ready, hydrated: true, activeProjectId: ALL_TASKS_ID })
     void window.modo?.saveState(persisted(get()))
 
     window.modo?.onStateChanged((remote) => get().applyRemote(remote))
@@ -166,9 +155,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((s) => ({
       ...remote,
       activeProjectId:
-        remote.projects.some((p) => p.id === s.activeProjectId)
+        s.activeProjectId === ALL_TASKS_ID || remote.projects.some((p) => p.id === s.activeProjectId)
           ? s.activeProjectId
-          : (remote.projects[0]?.id ?? null)
+          : ALL_TASKS_ID
     }))
     applyingRemote = false
   },
@@ -186,155 +175,82 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   checkRollover: () => {
     const before = persisted(get())
-    const after = activateDue(rolloverIfNeeded(before))
-    if (
-      after.lastRolloverDate !== before.lastRolloverDate ||
-      after.todayTasks.length !== before.todayTasks.length
-    ) {
-      set(after)
-    }
+    const after = rolloverIfNeeded(before)
+    if (after !== before) set(after)
   },
 
-  addTask: (text, projectId) => {
+  addTask: (text, opts) => {
     if (!text.trim()) return
-    const t = newTask(text, projectId)
-    if (projectId === TODAY_PROJECT_ID) {
-      set((s) => ({ todayTasks: [...s.todayTasks, t] }))
-    } else {
-      set((s) => ({
-        projects: s.projects.map((p) =>
-          p.id === projectId ? { ...p, tasks: [...p.tasks, t] } : p
-        )
-      }))
-    }
-  },
-
-  addTaskOn: (text, dateISO) => {
-    if (!text.trim()) return
-    const today = toISODate()
-    if (dateISO <= today) {
-      set((s) => ({ todayTasks: [...s.todayTasks, newTask(text, TODAY_PROJECT_ID)] }))
-    } else {
-      set((s) => ({
-        scheduledTasks: [
-          ...s.scheduledTasks,
-          { ...newTask(text, TODAY_PROJECT_ID), scheduledDate: dateISO }
-        ]
-      }))
-    }
+    const t = newTask(text, opts?.projectId ?? null, opts?.date ?? null)
+    set((s) => ({ tasks: [...s.tasks, t] }))
   },
 
   toggleTask: (id) =>
     set((s) => {
       let reveal: CompletionReveal | null = s.recentCompletion
-      const patch = mapTaskEverywhere(s, id, (t) => {
+      const today = toISODate()
+      const patch = mapTask(s, id, (t) => {
         const done = !t.done
         // al completar: cerrar el cronómetro de enfoque si estaba corriendo
         const base = done ? commitFocus(t) : t
         if (done && base.timeSpentMs >= 1000) {
           reveal = { id: t.id, text: base.text, ms: base.timeSpentMs, at: Date.now() }
         }
-        return { ...base, done, completedDate: done ? new Date().toISOString() : null }
+        return {
+          ...base,
+          done,
+          completedDate: done ? new Date().toISOString() : null,
+          // Se completó hoy: cuenta en el día (una tarea suelta o futura pasa a Hoy).
+          scheduledDate:
+            done && (base.scheduledDate === null || base.scheduledDate > today)
+              ? today
+              : base.scheduledDate
+        }
       })
       return { ...patch, recentCompletion: reveal }
     }),
 
-  deleteTask: (id) =>
-    set((s) => ({
-      todayTasks: s.todayTasks.filter((t) => t.id !== id),
-      scheduledTasks: s.scheduledTasks.filter((t) => t.id !== id),
-      projects: s.projects.map((p) => ({
-        ...p,
-        tasks: p.tasks.filter((t) => t.id !== id)
-      }))
-    })),
+  deleteTask: (id) => set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
 
   editTask: (id, text) => {
     if (text.trim()) {
-      set((s) => mapTaskEverywhere(s, id, (t) => ({ ...t, text: text.trim() })))
+      set((s) => mapTask(s, id, (t) => ({ ...t, text: text.trim() })))
     }
   },
 
   setEditingTask: (editingTaskId) => set({ editingTaskId }),
 
-  setReminder: (id, remindAt) =>
-    set((s) => {
-      const patch = (t: Task): Task => (t.id === id ? { ...t, remindAt } : t)
-      return {
-        todayTasks: s.todayTasks.map(patch),
-        scheduledTasks: s.scheduledTasks.map(patch),
-        projects: s.projects.map((p) => ({ ...p, tasks: p.tasks.map(patch) }))
-      }
-    }),
+  setReminder: (id, remindAt) => set((s) => mapTask(s, id, (t) => ({ ...t, remindAt }))),
 
   duplicateTask: (id) =>
     set((s) => {
       const src = findTask(s, id)
       if (!src) return {}
-      const copy = newTask(src.text, src.projectId)
-      if (src.projectId === TODAY_PROJECT_ID) {
-        return { todayTasks: [...s.todayTasks, copy] }
-      }
-      return {
-        projects: s.projects.map((p) =>
-          p.id === src.projectId ? { ...p, tasks: [...p.tasks, copy] } : p
-        )
-      }
+      return { tasks: [...s.tasks, newTask(src.text, src.projectId, src.scheduledDate)] }
     }),
 
-  moveTaskToDate: (id, dateISO) =>
+  assignDay: (id, dateISO) =>
     set((s) => {
-      const src = findTask(s, id)
-      if (!src) return {}
-      const today = toISODate()
-      const future = dateISO > today
-      const moved: Task = {
-        ...commitFocus(src),
+      if (!findTask(s, id)) return {}
+      const day = effectiveDay(dateISO)
+      const leavingToday = day === null || day > toISODate()
+      return mapTask(s, id, (t) => ({
+        ...(leavingToday ? commitFocus(t) : t),
         done: false,
         completedDate: null,
-        projectId: TODAY_PROJECT_ID,
         daysRolled: 0,
-        scheduledDate: future ? dateISO : null
-      }
-      const stripped = {
-        todayTasks: s.todayTasks.filter((t) => t.id !== id),
-        scheduledTasks: s.scheduledTasks.filter((t) => t.id !== id),
-        projects: s.projects.map((p) => ({ ...p, tasks: p.tasks.filter((t) => t.id !== id) }))
-      }
-      return future
-        ? { ...stripped, scheduledTasks: [...stripped.scheduledTasks, moved] }
-        : { ...stripped, todayTasks: [...stripped.todayTasks, moved] }
+        scheduledDate: day
+      }))
     }),
 
-  unscheduleTask: (id) => get().moveTaskToDate(id, toISODate()),
-
-  moveTaskToProject: (id, projectId) =>
-    set((s) => {
-      const src = findTask(s, id)
-      if (!src || src.projectId === projectId) return {}
-      const moved: Task = { ...commitFocus(src), projectId, scheduledDate: null }
-      const stripped = {
-        todayTasks: s.todayTasks.filter((t) => t.id !== id),
-        scheduledTasks: s.scheduledTasks.filter((t) => t.id !== id),
-        projects: s.projects.map((p) => ({ ...p, tasks: p.tasks.filter((t) => t.id !== id) }))
-      }
-      if (projectId === TODAY_PROJECT_ID) {
-        return { ...stripped, todayTasks: [...stripped.todayTasks, { ...moved, daysRolled: 0 }] }
-      }
-      return {
-        ...stripped,
-        projects: stripped.projects.map((p) =>
-          p.id === projectId ? { ...p, tasks: [...p.tasks, moved] } : p
-        )
-      }
-    }),
+  setTaskProject: (id, projectId) =>
+    set((s) => mapTask(s, id, (t) => (t.projectId === projectId ? t : { ...t, projectId }))),
 
   addProject: (name) => {
     const project: Project = {
       id: crypto.randomUUID(),
       name: name.trim() || 'Proyecto',
-      createdDate: toISODate(),
-      tasks: []
+      createdDate: toISODate()
     }
     set((s) => ({ projects: [...s.projects, project], activeProjectId: project.id }))
     return project.id
@@ -347,23 +263,32 @@ export const useAppStore = create<AppState>((set, get) => ({
       )
     })),
 
+  // Quitar un proyecto solo quita la etiqueta: sus tareas se conservan (sin proyecto).
   deleteProject: (id) =>
     set((s) => {
-      const projects = s.projects.filter((p) => p.id !== id)
+      const unlabel = (t: Task): Task => (t.projectId === id ? { ...t, projectId: null } : t)
       return {
-        projects,
-        activeProjectId:
-          s.activeProjectId === id ? (projects[0]?.id ?? null) : s.activeProjectId
+        projects: s.projects.filter((p) => p.id !== id),
+        tasks: s.tasks.map(unlabel),
+        archivedTasks: s.archivedTasks.map(unlabel),
+        activeProjectId: s.activeProjectId === id ? ALL_TASKS_ID : s.activeProjectId,
+        miniTargetId: s.miniTargetId === id ? TODAY_PROJECT_ID : s.miniTargetId
       }
     }),
 
   startFocus: (id) => {
+    // Darle play = trabajarla hoy: si estaba suelta o en un día futuro, pasa a Hoy.
     set((s) =>
-      mapTaskEverywhere(s, id, (t) =>
-        t.focusStartedAt || t.done
-          ? t
-          : { ...t, focusStartedAt: Date.now(), lastFocusedDate: toISODate() }
-      )
+      mapTask(s, id, (t) => {
+        if (t.focusStartedAt || t.done) return t
+        const today = toISODate()
+        return {
+          ...t,
+          focusStartedAt: Date.now(),
+          lastFocusedDate: today,
+          scheduledDate: t.scheduledDate === null || t.scheduledDate > today ? today : t.scheduledDate
+        }
+      })
     )
     // nudge de multitasking: se dispara desde la ventana que inició el enfoque
     const active = activeFocusTasks(persisted(get()))
@@ -372,8 +297,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  stopFocus: (id) =>
-    set((s) => mapTaskEverywhere(s, id, (t) => commitFocus(t))),
+  stopFocus: (id) => set((s) => mapTask(s, id, (t) => commitFocus(t))),
 
   toggleFocus: (id) => {
     // Play/pausa con el mismo botón. Pausar cierra el tramo (suma su tiempo);
@@ -408,26 +332,27 @@ useAppStore.subscribe((s) => {
 })
 
 // --- selectores derivados ---
-export const projectProgress = (
-  p: Project
-): { done: number; total: number; pct: number } => {
-  const total = p.tasks.length
-  const done = p.tasks.filter((t) => t.done).length
-  return { done, total, pct: total === 0 ? 0 : done / total }
-}
 
-/** Nombre del proyecto de una tarea, o null si es de la lista "Hoy". */
+/** Nombre del proyecto de una tarea, o null si no tiene etiqueta. */
 export function projectNameOf(s: AppState, task: Task): string | null {
-  if (task.projectId === TODAY_PROJECT_ID) return null
-  return s.projects.find((p) => p.id === task.projectId)?.name ?? null
+  return projectNameFor(s.projects, task)
 }
 
-/** Lista y nombre para un "target" del mini (Hoy o un proyecto). */
-export function targetView(s: AppState): { id: string; name: string; tasks: Task[] } {
-  if (s.miniTargetId === TODAY_PROJECT_ID) {
-    return { id: TODAY_PROJECT_ID, name: 'Hoy', tasks: s.todayTasks }
+/**
+ * Lista y nombre para una vista del mini (calcúlala con useMemo: devuelve arrays nuevos):
+ *  - Hoy: las tareas con día asignado hoy o antes.
+ *  - Todas las tareas: todas las vivas.
+ *  - un proyecto: todas las que llevan su etiqueta (vivas y archivadas, para el avance).
+ */
+export function targetView(
+  s: Pick<PersistedState, 'tasks' | 'archivedTasks' | 'projects'> & { miniTargetId: string }
+): { id: string; name: string; tasks: Task[] } {
+  if (s.miniTargetId === ALL_TASKS_ID) {
+    return { id: ALL_TASKS_ID, name: 'Todas las tareas', tasks: s.tasks }
   }
-  const p = s.projects.find((x) => x.id === s.miniTargetId)
-  if (!p) return { id: TODAY_PROJECT_ID, name: 'Hoy', tasks: s.todayTasks }
-  return { id: p.id, name: p.name, tasks: p.tasks }
+  if (s.miniTargetId !== TODAY_PROJECT_ID) {
+    const p = s.projects.find((x) => x.id === s.miniTargetId)
+    if (p) return { id: p.id, name: p.name, tasks: projectTasks(s, p.id) }
+  }
+  return { id: TODAY_PROJECT_ID, name: 'Hoy', tasks: todayList(s) }
 }

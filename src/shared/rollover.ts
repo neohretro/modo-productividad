@@ -2,10 +2,13 @@
  * Cierre de día y racha — lógica pura y testeable (PLAN.md §4.1 y §8).
  *
  * Reglas:
- *  - "Hoy" NO se vacía. Al cambiar de día: se toma un DailySnapshot del día que
- *    terminó, las completadas se archivan y las pendientes se quedan con daysRolled += días.
- *  - Los PROYECTOS nunca entran aquí: su progreso es acumulado y solo cambia por
- *    acción directa del usuario.
+ *  - "Hoy" NO se vacía. La lista del día son las tareas con día asignado igual o
+ *    anterior a hoy. Al cambiar de día: se toma un DailySnapshot del día que
+ *    terminó, las completadas se archivan y las pendientes se quedan con
+ *    daysRolled += días (y pasan a ser de hoy).
+ *  - Las tareas SIN día ("sueltas", en Todas las tareas) y las de días futuros no
+ *    entran en el cierre: no cuentan como fallo ni rueden. Su progreso (el de los
+ *    proyectos) es acumulado y solo cambia por acción directa del usuario.
  *  - Racha estilo videojuego: se rompe si un día con tareas no se cierra al 100%,
  *    pero un "protector de racha" (freeze) cubre un día fallado sin perderla.
  */
@@ -30,9 +33,13 @@ export function rolloverIfNeeded(state: PersistedState, now: Date = new Date()):
   if (elapsed <= 0) return state // mismo día, o reloj hacia atrás: no-op
 
   const closingDate = state.lastRolloverDate
-  const completed = state.todayTasks.filter((t) => t.done)
-  const pending = state.todayTasks.filter((t) => !t.done)
-  const total = state.todayTasks.length
+  // La lista del día que cierra: tareas asignadas a ese día o a uno anterior.
+  const inClosingList = (t: Task): boolean =>
+    t.scheduledDate !== null && t.scheduledDate <= closingDate
+  const list = state.tasks.filter(inClosingList)
+  const completed = list.filter((t) => t.done)
+  const pending = list.filter((t) => !t.done)
+  const total = list.length
 
   const closingSnapshot: DailySnapshot = {
     date: closingDate,
@@ -54,19 +61,28 @@ export function rolloverIfNeeded(state: PersistedState, now: Date = new Date()):
     })
   }
 
-  // al cerrar el día se corta cualquier enfoque abierto de las tareas que ruedan
-  const rolled: Task[] = pending.map((t) => ({
-    ...commitFocus(t, now.getTime()),
-    daysRolled: t.daysRolled + elapsed
-  }))
+  // Se archivan las hechas (de la lista del día o completadas sin día); lo
+  // futuro no se toca. Las pendientes ruedan: se corta su enfoque abierto y pasan a hoy.
+  const archivable = (t: Task): boolean =>
+    t.done && (t.scheduledDate === null || t.scheduledDate <= closingDate)
+  const archived = state.tasks.filter(archivable).map((t) => commitFocus(t, now.getTime()))
+  const rolledIds = new Set(pending.map((t) => t.id))
+  const tasks = state.tasks
+    .filter((t) => !archivable(t))
+    .map((t) =>
+      rolledIds.has(t.id)
+        ? {
+            ...commitFocus(t, now.getTime()),
+            daysRolled: t.daysRolled + elapsed,
+            scheduledDate: today
+          }
+        : t
+    )
 
   return {
     ...state,
-    todayTasks: rolled,
-    archivedTasks: [
-      ...state.archivedTasks,
-      ...completed.map((t) => commitFocus(t, now.getTime()))
-    ],
+    tasks,
+    archivedTasks: [...state.archivedTasks, ...archived],
     snapshots: [...state.snapshots, closingSnapshot, ...gapSnapshots],
     streak: evaluateStreak(state.streak, closingSnapshot, elapsed),
     lastRolloverDate: today

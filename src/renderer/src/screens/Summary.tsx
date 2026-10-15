@@ -9,7 +9,7 @@ const PERIODS: Period[] = ['today', 'week', 'month']
 
 export default function Summary(): React.JSX.Element {
   const [period, setPeriod] = useState<Period>('week')
-  const todayTasks = useAppStore((s) => s.todayTasks)
+  const tasks = useAppStore((s) => s.tasks)
   const archivedTasks = useAppStore((s) => s.archivedTasks)
   const projects = useAppStore((s) => s.projects)
   const snapshots = useAppStore((s) => s.snapshots)
@@ -20,9 +20,8 @@ export default function Summary(): React.JSX.Element {
     () =>
       buildSummary(
         {
-          version: 2,
-          todayTasks,
-          scheduledTasks: [],
+          version: 5,
+          tasks,
           archivedTasks,
           projects,
           snapshots,
@@ -32,7 +31,7 @@ export default function Summary(): React.JSX.Element {
         },
         period
       ),
-    [todayTasks, archivedTasks, projects, snapshots, streak, settings, period]
+    [tasks, archivedTasks, projects, snapshots, streak, settings, period]
   )
 
   return (
@@ -82,7 +81,7 @@ export default function Summary(): React.JSX.Element {
         ) : (
           <div className="flex flex-col gap-4">
             {summary.worked.map((g) => (
-              <div key={g.projectId}>
+              <div key={g.projectId ?? "none"}>
                 <div className="mb-1.5 flex items-baseline justify-between">
                   <span className="text-sm text-paper">{g.projectName}</span>
                   <span className="text-xs text-paper-dim">

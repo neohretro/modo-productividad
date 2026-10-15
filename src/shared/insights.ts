@@ -3,9 +3,10 @@
  * Lógica pura y local — sin IA, sin red. Observaciones sobre tus propios datos,
  * nunca consejos genéricos ni tono de regaño.
  */
-import { TODAY_PROJECT_ID, type PersistedState, type Task } from './types'
+import type { PersistedState, Task } from './types'
 import { daysBetween, toISODate } from './date'
 import { formatDurationLong } from './focus'
+import { projectProgressOf, projectTasks, todayList } from './tasks'
 
 export type Period = 'today' | 'week' | 'month'
 
@@ -18,7 +19,7 @@ export const PERIOD_LABEL: Record<Period, string> = {
 const PERIOD_DAYS: Record<Period, number> = { today: 1, week: 7, month: 30 }
 
 export interface WorkedGroup {
-  projectId: string
+  projectId: string | null
   projectName: string
   tasks: { text: string; completedDate: string; timeSpentMs: number }[]
   totalTimeMs: number
@@ -48,22 +49,18 @@ function inPeriod(completedDate: string | null, period: Period, now: Date): bool
   return daysBetween(d, today) < PERIOD_DAYS[period] && daysBetween(d, today) >= 0
 }
 
-function projectNameOf(state: PersistedState, projectId: string): string {
-  if (projectId === TODAY_PROJECT_ID) return 'Hoy (suelto)'
+function projectNameOf(state: PersistedState, projectId: string | null): string {
+  if (projectId === null) return 'Sin proyecto'
   return state.projects.find((p) => p.id === projectId)?.name ?? 'Sin proyecto'
 }
 
 export function buildSummary(state: PersistedState, period: Period, now: Date = new Date()): Summary {
-  const allTasks: Task[] = [
-    ...state.todayTasks,
-    ...state.archivedTasks,
-    ...state.projects.flatMap((p) => p.tasks)
-  ]
+  const allTasks: Task[] = [...state.tasks, ...state.archivedTasks]
 
   const completed = allTasks.filter((t) => t.done && inPeriod(t.completedDate, period, now))
 
   // agrupar por proyecto
-  const byProject = new Map<string, WorkedGroup>()
+  const byProject = new Map<string | null, WorkedGroup>()
   for (const t of completed) {
     const g =
       byProject.get(t.projectId) ??
@@ -87,9 +84,8 @@ export function buildSummary(state: PersistedState, period: Period, now: Date = 
   const trackedCount = completed.filter((t) => t.timeSpentMs > 0).length
 
   const projectProgress = state.projects.map((p) => {
-    const total = p.tasks.length
-    const done = p.tasks.filter((t) => t.done).length
-    return { id: p.id, name: p.name, done, total, pct: total === 0 ? 0 : done / total }
+    const { done, total, pct } = projectProgressOf(state, p.id)
+    return { id: p.id, name: p.name, done, total, pct }
   })
 
   // consistencia: últimos 14 días desde snapshots
@@ -127,7 +123,7 @@ function buildSuggestions(
   const info: Suggestion[] = []
 
   // 1. tareas que llevan días rodando
-  const stuck = state.todayTasks
+  const stuck = todayList(state, now)
     .filter((t) => !t.done && t.daysRolled >= 3)
     .sort((a, b) => b.daysRolled - a.daysRolled)
   if (stuck[0]) {
@@ -159,8 +155,9 @@ function buildSuggestions(
 
   // 3. proyecto sin movimiento
   for (const p of state.projects) {
-    if (p.tasks.length === 0 || p.tasks.every((t) => t.done)) continue
-    const lastCreated = p.tasks
+    const all = projectTasks(state, p.id)
+    if (all.length === 0 || all.every((t) => t.done)) continue
+    const lastCreated = all
       .map((t) => t.createdDate)
       .sort()
       .at(-1)

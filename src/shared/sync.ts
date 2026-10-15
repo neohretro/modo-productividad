@@ -31,8 +31,7 @@ export interface SyncStatus {
  */
 export function isPristine(s: PersistedState): boolean {
   return (
-    s.todayTasks.length === 0 &&
-    s.scheduledTasks.length === 0 &&
+    s.tasks.length === 0 &&
     s.archivedTasks.length === 0 &&
     s.projects.length === 0 &&
     s.snapshots.length === 0 &&
@@ -44,8 +43,7 @@ export function isPristine(s: PersistedState): boolean {
 /** Huella estable del estado sincronizable (para detectar cambios locales sin subir). */
 export function stateFingerprint(s: PersistedState): string {
   return JSON.stringify([
-    s.todayTasks,
-    s.scheduledTasks,
+    s.tasks,
     s.archivedTasks,
     s.projects,
     s.snapshots,
@@ -66,6 +64,8 @@ function mergeTask(a: Task, b: Task): Task {
     remindAt: a.remindAt ?? b.remindAt,
     focusStartedAt: a.focusStartedAt ?? b.focusStartedAt,
     completedDate: a.completedDate ?? b.completedDate,
+    projectId: a.projectId ?? b.projectId,
+    scheduledDate: a.scheduledDate ?? b.scheduledDate,
     lastFocusedDate:
       (a.lastFocusedDate ?? '') >= (b.lastFocusedDate ?? '') ? a.lastFocusedDate : b.lastFocusedDate
   }
@@ -84,14 +84,7 @@ function mergeTaskList(a: Task[], b: Task[]): Task[] {
 function mergeProjects(a: Project[], b: Project[]): Project[] {
   const byId = new Map<string, Project>()
   for (const p of a) byId.set(p.id, p)
-  for (const p of b) {
-    const cur = byId.get(p.id)
-    if (!cur) {
-      byId.set(p.id, p)
-    } else {
-      byId.set(p.id, { ...cur, name: cur.name, tasks: mergeTaskList(cur.tasks, p.tasks) })
-    }
-  }
+  for (const p of b) if (!byId.has(p.id)) byId.set(p.id, p)
   return [...byId.values()]
 }
 
@@ -124,8 +117,7 @@ function mergeStreak(a: StreakState, b: StreakState): StreakState {
 export function mergeStates(local: PersistedState, remote: PersistedState): PersistedState {
   return {
     version: local.version,
-    todayTasks: mergeTaskList(local.todayTasks, remote.todayTasks),
-    scheduledTasks: mergeTaskList(local.scheduledTasks, remote.scheduledTasks),
+    tasks: mergeTaskList(local.tasks, remote.tasks),
     archivedTasks: mergeTaskList(local.archivedTasks, remote.archivedTasks),
     projects: mergeProjects(local.projects, remote.projects),
     snapshots: mergeSnapshots(local.snapshots, remote.snapshots),

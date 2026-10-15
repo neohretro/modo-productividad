@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from 'react'
-import { useShallow } from 'zustand/react/shallow'
 import { Maximize2 } from 'lucide-react'
-import { TODAY_PROJECT_ID } from '@shared/types'
-import { focusSortRank, todayProjectTasks } from '@shared/focus'
+import { ALL_TASKS_ID, TODAY_PROJECT_ID } from '@shared/types'
+import { toISODate } from '@shared/date'
+import { focusSortRank } from '@shared/focus'
 import { targetView, useAppStore } from '../store/useAppStore'
 import ProgressRing from './ProgressRing'
 import FocusTaskRow from './FocusTaskRow'
@@ -20,10 +20,15 @@ export default function MiniFloating(): React.JSX.Element {
   const hydrated = useAppStore((s) => s.hydrated)
   const hydrate = useAppStore((s) => s.hydrate)
   const projects = useAppStore((s) => s.projects)
+  const tasks = useAppStore((s) => s.tasks)
+  const archivedTasks = useAppStore((s) => s.archivedTasks)
   const miniTargetId = useAppStore((s) => s.miniTargetId)
   const setMiniTarget = useAppStore((s) => s.setMiniTarget)
   const addTask = useAppStore((s) => s.addTask)
-  const view = useAppStore(useShallow(targetView))
+  const view = useMemo(
+    () => targetView({ tasks, archivedTasks, projects, miniTargetId }),
+    [tasks, archivedTasks, projects, miniTargetId]
+  )
 
   useEffect(() => {
     void hydrate()
@@ -32,18 +37,18 @@ export default function MiniFloating(): React.JSX.Element {
   const pending = view.tasks.filter((t) => !t.done)
   const done = view.tasks.length - pending.length
   const pct = view.tasks.length === 0 ? 0 : done / view.tasks.length
+  const focusing = pending.filter((t) => t.focusStartedAt !== null)
 
-  // En "Hoy", suma las tareas de proyecto que trabajas hoy (con su etiqueta)
-  // para poder cerrarlas sin cambiar de lista.
-  const extra = useMemo(
-    () => (miniTargetId === TODAY_PROJECT_ID ? todayProjectTasks({ projects }) : []),
-    [miniTargetId, projects]
-  )
+  // En curso primero, luego en pausa, luego el resto.
+  const ordered = [...pending].sort((a, b) => focusSortRank(a) - focusSortRank(b))
 
-  const focusing = [...pending, ...extra].filter((t) => t.focusStartedAt !== null)
-
-  // En curso primero (venga de Hoy o de un proyecto), luego en pausa, luego el resto.
-  const ordered = [...extra, ...pending].sort((a, b) => focusSortRank(a) - focusSortRank(b))
+  // Al agregar: en Hoy = para hoy; en un proyecto = con su etiqueta y sin día
+  // (suelta, se asigna a un día después); en "Todas las tareas" = suelta sin etiqueta.
+  const onAdd = (text: string): void => {
+    if (view.id === TODAY_PROJECT_ID) addTask(text, { projectId: null, date: toISODate() })
+    else if (view.id === ALL_TASKS_ID) addTask(text, { projectId: null, date: null })
+    else addTask(text, { projectId: view.id, date: null })
+  }
 
   return (
     <div className="drag flex h-screen w-screen p-2">
@@ -60,6 +65,7 @@ export default function MiniFloating(): React.JSX.Element {
             onChange={setMiniTarget}
             options={[
               { value: TODAY_PROJECT_ID, label: 'Hoy' },
+              { value: ALL_TASKS_ID, label: 'Todas las tareas' },
               ...projects.map((p) => ({ value: p.id, label: p.name }))
             ]}
           />
@@ -94,7 +100,7 @@ export default function MiniFloating(): React.JSX.Element {
           ) : (
             <ul className="space-y-1.5">
               {ordered.map((t) => (
-                <FocusTaskRow key={t.id} task={t} />
+                <FocusTaskRow key={t.id} task={t} showDay={view.id !== TODAY_PROJECT_ID} />
               ))}
             </ul>
           )}
@@ -103,7 +109,7 @@ export default function MiniFloating(): React.JSX.Element {
         <div className="px-3 pb-2.5 pt-1">
           <AddTask
             compact
-            onAdd={(text) => addTask(text, view.id)}
+            onAdd={onAdd}
             placeholder={`Agregar a ${view.name}`}
           />
         </div>

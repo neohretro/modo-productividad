@@ -16,6 +16,7 @@ import { BrowserWindow, ipcMain } from 'electron'
 import Store from 'electron-store'
 import { normalizeState } from '../shared/focus'
 import { isPristine, mergeStates, stateFingerprint, type SyncStatus } from '../shared/sync'
+import { toCloudBlob } from '../shared/migrate'
 import type { PersistedState } from '../shared/types'
 import { getSupabase, getAuthState } from './supabase'
 import { broadcastState, getState, setState } from './store'
@@ -215,7 +216,7 @@ async function push(): Promise<void> {
 
   const { data, error } = await table()
     .update({
-      state: local,
+      state: toCloudBlob(local),
       state_version: local.version,
       last_device_id: deviceId(),
       last_device_label: deviceLabel()
@@ -242,7 +243,7 @@ async function insertInitial(): Promise<void> {
   const { data, error } = await table()
     .insert({
       user_id: uid,
-      state: local,
+      state: toCloudBlob(local),
       state_version: local.version,
       last_device_id: deviceId(),
       last_device_label: deviceLabel()

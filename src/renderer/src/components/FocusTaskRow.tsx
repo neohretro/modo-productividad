@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Bell, Check, Pause, Play } from 'lucide-react'
 import type { Task } from '@shared/types'
 import { focusPhase, formatDurationLong } from '@shared/focus'
+import { dayLabel } from '@shared/tasks'
 import { projectNameOf, useAppStore } from '../store/useAppStore'
 import { useTaskMenu } from '../hooks/useTaskMenu'
 import ProjectChip from './ProjectChip'
@@ -12,7 +13,14 @@ import ProjectChip from './ProjectChip'
  * La fila NO es zona de arrastre: así funcionan el clic derecho y seleccionar
  * texto. El mini se arrastra desde todo lo demás (cabecera, anillo, huecos).
  */
-export default function FocusTaskRow({ task }: { task: Task }): React.JSX.Element {
+export default function FocusTaskRow({
+  task,
+  showDay
+}: {
+  task: Task
+  /** muestra el día asignado (o "sin día") — para las vistas que no son Hoy. */
+  showDay?: boolean
+}): React.JSX.Element {
   const toggleTask = useAppStore((s) => s.toggleTask)
   const toggleFocus = useAppStore((s) => s.toggleFocus)
   const editTask = useAppStore((s) => s.editTask)
@@ -83,6 +91,11 @@ export default function FocusTaskRow({ task }: { task: Task }): React.JSX.Elemen
         )}
         <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px]">
           {projectName && <ProjectChip name={projectName} />}
+          {showDay && (
+            <span className="rounded-full border border-border-hi px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-paper-dim">
+              {task.scheduledDate ? dayLabel(task.scheduledDate) : 'sin día'}
+            </span>
+          )}
           {running && <span className="text-orange">en curso</span>}
           {paused && (
             <span className="text-paper-dim">

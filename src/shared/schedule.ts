@@ -1,24 +1,9 @@
 /**
- * Tareas programadas para una fecha futura (clic derecho → "para mañana / otra
- * fecha"). Viven en `scheduledTasks` y se activan a "Hoy" cuando llega el día.
+ * Etiquetas de fechas programadas. (Las tareas con día asignado entran solas a
+ * "Hoy" cuando llega su día: ya no hay que "activarlas".)
  */
-import type { PersistedState, Task } from './types'
+import type { Task } from './types'
 import { toISODate } from './date'
-
-/** Mueve a "Hoy" las tareas programadas cuyo día ya llegó. Idempotente. */
-export function activateDue(state: PersistedState, now: Date = new Date()): PersistedState {
-  const today = toISODate(now)
-  const due = state.scheduledTasks.filter((t) => !t.scheduledDate || t.scheduledDate <= today)
-  if (due.length === 0) return state
-
-  return {
-    ...state,
-    todayTasks: [...state.todayTasks, ...due.map((t) => ({ ...t, scheduledDate: null }))],
-    scheduledTasks: state.scheduledTasks.filter(
-      (t) => t.scheduledDate !== null && t.scheduledDate > today
-    )
-  }
-}
 
 /** Etiqueta corta y humana para una fecha programada. */
 export function scheduleLabel(iso: string, now: Date = new Date()): string {

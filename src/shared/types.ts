@@ -3,21 +3,25 @@
  * Compartido entre proceso main (persistencia) y renderer (UI).
  */
 
-/** ID del proyecto reservado para la lista continua "Hoy". */
+/**
+ * IDs reservados de las VISTAS (no son proyectos): "Hoy" y "Todas las tareas".
+ * Se usan en el selector del mini y en la pantalla Proyectos.
+ */
 export const TODAY_PROJECT_ID = 'today' as const
+export const ALL_TASKS_ID = 'all' as const
 
 export interface Task {
   id: string
   text: string
   done: boolean
-  /** `TODAY_PROJECT_ID` para la lista de Hoy, o el id de un proyecto. */
-  projectId: string
+  /** Etiqueta de proyecto (id), o null si no es de ningún proyecto. */
+  projectId: string | null
   /** ISO date (YYYY-MM-DD) en que se creó. */
   createdDate: string
   /** ISO datetime en que se completó, o null. */
   completedDate: string | null
   /**
-   * Solo aplica a tareas de "Hoy": cuántos días lleva pendiente sin cerrarse.
+   * Solo aplica a tareas en "Hoy": cuántos días lleva pendiente sin cerrarse.
    * 0 el día que se crea, +N cada vez que cierran días con la tarea abierta.
    */
   daysRolled: number
@@ -25,24 +29,27 @@ export interface Task {
   timeSpentMs: number
   /** epoch ms del tramo de enfoque activo, o null si la tarea no está en curso. */
   focusStartedAt: number | null
-  /** ISO date a la que está programada; null = activa ahora. Vive en `scheduledTasks`. */
+  /**
+   * Día asignado (ISO date). null = tarea "suelta" (sin día): vive en "Todas las
+   * tareas" hasta que la asignes. Hoy o un día pasado = está en "Hoy"; un día
+   * futuro = aparece en ese día de la Semana y se activa sola cuando llega.
+   */
   scheduledDate: string | null
   /** ISO datetime del recordatorio (notificación nativa), o null. Se limpia al dispararse. */
   remindAt: string | null
-  /**
-   * ISO date del último día en que se enfocó (se puso "play"). Sirve para que una
-   * tarea de proyecto que estás trabajando hoy aparezca también en "Hoy" todo el
-   * día, aunque la pauses, hasta cerrarla o hasta que cambie el día.
-   */
+  /** ISO date del último día en que se enfocó ("play"). Informativo. */
   lastFocusedDate: string | null
 }
 
+/**
+ * Un proyecto es solo una ETIQUETA que se le pone a las tareas. Sus tareas no
+ * viven "dentro" del proyecto: son las mismas de Hoy y de la Semana, y el panel
+ * Proyectos las junta por etiqueta.
+ */
 export interface Project {
   id: string
   name: string
   createdDate: string
-  /** progreso = completadas / total, acumulado, nunca se resetea solo. */
-  tasks: Task[]
 }
 
 /** Foto del estado de un día que cerró. Alimenta el Resumen (PLAN.md §4.2). */
@@ -83,12 +90,17 @@ export interface AppSettings {
 /** Forma completa del estado persistido en disco (electron-store). */
 export interface PersistedState {
   version: number
-  /** Lista continua de "Hoy" (pendientes + completadas del día en curso). */
-  todayTasks: Task[]
-  /** Tareas programadas para una fecha futura; se activan a "Hoy" ese día. */
-  scheduledTasks: Task[]
-  /** Tareas de "Hoy" ya archivadas al cerrar su día. Historial para el Resumen. */
+  /**
+   * TODAS las tareas vivas, en una sola lista. Dónde se ven lo decide su día
+   * asignado (`scheduledDate`) y su etiqueta (`projectId`):
+   *  - día de hoy o anterior → aparece en "Hoy"
+   *  - día futuro            → aparece en ese día de la Semana
+   *  - sin día               → "suelta", vive en "Todas las tareas"
+   */
+  tasks: Task[]
+  /** Tareas completadas ya archivadas al cerrar su día. Historial y progreso de proyectos. */
   archivedTasks: Task[]
+  /** Etiquetas de proyecto. */
   projects: Project[]
   snapshots: DailySnapshot[]
   streak: StreakState
@@ -107,12 +119,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system'
 }
 
-export const STATE_VERSION = 4
+export const STATE_VERSION = 5
 
 export const INITIAL_STATE: PersistedState = {
   version: STATE_VERSION,
-  todayTasks: [],
-  scheduledTasks: [],
+  tasks: [],
   archivedTasks: [],
   projects: [],
   snapshots: [],

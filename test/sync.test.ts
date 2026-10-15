@@ -1,33 +1,14 @@
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { INITIAL_STATE, type PersistedState, type Task } from '@shared/types'
+import { INITIAL_STATE } from '@shared/types'
 import { isPristine, mergeStates, stateFingerprint } from '@shared/sync'
+import { state, task } from './helpers'
 
-function task(over: Partial<Task> = {}): Task {
-  return {
-    id: crypto.randomUUID(),
-    text: 't',
-    done: false,
-    projectId: 'today',
-    createdDate: '2026-08-28',
-    completedDate: null,
-    daysRolled: 0,
-    timeSpentMs: 0,
-    focusStartedAt: null,
-    scheduledDate: null,
-    remindAt: null,
-    lastFocusedDate: null,
-    ...over
-  }
-}
-
-function state(over: Partial<PersistedState> = {}): PersistedState {
-  return { ...structuredClone(INITIAL_STATE), ...over }
-}
+const proj = (id: string, name: string) => ({ id, name, createdDate: '2026-08-01' })
 
 test('isPristine: estado inicial sí, con una tarea no', () => {
   assert.equal(isPristine(state()), true)
-  assert.equal(isPristine(state({ todayTasks: [task()] })), false)
+  assert.equal(isPristine(state({ tasks: [task()] })), false)
   assert.equal(
     isPristine(state({ streak: { current: 2, best: 2, lastCountedDate: null, freezesAvailable: 1 } })),
     false
@@ -35,60 +16,59 @@ test('isPristine: estado inicial sí, con una tarea no', () => {
 })
 
 test('stateFingerprint ignora cambios no sincronizables y es estable', () => {
-  const a = state({ todayTasks: [task({ id: 'x', text: 'hola' })] })
-  const b = state({ todayTasks: [task({ id: 'x', text: 'hola' })], version: 999 })
+  const a = state({ tasks: [task({ id: 'x', text: 'hola' })] })
+  const b = state({ tasks: [task({ id: 'x', text: 'hola' })], version: 999 })
   assert.equal(stateFingerprint(a), stateFingerprint(b))
 })
 
 test('mergeStates: une tareas por id de ambos equipos', () => {
-  const local = state({ todayTasks: [task({ id: 'a', text: 'a' })] })
-  const remote = state({ todayTasks: [task({ id: 'b', text: 'b' })] })
+  const local = state({ tasks: [task({ id: 'a', text: 'a' })] })
+  const remote = state({ tasks: [task({ id: 'b', text: 'b' })] })
   const out = mergeStates(local, remote)
-  assert.deepEqual(new Set(out.todayTasks.map((t) => t.id)), new Set(['a', 'b']))
+  assert.deepEqual(new Set(out.tasks.map((t) => t.id)), new Set(['a', 'b']))
 })
 
 test('mergeStates: si una copia está hecha, gana la hecha', () => {
-  const local = state({ todayTasks: [task({ id: 'a', done: false })] })
+  const local = state({ tasks: [task({ id: 'a', done: false })] })
   const remote = state({
-    todayTasks: [task({ id: 'a', done: true, completedDate: '2026-08-28T10:00:00' })]
+    tasks: [task({ id: 'a', done: true, completedDate: '2026-08-28T10:00:00' })]
   })
   const out = mergeStates(local, remote)
-  assert.equal(out.todayTasks[0].done, true)
-  assert.equal(out.todayTasks[0].completedDate, '2026-08-28T10:00:00')
+  assert.equal(out.tasks[0].done, true)
+  assert.equal(out.tasks[0].completedDate, '2026-08-28T10:00:00')
 })
 
 test('mergeStates: tiempo trabajado y recordatorio se conservan', () => {
-  const local = state({ todayTasks: [task({ id: 'a', timeSpentMs: 5000, remindAt: null })] })
+  const local = state({ tasks: [task({ id: 'a', timeSpentMs: 5000, remindAt: null })] })
   const remote = state({
-    todayTasks: [task({ id: 'a', timeSpentMs: 1000, remindAt: '2026-08-29T09:00:00' })]
+    tasks: [task({ id: 'a', timeSpentMs: 1000, remindAt: '2026-08-29T09:00:00' })]
   })
   const out = mergeStates(local, remote)
-  assert.equal(out.todayTasks[0].timeSpentMs, 5000)
-  assert.equal(out.todayTasks[0].remindAt, '2026-08-29T09:00:00')
+  assert.equal(out.tasks[0].timeSpentMs, 5000)
+  assert.equal(out.tasks[0].remindAt, '2026-08-29T09:00:00')
+})
+
+test('mergeStates: conserva etiqueta y día asignado aunque solo una copia los tenga', () => {
+  const local = state({ tasks: [task({ id: 'a', projectId: null, scheduledDate: null })] })
+  const remote = state({ tasks: [task({ id: 'a', projectId: 'p1', scheduledDate: '2026-09-01' })] })
+  const out = mergeStates(local, remote)
+  assert.equal(out.tasks[0].projectId, 'p1')
+  assert.equal(out.tasks[0].scheduledDate, '2026-09-01')
 })
 
 test('mergeStates: lastFocusedDate se queda con la fecha más reciente', () => {
-  const local = state({ projects: [{ id: 'p', name: 'P', createdDate: '2026-08-01', tasks: [task({ id: 'a', lastFocusedDate: '2026-08-27' })] }] })
-  const remote = state({ projects: [{ id: 'p', name: 'P', createdDate: '2026-08-01', tasks: [task({ id: 'a', lastFocusedDate: '2026-08-28' })] }] })
+  const local = state({ tasks: [task({ id: 'a', lastFocusedDate: '2026-08-27' })] })
+  const remote = state({ tasks: [task({ id: 'a', lastFocusedDate: '2026-08-28' })] })
   const out = mergeStates(local, remote)
-  assert.equal(out.projects[0].tasks[0].lastFocusedDate, '2026-08-28')
+  assert.equal(out.tasks[0].lastFocusedDate, '2026-08-28')
 })
 
-test('mergeStates: proyectos se unen y sus tareas también', () => {
-  const local = state({
-    projects: [{ id: 'p', name: 'P', createdDate: '2026-08-01', tasks: [task({ id: 't1' })] }]
-  })
-  const remote = state({
-    projects: [
-      { id: 'p', name: 'P (remoto)', createdDate: '2026-08-01', tasks: [task({ id: 't2' })] },
-      { id: 'q', name: 'Q', createdDate: '2026-08-02', tasks: [] }
-    ]
-  })
+test('mergeStates: proyectos (etiquetas) se unen; el nombre local manda', () => {
+  const local = state({ projects: [proj('p', 'P')] })
+  const remote = state({ projects: [proj('p', 'P (remoto)'), proj('q', 'Q')] })
   const out = mergeStates(local, remote)
   assert.deepEqual(new Set(out.projects.map((p) => p.id)), new Set(['p', 'q']))
-  const p = out.projects.find((x) => x.id === 'p')!
-  assert.equal(p.name, 'P', 'el nombre local manda')
-  assert.deepEqual(new Set(p.tasks.map((t) => t.id)), new Set(['t1', 't2']))
+  assert.equal(out.projects.find((p) => p.id === 'p')!.name, 'P')
 })
 
 test('mergeStates: racha toma los máximos; ajustes locales mandan', () => {

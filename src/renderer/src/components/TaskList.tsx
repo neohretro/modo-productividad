@@ -5,6 +5,7 @@ import { focusPhase, focusSortRank, formatDurationLong } from '@shared/focus'
 import { projectNameOf, useAppStore } from '../store/useAppStore'
 import { useTaskMenu } from '../hooks/useTaskMenu'
 import ProjectChip from './ProjectChip'
+import AssignDay from './AssignDay'
 
 interface Props {
   tasks: Task[]
@@ -13,13 +14,19 @@ interface Props {
   /** muestra el botón de enfoque (▶) en cada fila. */
   focusable?: boolean
   emptyHint?: string
+  /** muestra el día asignado de cada tarea (o "Asignar día" si está suelta). */
+  showDay?: boolean
+  /** oculta la etiqueta de proyecto (cuando la lista ya es de un solo proyecto). */
+  hideProject?: boolean
 }
 
 export default function TaskList({
   tasks,
   showRolled,
   focusable,
-  emptyHint
+  emptyHint,
+  showDay,
+  hideProject
 }: Props): React.JSX.Element {
   if (tasks.length === 0) {
     return (
@@ -35,7 +42,14 @@ export default function TaskList({
   return (
     <ul className="flex flex-col gap-1.5">
       {ordered.map((t) => (
-        <TaskItem key={t.id} task={t} showRolled={showRolled} focusable={focusable} />
+        <TaskItem
+          key={t.id}
+          task={t}
+          showRolled={showRolled}
+          focusable={focusable}
+          showDay={showDay}
+          hideProject={hideProject}
+        />
       ))}
     </ul>
   )
@@ -44,11 +58,15 @@ export default function TaskList({
 function TaskItem({
   task,
   showRolled,
-  focusable
+  focusable,
+  showDay,
+  hideProject
 }: {
   task: Task
   showRolled?: boolean
   focusable?: boolean
+  showDay?: boolean
+  hideProject?: boolean
 }): React.JSX.Element {
   const toggleTask = useAppStore((s) => s.toggleTask)
   const deleteTask = useAppStore((s) => s.deleteTask)
@@ -118,7 +136,7 @@ function TaskItem({
           }`}
         >
           {task.text}
-          {projectName && (
+          {projectName && !hideProject && (
             <ProjectChip name={projectName} className="ml-2 -translate-y-px align-middle no-underline" />
           )}
           {running && (
@@ -135,6 +153,8 @@ function TaskItem({
       )}
 
       <div className="mt-0.5 flex shrink-0 items-center gap-2 self-start">
+        {showDay && !task.done && <AssignDay task={task} />}
+
         {task.remindAt && !task.done && (
           <Bell size={13} strokeWidth={2} className="text-orange" aria-label="Con recordatorio" />
         )}

@@ -1,15 +1,29 @@
 import { BrowserWindow, ipcMain } from 'electron'
 import Store from 'electron-store'
-import { INITIAL_STATE, type AppSettings, type PersistedState } from '../shared/types'
+import { INITIAL_STATE, STATE_VERSION, type AppSettings, type PersistedState } from '../shared/types'
+import { normalizeState } from '../shared/focus'
 
 interface Schema {
   state: PersistedState
+  /** Copia del estado tal como estaba antes de migrar al modelo de una sola lista. */
+  backupBeforeV5?: unknown
 }
 
 const store = new Store<Schema>({
   name: 'modo-productividad',
   defaults: { state: INITIAL_STATE }
 })
+
+// Migración al arrancar: estados viejos (listas separadas de Hoy / programadas /
+// proyectos) pasan al modelo de una sola lista con etiquetas. Antes de tocar nada
+// se guarda una copia del estado original por si hiciera falta recuperarlo.
+{
+  const raw = store.get('state') as unknown as { version?: number } | undefined
+  if (raw && (raw.version ?? 0) < STATE_VERSION) {
+    if (store.get('backupBeforeV5') === undefined) store.set('backupBeforeV5', raw)
+    store.set('state', normalizeState(raw as Partial<PersistedState>))
+  }
+}
 
 export function getState(): PersistedState {
   return store.get('state')

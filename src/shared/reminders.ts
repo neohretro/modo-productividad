@@ -18,9 +18,9 @@ export interface PendingReminder {
  *  (p. ej. sonó mientras la app estaba cerrada). Pasado esto, se descarta. */
 export const REMINDER_GRACE_MS = 24 * 60 * 60 * 1000
 
-/** Todas las tareas vivas que pueden tener recordatorio (Hoy + proyectos). */
-export function remindableTasks(state: PersistedState): Task[] {
-  return [...state.todayTasks, ...state.projects.flatMap((p) => p.tasks)]
+/** Todas las tareas vivas que pueden tener recordatorio. */
+export function remindableTasks(state: Pick<PersistedState, 'tasks'>): Task[] {
+  return state.tasks
 }
 
 function toReminder(t: Task): PendingReminder | null {
@@ -37,7 +37,7 @@ function toReminder(t: Task): PendingReminder | null {
  * Los vencidos hace más de `graceMs` se ignoran (ni se muestran ni se agendan).
  */
 export function collectReminders(
-  state: PersistedState,
+  state: Pick<PersistedState, 'tasks'>,
   now: number = Date.now(),
   graceMs: number = REMINDER_GRACE_MS
 ): { due: PendingReminder[]; upcoming: PendingReminder[] } {
@@ -77,11 +77,8 @@ export function tomorrowAtISO(hour: number, from: Date = new Date()): string {
 
 /** Devuelve una copia del estado con `remindAt = null` en las tareas indicadas. */
 export function clearRemindAts(state: PersistedState, ids: Set<string>): PersistedState {
-  const strip = (t: Task): Task => (ids.has(t.id) ? { ...t, remindAt: null } : t)
   return {
     ...state,
-    todayTasks: state.todayTasks.map(strip),
-    scheduledTasks: state.scheduledTasks.map(strip),
-    projects: state.projects.map((p) => ({ ...p, tasks: p.tasks.map(strip) }))
+    tasks: state.tasks.map((t) => (ids.has(t.id) ? { ...t, remindAt: null } : t))
   }
 }

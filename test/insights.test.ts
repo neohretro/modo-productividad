@@ -1,62 +1,47 @@
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { INITIAL_STATE, TODAY_PROJECT_ID, type PersistedState, type Task } from '@shared/types'
 import { buildSummary } from '@shared/insights'
+import { state, task } from './helpers'
 
 const NOW = new Date('2026-08-28T12:00:00')
+const proj = (id: string, name: string) => ({ id, name, createdDate: '2026-08-01' })
 
-function task(over: Partial<Task> = {}): Task {
-  return {
-    id: crypto.randomUUID(),
-    text: 't',
-    done: false,
-    projectId: TODAY_PROJECT_ID,
-    createdDate: '2026-08-28',
-    completedDate: null,
-    daysRolled: 0,
-    timeSpentMs: 0,
-    focusStartedAt: null,
-    ...over
-  }
-}
-
-function state(over: Partial<PersistedState> = {}): PersistedState {
-  return { ...structuredClone(INITIAL_STATE), ...over }
-}
-
-test('cuenta completadas del período y agrupa por proyecto', () => {
+test('cuenta completadas del período y agrupa por proyecto (etiqueta)', () => {
   const s = state({
-    todayTasks: [
-      task({ done: true, completedDate: '2026-08-28T10:00:00', timeSpentMs: 600_000 }),
-      task({ done: true, completedDate: '2026-08-27T10:00:00' }),
-      task({ done: false })
+    tasks: [
+      task({ done: true, completedDate: '2026-08-28T10:00:00', timeSpentMs: 600_000, scheduledDate: '2026-08-28' }),
+      task({ done: true, completedDate: '2026-08-27T10:00:00', scheduledDate: '2026-08-28' }),
+      task({ done: false, scheduledDate: '2026-08-28' }),
+      task({ projectId: 'p1', done: true, completedDate: '2026-08-28T09:00:00', scheduledDate: '2026-08-28' })
     ],
-    projects: [
-      {
-        id: 'p1',
-        name: 'Planner',
-        createdDate: '2026-08-01',
-        tasks: [task({ projectId: 'p1', done: true, completedDate: '2026-08-28T09:00:00' })]
-      }
-    ]
+    projects: [proj('p1', 'Planner')]
   })
 
   const today = buildSummary(s, 'today', NOW)
   assert.equal(today.completedCount, 2)
   assert.equal(today.totalTimeMs, 600_000)
   assert.equal(today.trackedCount, 1)
-  assert.deepEqual(
-    today.worked.map((g) => g.projectName).sort(),
-    ['Hoy (suelto)', 'Planner']
-  )
+  assert.deepEqual(today.worked.map((g) => g.projectName).sort(), ['Planner', 'Sin proyecto'])
 
   const week = buildSummary(s, 'week', NOW)
   assert.equal(week.completedCount, 3)
 })
 
+test('el avance de un proyecto cuenta tareas vivas y archivadas con su etiqueta', () => {
+  const s = state({
+    projects: [proj('p1', 'Gear')],
+    tasks: [task({ projectId: 'p1', done: true }), task({ projectId: 'p1' })],
+    archivedTasks: [task({ projectId: 'p1', done: true }), task({ projectId: null, done: true })]
+  })
+  const sum = buildSummary(s, 'week', NOW)
+  const p = sum.projectProgress.find((x) => x.id === 'p1')!
+  assert.equal(p.total, 3)
+  assert.equal(p.done, 2)
+})
+
 test('sugerencia: tarea que lleva días rodando', () => {
   const s = state({
-    todayTasks: [task({ text: 'Guion largo', daysRolled: 4 })]
+    tasks: [task({ text: 'Guion largo', daysRolled: 4, scheduledDate: '2026-08-28' })]
   })
   const sum = buildSummary(s, 'week', NOW)
   assert.ok(sum.suggestions.some((x) => x.tone === 'nudge' && x.text.includes('4 días')))
@@ -64,14 +49,8 @@ test('sugerencia: tarea que lleva días rodando', () => {
 
 test('sugerencia: proyecto sin movimiento', () => {
   const s = state({
-    projects: [
-      {
-        id: 'p1',
-        name: 'Gear',
-        createdDate: '2026-08-01',
-        tasks: [task({ projectId: 'p1', createdDate: '2026-08-15' })]
-      }
-    ]
+    projects: [proj('p1', 'Gear')],
+    tasks: [task({ projectId: 'p1', createdDate: '2026-08-15' })]
   })
   const sum = buildSummary(s, 'week', NOW)
   assert.ok(sum.suggestions.some((x) => x.text.includes('Gear') && x.text.includes('movimiento')))
@@ -91,12 +70,14 @@ test('consistencia devuelve 14 días', () => {
 
 test('máximo 5 sugerencias', () => {
   const s = state({
-    todayTasks: [task({ daysRolled: 9 }), task({ daysRolled: 3 })],
+    tasks: [
+      task({ daysRolled: 9, scheduledDate: '2026-08-28' }),
+      task({ daysRolled: 3, scheduledDate: '2026-08-28' }),
+      task({ projectId: 'a', createdDate: '2026-01-01' }),
+      task({ projectId: 'b', createdDate: '2026-01-01' })
+    ],
     streak: { current: 10, best: 10, lastCountedDate: '2026-08-27', freezesAvailable: 3 },
-    projects: [
-      { id: 'a', name: 'A', createdDate: '2026-01-01', tasks: [task({ projectId: 'a', createdDate: '2026-01-01' })] },
-      { id: 'b', name: 'B', createdDate: '2026-01-01', tasks: [task({ projectId: 'b', createdDate: '2026-01-01' })] }
-    ]
+    projects: [proj('a', 'A'), proj('b', 'B')]
   })
   const sum = buildSummary(s, 'week', NOW)
   assert.ok(sum.suggestions.length <= 5)

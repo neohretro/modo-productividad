@@ -1,16 +1,19 @@
 import { useState } from 'react'
 import {
-  ArrowRightLeft,
   Bell,
   BellOff,
   CalendarClock,
   CalendarPlus,
+  CalendarX2,
+  Check,
   Copy,
   CopyPlus,
+  FolderKanban,
   Pencil,
+  Sun,
   Trash2
 } from 'lucide-react'
-import { TODAY_PROJECT_ID, type Task } from '@shared/types'
+import type { Task } from '@shared/types'
 import { addDaysISO, toISODate } from '@shared/date'
 import { inHoursISO, laterTodayISO, tomorrowAtISO } from '@shared/reminders'
 import { useAppStore } from '../store/useAppStore'
@@ -47,8 +50,8 @@ export default function TaskContextMenu({
   const [date, setDate] = useState(addDaysISO(toISODate(), 1))
   const [when, setWhen] = useState(() => toLocalInput(new Date(Date.now() + 3_600_000)))
   const laterToday = laterTodayISO(18)
-  // Las tareas de proyecto no tienen fecha; solo se pueden mover.
-  const canSchedule = task.projectId === TODAY_PROJECT_ID
+  const today = toISODate()
+  const inToday = task.scheduledDate !== null && task.scheduledDate <= today
 
   const done = (fn: () => void, msg?: string): void => {
     fn()
@@ -77,26 +80,29 @@ export default function TaskContextMenu({
             onClick={() => done(() => s.duplicateTask(task.id))}
           />
           <MenuSep />
-          {canSchedule && (
-            <>
-              <MenuItem
-                Icon={CalendarPlus}
-                label="Para mañana"
-                onClick={() =>
-                  done(
-                    () => s.moveTaskToDate(task.id, addDaysISO(toISODate(), 1)),
-                    'Movida a mañana'
-                  )
-                }
-              />
-              <MenuItem
-                Icon={CalendarClock}
-                label="Para otra fecha…"
-                onClick={() => setMode('date')}
-              />
-            </>
+          {!inToday && (
+            <MenuItem
+              Icon={Sun}
+              label="Para hoy"
+              onClick={() => done(() => s.assignDay(task.id, today), 'Asignada a hoy')}
+            />
           )}
-          <MenuItem Icon={ArrowRightLeft} label="Mover a…" onClick={() => setMode('project')} />
+          <MenuItem
+            Icon={CalendarPlus}
+            label="Para mañana"
+            onClick={() =>
+              done(() => s.assignDay(task.id, addDaysISO(today, 1)), 'Asignada a mañana')
+            }
+          />
+          <MenuItem Icon={CalendarClock} label="Para otra fecha…" onClick={() => setMode('date')} />
+          {task.scheduledDate !== null && (
+            <MenuItem
+              Icon={CalendarX2}
+              label="Quitar el día (suelta)"
+              onClick={() => done(() => s.assignDay(task.id, null), 'Quedó sin día')}
+            />
+          )}
+          <MenuItem Icon={FolderKanban} label="Proyecto…" onClick={() => setMode('project')} />
           <MenuSep />
           {task.remindAt ? (
             <MenuItem
@@ -135,7 +141,7 @@ export default function TaskContextMenu({
               Atrás
             </button>
             <button
-              onClick={() => done(() => s.moveTaskToDate(task.id, date), 'Programada')}
+              onClick={() => done(() => s.assignDay(task.id, date), 'Día asignado')}
               className="flex-1 rounded-[11px] bg-orange px-2 py-1.5 text-xs text-onaccent"
             >
               Listo
@@ -146,22 +152,21 @@ export default function TaskContextMenu({
 
       {mode === 'project' && (
         <>
-          <MenuLabel>Mover a</MenuLabel>
-          {task.projectId !== TODAY_PROJECT_ID && (
+          <MenuLabel>Proyecto</MenuLabel>
+          <MenuItem
+            label="Sin proyecto"
+            onClick={() => done(() => s.setTaskProject(task.id, null), 'Sin proyecto')}
+            trailing={task.projectId === null ? <Check size={12} strokeWidth={3} className="text-orange" /> : null}
+          />
+          {s.projects.map((p) => (
             <MenuItem
-              label="Hoy"
-              onClick={() => done(() => s.moveTaskToProject(task.id, TODAY_PROJECT_ID), 'Movida a Hoy')}
+              key={p.id}
+              Icon={FolderKanban}
+              label={p.name}
+              onClick={() => done(() => s.setTaskProject(task.id, p.id), `En ${p.name}`)}
+              trailing={task.projectId === p.id ? <Check size={12} strokeWidth={3} className="text-orange" /> : null}
             />
-          )}
-          {s.projects
-            .filter((p) => p.id !== task.projectId)
-            .map((p) => (
-              <MenuItem
-                key={p.id}
-                label={p.name}
-                onClick={() => done(() => s.moveTaskToProject(task.id, p.id), `Movida a ${p.name}`)}
-              />
-            ))}
+          ))}
           <MenuSep />
           <MenuItem label="Atrás" onClick={() => setMode('root')} />
         </>

@@ -11,7 +11,7 @@ import {
   type PersistedState,
   type Task
 } from './types'
-import { toISODate } from './date'
+import { cleanProjectId, isNewShape, migrateLegacyTasks, type LegacyShape } from './migrate'
 
 /** Si un tramo de enfoque quedó abierto más de esto (app cerrada), se descarta. */
 export const STALE_FOCUS_MS = 4 * 60 * 60 * 1000
@@ -55,7 +55,7 @@ function normalizeTask(t: Partial<Task>): Task {
     id: t.id ?? crypto.randomUUID(),
     text: t.text ?? '',
     done: t.done ?? false,
-    projectId: t.projectId ?? 'today',
+    projectId: cleanProjectId(t.projectId),
     createdDate: t.createdDate ?? new Date().toISOString().slice(0, 10),
     completedDate: t.completedDate ?? null,
     daysRolled: t.daysRolled ?? 0,
@@ -68,8 +68,9 @@ function normalizeTask(t: Partial<Task>): Task {
 }
 
 /**
- * Rellena campos nuevos en estados guardados por versiones anteriores y cierra
- * tramos de enfoque que quedaron colgados. Idempotente.
+ * Deja un estado cargado (de disco o de la nube) en el formato actual: convierte
+ * el modelo viejo (listas separadas) al nuevo (una lista + etiquetas), rellena
+ * campos que falten y cierra tramos de enfoque que quedaron colgados. Idempotente.
  */
 export function normalizeState(
   loaded: Partial<PersistedState>,
@@ -82,16 +83,25 @@ export function normalizeState(
     return t
   }
 
+  let tasks: Task[]
+  let archivedTasks: Task[]
+  if (isNewShape(loaded)) {
+    tasks = (loaded.tasks ?? []).map(normalizeTask)
+    archivedTasks = (loaded.archivedTasks ?? []).map(normalizeTask)
+  } else {
+    const migrated = migrateLegacyTasks(loaded as LegacyShape, normalizeTask, new Date(now))
+    tasks = migrated.tasks
+    archivedTasks = migrated.archivedTasks
+  }
+
   return {
     version: STATE_VERSION,
-    todayTasks: (loaded.todayTasks ?? []).map((t) => closeStale(normalizeTask(t))),
-    scheduledTasks: (loaded.scheduledTasks ?? []).map(normalizeTask),
-    archivedTasks: (loaded.archivedTasks ?? []).map(normalizeTask),
+    tasks: tasks.map(closeStale),
+    archivedTasks,
     projects: (loaded.projects ?? []).map((p) => ({
       id: p.id ?? crypto.randomUUID(),
       name: p.name ?? 'Proyecto',
-      createdDate: p.createdDate ?? new Date().toISOString().slice(0, 10),
-      tasks: (p.tasks ?? []).map((t) => closeStale(normalizeTask(t)))
+      createdDate: p.createdDate ?? new Date().toISOString().slice(0, 10)
     })),
     snapshots: loaded.snapshots ?? [],
     streak: loaded.streak ?? {
@@ -105,10 +115,9 @@ export function normalizeState(
   }
 }
 
-/** IDs de todas las tareas vivas que están en enfoque ahora mismo. */
-export function activeFocusTasks(state: PersistedState): Task[] {
-  const all = [...state.todayTasks, ...state.projects.flatMap((p) => p.tasks)]
-  return all.filter((t) => t.focusStartedAt !== null && !t.done)
+/** Todas las tareas vivas que están en enfoque ahora mismo. */
+export function activeFocusTasks(state: Pick<PersistedState, 'tasks'>): Task[] {
+  return state.tasks.filter((t) => t.focusStartedAt !== null && !t.done)
 }
 
 /** Estado de enfoque de una tarea, para diferenciarlas visualmente. */
@@ -128,20 +137,4 @@ export function focusSortRank(task: Task): number {
   if (task.done) return 3
   const p = focusPhase(task)
   return p === 'running' ? 0 : p === 'paused' ? 1 : 2
-}
-
-/**
- * Tareas DE PROYECTO que estás trabajando hoy (les diste "play" en algún momento
- * del día). Se muestran también en "Hoy", con su etiqueta de proyecto, todo el
- * día, aunque las pauses, hasta cerrarlas o hasta que cambie el día. Así lo que
- * estás haciendo hoy vive en un solo lugar.
- */
-export function todayProjectTasks(
-  state: Pick<PersistedState, 'projects'>,
-  now: Date = new Date()
-): Task[] {
-  const today = toISODate(now)
-  return state.projects
-    .flatMap((p) => p.tasks)
-    .filter((t) => !t.done && t.lastFocusedDate === today)
 }

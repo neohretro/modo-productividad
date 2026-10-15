@@ -46,7 +46,7 @@ Una burbuja de vidrio flotante, siempre encima de todo, que puedes arrastrar a
 donde quieras. Muestra:
 
 - **El anillo de avance del día** — el % de tareas completadas.
-- **Un selector** para ver las tareas de "Hoy" o las de cualquier proyecto.
+- **Un selector** para ver "Hoy", "Todas las tareas" o las tareas de cualquier proyecto.
 - **La lista de tareas**, cada una con: ▶ para ponerte a trabajarla, ⏸ para
   pausar, ✓ para completarla. Las pausadas se marcan como tal, con el tiempo que
   llevas.
@@ -73,9 +73,17 @@ tareas — los días pasados, lo que completaste ese día; hoy, tu lista de Hoy;
 días futuros, lo que dejaste programado. Puedes agregar una tarea a un día
 concreto y arrastrar una tarea de un día a otro para reprogramarla.
 
-**Proyectos** — Crea proyectos (MODO Planner, Gear, lo que sea), renómbralos,
-elimínalos. Cada proyecto tiene su propio anillo de progreso **acumulado** (no se
-reinicia solo, vive semanas). Chips para cambiar de uno a otro.
+**Proyectos** — Un proyecto es una **etiqueta** que le pones a tus tareas: no
+las separa de Hoy ni de la Semana. Una tarea con etiqueta "Tinkko" aparece en
+Hoy (con su etiquetita) y a la vez cuenta en el avance de Tinkko. Cada proyecto
+tiene su propio anillo de progreso **acumulado** (no se reinicia solo, vive
+semanas) y se ven juntas todas sus tareas: sin día, con día y hechas. Al
+quitar un proyecto, sus tareas se conservan (solo pierden la etiqueta).
+
+La primera sección es **"Todas las tareas"**: todo lo que tienes, de cualquier
+proyecto. Las tareas que aún **no tienen día** quedan sueltas ahí, y cuando vas
+a trabajarlas las asignas a **Hoy**, a **mañana** o a un día de tu calendario
+(con "Asignar día", clic derecho, o arrastrándolas desde la Semana).
 
 **Resumen** — Elige el período (hoy / 7 días / 30 días) y ves:
 - En qué trabajaste, agrupado por proyecto, con el tiempo de cada tarea.
@@ -91,13 +99,21 @@ reinicia solo, vive semanas). Chips para cambiar de uno a otro.
 global de teclado, aviso de multitasking, activar el modo mini, la cuenta para
 sincronizar, y las actualizaciones.
 
-### "Hoy" vs. Proyectos — la diferencia clave
+### Una sola lista de tareas
 
-- **"Hoy" no se vacía cada día.** Es una lista continua. Al cambiar de día se
-  guarda una foto (para el Resumen), las tareas completadas se archivan, y las
-  pendientes se quedan — cada una con un contador de cuántos días lleva rodando.
-- **Los proyectos no se reinician nunca.** Su progreso crece o cambia solo cuando
-  tú agregas, completas o borras tareas.
+Todas las tareas viven en una sola lista. Lo que decide dónde se ven es su
+**día** y su **etiqueta**:
+
+- **Con día de hoy (o anterior)** → aparece en **Hoy**. Hoy no se vacía cada día:
+  al cambiar de día se guarda una foto (para el Resumen), las completadas se
+  archivan y las pendientes se quedan con un contador de cuántos días llevan
+  rodando.
+- **Con un día futuro** → aparece en ese día de la **Semana** y entra sola a Hoy
+  cuando llega.
+- **Sin día** → queda "suelta" en **Todas las tareas** hasta que la asignes. Las
+  sueltas no cuentan como pendientes del día ni rompen tu racha.
+- **Con etiqueta de proyecto** → además se junta con las de su proyecto, sin
+  importar en qué día esté.
 
 ### El modo enfoque
 
@@ -109,10 +125,8 @@ queda en el Resumen agrupado por proyecto.
 Una tarea pausada se ve distinta de una que no has empezado: muestra "en pausa" y
 el tiempo que ya llevas, para que te acuerdes de retomarla.
 
-**Las tareas de proyecto que trabajas hoy aparecen también en "Hoy".** Si le das ▶
-a una tarea de un proyecto, se suma a tu lista de Hoy (con una etiqueta que dice de
-qué proyecto es) y se queda ahí todo el día, aunque la pauses, hasta que la cierres
-o cambie el día. Así lo que estás haciendo hoy vive en un solo lugar.
+**Darle ▶ a una tarea suelta o de otro día la pasa a Hoy**: si la estás
+trabajando, es de hoy.
 
 Si enfocas dos o más tareas a la vez, aparece el aviso de multitasking: una
 notificación de Windows con el dato completo, y en la app un recordatorio
@@ -178,7 +192,7 @@ Ajustes.
   muestra un aviso azul la primera vez ("Windows protegió tu PC"). Se resuelve con
   **"Más información" → "Ejecutar de todas formas"**. (Se quitará al comprar un
   certificado de firma para la versión pública.)
-- **Versión actual:** 0.4.3
+- **Versión actual:** 0.5.0
 
 ## Privacidad
 
