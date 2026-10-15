@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Bell, Check, Pause, Play, Trash2 } from 'lucide-react'
+import { ArrowLeftToLine, Bell, Check, Pause, Play, Trash2 } from 'lucide-react'
+import { toISODate } from '@shared/date'
 import type { Task } from '@shared/types'
 import { focusPhase, focusSortRank, formatDurationLong } from '@shared/focus'
 import { projectNameOf, useAppStore } from '../store/useAppStore'
@@ -18,6 +19,8 @@ interface Props {
   showDay?: boolean
   /** oculta la etiqueta de proyecto (cuando la lista ya es de un solo proyecto). */
   hideProject?: boolean
+  /** botón de un clic para traer la tarea a Hoy (si todavía no está en Hoy). */
+  quickToday?: boolean
 }
 
 export default function TaskList({
@@ -26,7 +29,8 @@ export default function TaskList({
   focusable,
   emptyHint,
   showDay,
-  hideProject
+  hideProject,
+  quickToday
 }: Props): React.JSX.Element {
   if (tasks.length === 0) {
     return (
@@ -49,6 +53,7 @@ export default function TaskList({
           focusable={focusable}
           showDay={showDay}
           hideProject={hideProject}
+          quickToday={quickToday}
         />
       ))}
     </ul>
@@ -60,13 +65,15 @@ function TaskItem({
   showRolled,
   focusable,
   showDay,
-  hideProject
+  hideProject,
+  quickToday
 }: {
   task: Task
   showRolled?: boolean
   focusable?: boolean
   showDay?: boolean
   hideProject?: boolean
+  quickToday?: boolean
 }): React.JSX.Element {
   const toggleTask = useAppStore((s) => s.toggleTask)
   const deleteTask = useAppStore((s) => s.deleteTask)
@@ -75,6 +82,7 @@ function TaskItem({
   const editing = useAppStore((s) => s.editingTaskId === task.id)
   const setEditingTask = useAppStore((s) => s.setEditingTask)
   const projectName = useAppStore((s) => projectNameOf(s, task))
+  const assignDay = useAppStore((s) => s.assignDay)
   const [draft, setDraft] = useState(task.text)
   const { onContextMenu, menu } = useTaskMenu(task)
 
@@ -153,7 +161,18 @@ function TaskItem({
       )}
 
       <div className="mt-0.5 flex shrink-0 items-center gap-2 self-start">
-        {showDay && !task.done && <AssignDay task={task} />}
+        {quickToday && !task.done && (task.scheduledDate === null || task.scheduledDate > toISODate()) && (
+          <button
+            onClick={() => assignDay(task.id, toISODate())}
+            title="Traer a Hoy"
+            className="inline-flex shrink-0 items-center gap-1 rounded-full bg-orange px-2 py-0.5 text-[10px] font-medium text-onaccent transition-opacity hover:opacity-85"
+          >
+            <ArrowLeftToLine size={10} strokeWidth={2.5} />
+            Hoy
+          </button>
+        )}
+
+        {showDay && !task.done && <AssignDay task={task} compact={quickToday} />}
 
         {task.remindAt && !task.done && (
           <Bell size={13} strokeWidth={2} className="text-orange" aria-label="Con recordatorio" />

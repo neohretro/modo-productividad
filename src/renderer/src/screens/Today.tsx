@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react'
-import { CalendarClock, ClipboardList, Flame, Snowflake } from 'lucide-react'
+import { ArrowRight, ClipboardList, Flame, Inbox, Snowflake } from 'lucide-react'
 import { toISODate, weekdayShortES } from '@shared/date'
-import { dayLabel, projectNameFor, scheduledAhead, todayList } from '@shared/tasks'
+import { looseTasks, scheduledAhead, todayList } from '@shared/tasks'
 import { useAppStore } from '../store/useAppStore'
 import ProgressRing from '../components/ProgressRing'
 import TaskList from '../components/TaskList'
 import AddTask from '../components/AddTask'
 import ProjectPicker from '../components/ProjectPicker'
-import ProjectChip from '../components/ProjectChip'
 import MultitaskNudge from '../components/MultitaskNudge'
 
 function greeting(): string {
@@ -24,21 +23,25 @@ export default function Today(): React.JSX.Element {
   const streak = useAppStore((s) => s.streak)
   const snapshots = useAppStore((s) => s.snapshots)
   const addTask = useAppStore((s) => s.addTask)
-  const assignDay = useAppStore((s) => s.assignDay)
-  const deleteTask = useAppStore((s) => s.deleteTask)
   const setFlash = useAppStore((s) => s.setFlash)
-  // Etiqueta de proyecto con la que se crean las tareas nuevas (opcional).
-  const [newProject, setNewProject] = useState<string | null>(null)
+  const setScreen = useAppStore((s) => s.setScreen)
+  // Etiqueta de proyecto con la que se crean las tareas nuevas (opcional), una por columna.
+  const [todayLabel, setTodayLabel] = useState<string | null>(null)
+  const [looseLabel, setLooseLabel] = useState<string | null>(null)
 
   // "Hoy" = todas las tareas con día asignado hoy o antes (de cualquier proyecto).
   const todayTasks = useMemo(() => todayList({ tasks }), [tasks])
-  const scheduledTasks = useMemo(() => scheduledAhead({ tasks }), [tasks])
+  // "Todas las tareas" = lo que todavía no está en Hoy: sueltas y programadas a futuro.
+  const loose = useMemo(() => looseTasks({ tasks }), [tasks])
+  const ahead = useMemo(() => scheduledAhead({ tasks }).filter((t) => !t.done), [tasks])
 
   const total = todayTasks.length
   const done = todayTasks.filter((t) => t.done).length
+  const pending = total - done
   const pct = total === 0 ? 0 : done / total
   const focusingCount = todayTasks.filter((t) => t.focusStartedAt !== null && !t.done).length
   const last7 = buildLast7(snapshots)
+  const otherCount = loose.length + ahead.length
 
   const copyList = (): void => {
     const lines = todayTasks
@@ -52,68 +55,60 @@ export default function Today(): React.JSX.Element {
 
   return (
     <div className="stagger flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
-      {/* bienvenida */}
-      <section className="glass relative shrink-0 overflow-hidden rounded-card px-5 py-3.5">
-        <span className="absolute right-0 top-0 h-8 w-8 rounded-bl-[18px] border-b border-l border-orange/50 bg-orange-glow" />
-        <h1 className="text-xl leading-tight">{greeting()}.</h1>
-        <p className="text-xs capitalize text-paper-dim">
-          {new Date().toLocaleDateString('es', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long'
-          })}
-        </p>
-      </section>
+      {/* resumen del día — una sola franja compacta para dejarle el espacio a las listas */}
+      <section className="glass relative flex shrink-0 items-center gap-5 overflow-hidden rounded-card py-3 pl-5 pr-6">
+        <span className="absolute right-0 top-0 h-7 w-7 rounded-bl-[16px] border-b border-l border-orange/50 bg-orange-glow" />
 
-      {/* fila de métricas — altura fija */}
-      <div className="grid shrink-0 grid-cols-12 gap-3" style={{ height: 208 }}>
-        <section className="glass-strong relative col-span-5 grid place-items-center overflow-hidden rounded-card">
+        <div className="min-w-0 shrink-0">
+          <h1 className="text-xl leading-tight">{greeting()}.</h1>
+          <p className="text-xs capitalize text-paper-dim">
+            {new Date().toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </p>
+        </div>
+
+        <span className="mx-1 h-12 w-px shrink-0 bg-border" aria-hidden />
+
+        <div className="relative shrink-0">
           <div className="ring-halo pointer-events-none absolute inset-0" />
-          <ProgressRing
-            pct={pct}
-            size={176}
-            stroke={7}
-            label="del día"
-            sub={`${done} de ${total || 0}`}
-          />
-        </section>
+          <ProgressRing pct={pct} size={92} stroke={5} label="del día" sub={`${done} de ${total}`} />
+        </div>
 
-        <div className="col-span-7 grid grid-cols-2 grid-rows-[1fr_auto] gap-3">
-          <div className="glass flex flex-col justify-between rounded-card p-4">
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-6">
+          <div>
             <p className="text-[10px] uppercase tracking-wide text-paper-dim">Completadas</p>
-            <p className="font-display text-3xl leading-none tabular-nums">
+            <p className="font-display text-2xl leading-none tabular-nums">
               {done}
-              <span className="text-lg text-paper-dim"> / {total}</span>
+              <span className="text-base text-paper-dim"> / {total}</span>
             </p>
           </div>
 
-          <div className="glass flex flex-col justify-between rounded-card p-4">
+          <div>
             <p className="text-[10px] uppercase tracking-wide text-paper-dim">Racha</p>
-            <div>
-              <p className="flex items-center gap-1.5 font-display text-3xl leading-none tabular-nums">
-                <Flame
-                  size={20}
-                  strokeWidth={2}
-                  className={streak.current > 0 ? 'text-orange' : 'text-paper-dim'}
-                />
-                {streak.current}
-              </p>
-              <p className="mt-1.5 flex items-center gap-2 text-[10px] text-paper-dim">
-                <span>mejor {streak.best}</span>
-                {streak.freezesAvailable > 0 && (
-                  <span className="flex items-center gap-0.5">
-                    {Array.from({ length: streak.freezesAvailable }).map((_, i) => (
-                      <Snowflake key={i} size={10} strokeWidth={2} />
-                    ))}
-                  </span>
-                )}
-              </p>
-            </div>
+            <p className="flex items-center gap-1.5 font-display text-2xl leading-none tabular-nums">
+              <Flame
+                size={18}
+                strokeWidth={2}
+                className={streak.current > 0 ? 'text-orange' : 'text-paper-dim'}
+              />
+              {streak.current}
+            </p>
+            <p className="mt-1 flex items-center gap-2 text-[10px] text-paper-dim">
+              <span>mejor {streak.best}</span>
+              {streak.freezesAvailable > 0 && (
+                <span className="flex items-center gap-0.5">
+                  {Array.from({ length: streak.freezesAvailable }).map((_, i) => (
+                    <Snowflake key={i} size={10} strokeWidth={2} />
+                  ))}
+                </span>
+              )}
+            </p>
           </div>
 
-          <div className="glass col-span-2 flex flex-col gap-2 rounded-card px-4 py-3">
-            <p className="text-[10px] uppercase tracking-wide text-paper-dim">Últimos 7 días</p>
-            <div className="flex h-11 items-end gap-1.5">
+          <div className="hidden min-[1000px]:block">
+            <p className="mb-1.5 text-[10px] uppercase tracking-wide text-paper-dim">
+              Últimos 7 días
+            </p>
+            <div className="flex h-9 w-36 items-end gap-1.5">
               {last7.map((d) => (
                 <div key={d.date} className="flex flex-1 flex-col items-center gap-1">
                   <div className="flex h-full w-full items-end rounded-[3px] bg-ink">
@@ -133,95 +128,126 @@ export default function Today(): React.JSX.Element {
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* lista de hoy — ocupa el resto, scroll interno */}
-      <section className="glass flex min-h-0 flex-1 flex-col rounded-card p-5">
-        <div className="mb-2.5 flex items-center justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-2">
-            <h2 className="shrink-0 text-base">Hoy</h2>
-            {focusingCount >= 2 ? (
-              <MultitaskNudge count={focusingCount} />
-            ) : (
-              <span className="text-[10px] uppercase tracking-wide text-paper-dim">
-                lista continua
-              </span>
+      {/* dos columnas: lo de hoy  |  todo lo demás */}
+      <div className="grid min-h-0 flex-1 grid-cols-2 gap-3">
+        {/* HOY */}
+        <section className="glass flex min-h-0 min-w-0 flex-col rounded-card p-4">
+          <div className="mb-2.5 flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <h2 className="shrink-0 text-base">Hoy</h2>
+              {pending > 0 && (
+                <span className="shrink-0 rounded-full bg-orange px-2 py-0.5 text-[10px] font-medium tabular-nums text-onaccent">
+                  {pending} {pending === 1 ? 'pendiente' : 'pendientes'}
+                </span>
+              )}
+              {focusingCount >= 2 && <MultitaskNudge count={focusingCount} />}
+            </div>
+            {todayTasks.some((t) => !t.done) && (
+              <button
+                onClick={copyList}
+                title="Copiar la lista de pendientes"
+                className="flex shrink-0 items-center gap-1 rounded-chip border border-border-hi px-2 py-1 text-[10px] text-paper-dim transition-colors hover:border-orange hover:text-orange"
+              >
+                <ClipboardList size={11} strokeWidth={1.75} />
+                Copiar
+              </button>
             )}
           </div>
-          {todayTasks.some((t) => !t.done) && (
+
+          <div className="-mr-1.5 min-h-0 flex-1 overflow-y-auto pr-1.5">
+            <TaskList
+              tasks={todayTasks}
+              showRolled
+              focusable
+              emptyHint="Nada para hoy todavía. Agrega una abajo o trae una desde 'Todas las tareas'."
+            />
+          </div>
+
+          <div className="mt-3 flex shrink-0 flex-col gap-1.5">
+            <AddTask
+              onAdd={(t) => addTask(t, { projectId: todayLabel, date: toISODate() })}
+              placeholder="¿Qué vas a crear hoy?"
+            />
+            {projects.length > 0 && (
+              <div className="flex items-center gap-2 px-1 text-[10px] text-paper-dim">
+                <span>Etiqueta:</span>
+                <ProjectPicker value={todayLabel} onChange={setTodayLabel} />
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* TODAS LAS TAREAS (las que no están en Hoy) */}
+        <section className="glass flex min-h-0 min-w-0 flex-col rounded-card p-4">
+          <div className="mb-2.5 flex items-center gap-2">
+            <h2 className="text-base">Todas las tareas</h2>
+            {otherCount > 0 && (
+              <span className="rounded-full bg-ink-soft px-2 py-0.5 text-[10px] tabular-nums text-paper-dim">
+                {otherCount}
+              </span>
+            )}
+            <span className="min-w-0 flex-1 truncate text-[10px] text-paper-dim">
+              lo que aún no está en Hoy
+            </span>
             <button
-              onClick={copyList}
-              title="Copiar la lista de pendientes"
+              onClick={() => setScreen('tasks')}
               className="flex shrink-0 items-center gap-1 rounded-chip border border-border-hi px-2 py-1 text-[10px] text-paper-dim transition-colors hover:border-orange hover:text-orange"
             >
-              <ClipboardList size={11} strokeWidth={1.75} />
-              Copiar lista
+              Ver todas
+              <ArrowRight size={11} strokeWidth={2} />
             </button>
-          )}
-        </div>
-        <div className="-mr-1.5 min-h-0 flex-1 overflow-y-auto pr-1.5">
-          <TaskList
-            tasks={todayTasks}
-            showRolled
-            focusable
-            emptyHint="Sin tareas hoy. Agrega la primera abajo."
-          />
+          </div>
 
-          {scheduledTasks.length > 0 && (
-            <div className="mt-3 border-t border-border pt-2.5">
-              <p className="mb-1.5 flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-paper-dim">
-                <CalendarClock size={11} strokeWidth={1.75} />
-                Programadas ({scheduledTasks.length})
-              </p>
-              <ul className="flex flex-col gap-1">
-                {scheduledTasks.map((t) => {
-                  const project = projectNameFor(projects, t)
-                  return (
-                    <li
-                      key={t.id}
-                      className="flex items-center gap-2 rounded-chip border border-border bg-ink-soft px-3 py-2 text-xs"
-                    >
-                      <span className="min-w-0 flex-1 select-text truncate text-paper-dim">
-                        {t.text}
-                      </span>
-                      {project && <ProjectChip name={project} />}
-                      <span className="shrink-0 rounded-full bg-orange-soft px-2 py-0.5 text-[10px] capitalize text-orange">
-                        {t.scheduledDate ? dayLabel(t.scheduledDate) : ''}
-                      </span>
-                      <button
-                        onClick={() => assignDay(t.id, toISODate())}
-                        className="shrink-0 text-[10px] text-paper-dim hover:text-paper"
-                        title="Traer a Hoy ahora"
-                      >
-                        a Hoy
-                      </button>
-                      <button
-                        onClick={() => deleteTask(t.id)}
-                        className="shrink-0 text-paper-dim hover:text-orange"
-                        title="Eliminar"
-                      >
-                        ✕
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          )}
-        </div>
-        <div className="mt-3 flex shrink-0 flex-col gap-1.5">
-          <AddTask
-            onAdd={(t) => addTask(t, { projectId: newProject, date: toISODate() })}
-            placeholder="¿Qué vas a crear hoy?"
-          />
-          {projects.length > 0 && (
-            <div className="flex items-center gap-2 px-1 text-[10px] text-paper-dim">
-              <span>Etiqueta:</span>
-              <ProjectPicker value={newProject} onChange={setNewProject} />
-            </div>
-          )}
-        </div>
-      </section>
+          <div className="-mr-1.5 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1.5">
+            {otherCount === 0 && (
+              <div className="grid place-items-center gap-2 py-10 text-center">
+                <span className="grid h-10 w-10 place-items-center rounded-[14px] bg-orange-soft text-orange">
+                  <Inbox size={18} strokeWidth={1.75} />
+                </span>
+                <p className="max-w-[16rem] text-xs leading-relaxed text-paper-dim">
+                  No tienes tareas pendientes fuera de Hoy. Las que agregues aquí sin día quedan
+                  sueltas hasta que las traigas a Hoy o las asignes a un día.
+                </p>
+              </div>
+            )}
+
+            {loose.length > 0 && (
+              <div>
+                <p className="mb-1.5 flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-paper-dim">
+                  Sin día
+                  <span className="rounded-full bg-ink-soft px-1.5 tabular-nums">{loose.length}</span>
+                </p>
+                <TaskList tasks={loose} showDay quickToday />
+              </div>
+            )}
+
+            {ahead.length > 0 && (
+              <div>
+                <p className="mb-1.5 flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-paper-dim">
+                  Programadas
+                  <span className="rounded-full bg-ink-soft px-1.5 tabular-nums">{ahead.length}</span>
+                </p>
+                <TaskList tasks={ahead} showDay quickToday />
+              </div>
+            )}
+          </div>
+
+          <div className="mt-3 flex shrink-0 flex-col gap-1.5">
+            <AddTask
+              onAdd={(t) => addTask(t, { projectId: looseLabel, date: null })}
+              placeholder="Agregar una tarea sin día"
+            />
+            {projects.length > 0 && (
+              <div className="flex items-center gap-2 px-1 text-[10px] text-paper-dim">
+                <span>Etiqueta:</span>
+                <ProjectPicker value={looseLabel} onChange={setLooseLabel} />
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
     </div>
   )
 }

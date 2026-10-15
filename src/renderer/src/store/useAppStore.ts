@@ -13,7 +13,7 @@ import { rolloverIfNeeded } from '@shared/rollover'
 import { activeFocusTasks, commitFocus, normalizeState } from '@shared/focus'
 import { projectNameFor, projectTasks, todayList } from '@shared/tasks'
 
-type Screen = 'today' | 'week' | 'projects' | 'summary' | 'settings'
+type Screen = 'today' | 'week' | 'tasks' | 'projects' | 'summary' | 'settings'
 
 /** Aviso efímero al completar una tarea con tiempo registrado. */
 export interface CompletionReveal {
@@ -26,7 +26,7 @@ export interface CompletionReveal {
 interface AppState extends PersistedState {
   hydrated: boolean
   screen: Screen
-  /** vista abierta en Proyectos: ALL_TASKS_ID (Todas las tareas) o el id de un proyecto. */
+  /** proyecto abierto en Proyectos: ALL_TASKS_ID = ninguno (se ve la lista de proyectos). */
   activeProjectId: string
   /** vista del mini: TODAY_PROJECT_ID (Hoy), ALL_TASKS_ID o el id de un proyecto. */
   miniTargetId: string

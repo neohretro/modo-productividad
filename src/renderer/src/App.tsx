@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Minimize2, Minus } from 'lucide-react'
+import { Minimize2, Minus, Settings as SettingsIcon } from 'lucide-react'
 import { useAppStore } from './store/useAppStore'
 import { useTheme } from './theme'
 import BottomNav from './components/BottomNav'
@@ -8,15 +8,26 @@ import FlashToast from './components/FlashToast'
 import UpdateBanner from './components/UpdateBanner'
 import Today from './screens/Today'
 import Calendar from './screens/Calendar'
+import Tasks from './screens/Tasks'
 import Projects from './screens/Projects'
 import Summary from './screens/Summary'
 import Settings from './screens/Settings'
 
 function WindowControls(): React.JSX.Element {
+  const screen = useAppStore((s) => s.screen)
+  const setScreen = useAppStore((s) => s.setScreen)
   const btn =
     'no-drag grid h-7 w-7 place-items-center rounded-lg text-paper-dim transition-colors duration-200 hover:bg-ink-glass-strong hover:text-paper'
   return (
     <div className="no-drag flex items-center gap-1">
+      <button
+        aria-label="Ajustes"
+        title="Ajustes"
+        className={`${btn} ${screen === 'settings' ? 'bg-ink-glass-strong text-orange' : ''}`}
+        onClick={() => setScreen('settings')}
+      >
+        <SettingsIcon size={14} strokeWidth={1.75} />
+      </button>
       <button aria-label="Minimizar" className={btn} onClick={() => window.modo?.minimizeWindow()}>
         <Minus size={15} strokeWidth={1.75} />
       </button>
@@ -35,6 +46,7 @@ function WindowControls(): React.JSX.Element {
 const SCREENS = {
   today: Today,
   week: Calendar,
+  tasks: Tasks,
   projects: Projects,
   summary: Summary,
   settings: Settings

@@ -152,7 +152,7 @@ export default function Calendar(): React.JSX.Element {
             </span>
           </button>
           {trayOpen && (
-            <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
+            <div className="mt-2 flex max-h-[78px] flex-wrap gap-1.5 overflow-y-auto pr-1">
               {loose.map((t) => (
                 <LooseChip
                   key={t.id}
@@ -344,13 +344,13 @@ function LooseChip({
       onDragEnd={onDragEnd}
       onContextMenu={onContextMenu}
       title={task.text}
-      className="flex max-w-[200px] shrink-0 cursor-grab items-center gap-1.5 rounded-chip border border-border-hi bg-ink-soft px-2 py-1 text-[11px] text-paper transition-colors hover:border-orange active:cursor-grabbing"
+      className="flex max-w-[320px] min-w-0 cursor-grab items-center gap-1.5 rounded-chip border border-border-hi bg-ink-soft px-2 py-1 text-[11px] text-paper transition-colors hover:border-orange active:cursor-grabbing"
     >
       {menu}
       <GripVertical size={11} strokeWidth={2} className="shrink-0 text-paper-dim" />
-      <span className="truncate">{task.text}</span>
+      <span className="min-w-0 truncate">{task.text}</span>
       {projectName && (
-        <span className="shrink-0 rounded-full bg-ink-glass px-1.5 py-px text-[8px] uppercase tracking-wide text-paper-dim">
+        <span className="max-w-[84px] shrink-0 truncate rounded-full bg-ink-glass px-1.5 py-px text-[8px] uppercase tracking-wide text-paper-dim">
           {projectName}
         </span>
       )}

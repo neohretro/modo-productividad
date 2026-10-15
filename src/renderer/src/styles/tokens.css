@@ -76,6 +76,12 @@
     height: 100%;
   }
 
+  /* Barras de desplazamiento discretas (en vez de las blancas del sistema). */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-hi) transparent;
+  }
+
   body {
     margin: 0;
     /* la ventana Electron es transparente solo para las esquinas redondeadas */

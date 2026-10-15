@@ -12,10 +12,13 @@ import { ContextMenu, MenuItem, MenuLabel, MenuSep, type MenuPos } from './Conte
  */
 export default function AssignDay({
   task,
-  className = ''
+  className = '',
+  compact = false
 }: {
   task: Task
   className?: string
+  /** si la tarea está suelta, solo muestra el ícono (para columnas angostas). */
+  compact?: boolean
 }): React.JSX.Element {
   const assignDay = useAppStore((s) => s.assignDay)
   const setFlash = useAppStore((s) => s.setFlash)
@@ -47,7 +50,9 @@ export default function AssignDay({
         type="button"
         onClick={open}
         title={loose ? 'Asignar a un día' : 'Cambiar el día'}
-        className={`no-drag inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] transition-colors ${
+        className={`no-drag inline-flex shrink-0 items-center gap-1 rounded-full border text-[10px] transition-colors ${
+          loose && compact ? 'h-6 w-6 justify-center' : 'px-2 py-0.5'
+        } ${
           loose
             ? 'border-dashed border-border-hi text-paper-dim hover:border-orange hover:text-orange'
             : 'border-orange/40 bg-orange-soft capitalize text-orange hover:bg-orange-glow'
@@ -55,8 +60,8 @@ export default function AssignDay({
       >
         {loose ? (
           <>
-            <CalendarPlus size={10} strokeWidth={2} />
-            Asignar día
+            <CalendarPlus size={compact ? 12 : 10} strokeWidth={2} />
+            {!compact && 'Asignar día'}
           </>
         ) : (
           <>

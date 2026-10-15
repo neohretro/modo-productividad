@@ -58,32 +58,34 @@ donde quieras. Muestra:
 
 ### La ventana completa
 
-Cinco secciones:
+Cinco secciones en la barra de abajo (y **Ajustes** en el engranaje de arriba a
+la derecha). Cada una responde una sola pregunta:
 
-**Hoy** — Card de bienvenida con saludo según la hora. El anillo de avance grande.
-Tarjetas de stats: tareas completadas, racha, mini gráfico de los últimos 7 días.
-La lista continua de tareas del día. Un botón "Copiar lista" que copia tus
-pendientes con viñetas (para pegárselos a una IA, por ejemplo). Y una sección
-"Programadas" con las tareas que pusiste para una fecha futura, que aparecen solas
-ese día.
+**Hoy** — *¿Qué hago hoy?* Una franja con el saludo, el anillo de avance del día,
+las completadas, la racha y los últimos 7 días. Debajo, dos columnas: a la
+izquierda **Hoy** (tus tareas del día, con ▶ ⏸ ✓ y la etiqueta de proyecto si la
+tienen) y a la derecha **Todas las tareas** (lo que aún no está en Hoy: las
+sueltas y las programadas), cada una con un botón **"Hoy"** para traerla de un
+clic. Un botón "Copiar" copia tus pendientes con viñetas (para pegárselos a una
+IA, por ejemplo).
 
-**Semana** — Vista de calendario: los 7 días (lunes a domingo) en columnas, con
-navegación entre semanas y un botón para volver a hoy. Cada día muestra sus
-tareas — los días pasados, lo que completaste ese día; hoy, tu lista de Hoy; los
-días futuros, lo que dejaste programado. Puedes agregar una tarea a un día
-concreto y arrastrar una tarea de un día a otro para reprogramarla.
+**Semana** — *¿Cómo viene mi semana?* Calendario de lunes a domingo en columnas,
+con navegación entre semanas. Cada día muestra sus tareas (los pasados, lo que
+completaste; hoy, tu lista; los futuros, lo asignado). Agregas una tarea a un
+día con una tarjeta (el texto salta de línea, con selector de proyecto) y
+arrastras tareas de un día a otro. Abajo hay una bandeja **"Sin día asignado"**
+con las tareas sueltas para arrastrarlas a un día.
 
-**Proyectos** — Un proyecto es una **etiqueta** que le pones a tus tareas: no
-las separa de Hoy ni de la Semana. Una tarea con etiqueta "Tinkko" aparece en
-Hoy (con su etiquetita) y a la vez cuenta en el avance de Tinkko. Cada proyecto
-tiene su propio anillo de progreso **acumulado** (no se reinicia solo, vive
-semanas) y se ven juntas todas sus tareas: sin día, con día y hechas. Al
-quitar un proyecto, sus tareas se conservan (solo pierden la etiqueta).
+**Tareas** — *¿Qué tengo por hacer?* Todas tus tareas en un solo lugar, con tres
+pestañas: **Sin día** (sueltas, esperando a que las asignes), **Con día** y
+**Hechas**. Se pueden filtrar por proyecto. Cada tarea suelta tiene "Asignar
+día" (Hoy, mañana u otra fecha).
 
-La primera sección es **"Todas las tareas"**: todo lo que tienes, de cualquier
-proyecto. Las tareas que aún **no tienen día** quedan sueltas ahí, y cuando vas
-a trabajarlas las asignas a **Hoy**, a **mañana** o a un día de tu calendario
-(con "Asignar día", clic derecho, o arrastrándolas desde la Semana).
+**Proyectos** — *¿Cómo van mis proyectos?* Tarjetas grandes, una por proyecto,
+con su avance acumulado (nunca se reinicia) y cuántas tareas tiene sin día y con
+día. Un proyecto es una **etiqueta**: no separa las tareas de Hoy ni de la
+Semana; al abrirlo ves todas las que lo llevan. Al quitar un proyecto, sus
+tareas se conservan (solo pierden la etiqueta).
 
 **Resumen** — Elige el período (hoy / 7 días / 30 días) y ves:
 - En qué trabajaste, agrupado por proyecto, con el tiempo de cada tarea.
@@ -95,7 +97,7 @@ a trabajarlas las asignas a **Hoy**, a **mañana** o a un día de tu calendario
   movimiento hace 5 días", "Racha de 4 días, vas en buen ritmo", "Promedio por
   tarea con cronómetro: 23 min".
 
-**Ajustes** — Tema (claro / oscuro / el del sistema), iniciar con Windows, atajo
+**Ajustes** (engranaje arriba a la derecha) — Tema (claro / oscuro / el del sistema), iniciar con Windows, atajo
 global de teclado, aviso de multitasking, activar el modo mini, la cuenta para
 sincronizar, y las actualizaciones.
 
@@ -192,7 +194,7 @@ Ajustes.
   muestra un aviso azul la primera vez ("Windows protegió tu PC"). Se resuelve con
   **"Más información" → "Ejecutar de todas formas"**. (Se quitará al comprar un
   certificado de firma para la versión pública.)
-- **Versión actual:** 0.5.0
+- **Versión actual:** 0.6.0
 
 ## Privacidad
 
