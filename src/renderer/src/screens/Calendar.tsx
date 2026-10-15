@@ -98,7 +98,12 @@ export default function Calendar(): React.JSX.Element {
 
             {canAddOn(col.iso) && (
               <div className="mt-1.5 shrink-0">
-                <AddTask compact placeholder="Agregar" onAdd={(text) => addTaskOn(text, col.iso)} />
+                <AddTask
+                  compact
+                  wrap
+                  placeholder="Agregar"
+                  onAdd={(text) => addTaskOn(text, col.iso)}
+                />
               </div>
             )}
           </section>
