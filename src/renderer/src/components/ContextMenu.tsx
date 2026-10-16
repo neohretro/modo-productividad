@@ -19,6 +19,9 @@ export function ContextMenu({
   const ref = useRef<HTMLDivElement>(null)
   const [adj, setAdj] = useState(pos)
 
+  // En cada render (sin deps): el menú cambia de tamaño al pasar de una vista a otra
+  // (p. ej. del menú al editor de tiempo) y hay que volver a encajarlo en la ventana,
+  // que en el mini es muy angosta. Es idempotente: solo actualiza si cambia la posición.
   useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
@@ -26,8 +29,10 @@ export function ContextMenu({
     let { x, y } = pos
     if (x + r.width > window.innerWidth - 8) x = window.innerWidth - r.width - 8
     if (y + r.height > window.innerHeight - 8) y = window.innerHeight - r.height - 8
-    setAdj({ x: Math.max(8, x), y: Math.max(8, y) })
-  }, [pos])
+    x = Math.max(8, x)
+    y = Math.max(8, y)
+    setAdj((prev) => (prev.x === x && prev.y === y ? prev : { x, y }))
+  })
 
   useEffect(() => {
     const close = (): void => onClose()
@@ -51,7 +56,7 @@ export function ContextMenu({
       style={{ position: 'fixed', left: adj.x, top: adj.y }}
       // `no-drag`: sin esto, en el mini (ventana sin marco) la zona del menú
       // cuenta como zona de arrastre de ventana y los clics no llegan a los items.
-      className="no-drag glass-strong z-50 min-w-[196px] animate-fade rounded-chip p-1.5"
+      className="no-drag glass-strong z-50 w-max min-w-[196px] max-w-[260px] animate-fade rounded-chip p-1.5"
     >
       {children}
     </div>,
