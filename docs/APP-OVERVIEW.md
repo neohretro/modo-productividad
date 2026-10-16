@@ -69,8 +69,11 @@ Sin día / Con día / Hechas), cada una con un botón **"Hoy"** para traerla de 
 clic. Un botón "Copiar" copia tus pendientes con viñetas (para pegárselos a una
 IA, por ejemplo).
 
-**Semana** — *¿Cómo viene mi semana?* Calendario de lunes a domingo en columnas,
-con navegación entre semanas. Cada día muestra sus tareas (los pasados, lo que
+**Semana y Mes** — *¿Cómo viene mi semana?* Un interruptor arriba cambia entre la vista
+de **Semana** (calendario de lunes a domingo en columnas) y la de **Mes** (toda la
+cuadrícula del mes: tocas un día, ves sus tareas y agregas una nueva en el panel de la
+derecha; también puedes soltar ahí tareas arrastradas). Ambas con navegación entre
+semanas o meses. Cada día muestra sus tareas (los pasados, lo que
 completaste; hoy, tu lista; los futuros, lo asignado). Agregas una tarea a un
 día con una tarjeta (el texto salta de línea, con selector de proyecto) y
 arrastras tareas de un día a otro. Abajo hay una bandeja **"Sin día asignado"**
@@ -82,7 +85,8 @@ día. Un proyecto es una **etiqueta**: no separa las tareas de Hoy ni de la
 Semana; al abrirlo ves todas las que lo llevan. Al quitar un proyecto, sus
 tareas se conservan (solo pierden la etiqueta).
 
-**Resumen** — *¿Cómo me va?* Elige el período (hoy / 7 días / 30 días / todo) y
+**Resumen** — *¿Cómo me va?* Elige el período (hoy / 7 días / 30 días / todo, o **Fechas** para un tramo
+de "tal día a tal día" con atajos como Mes pasado) y
 ves, de arriba hacia abajo:
 - Cuatro números clave (tareas cerradas, tiempo trabajado, promedio por tarea y
   días con actividad), comparados con el período anterior.

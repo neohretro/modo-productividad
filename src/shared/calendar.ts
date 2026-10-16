@@ -69,3 +69,36 @@ export function buildWeek(
 export function canAddOn(iso: string, now: Date = new Date()): boolean {
   return iso >= toISODate(now)
 }
+
+/** Primer día del mes que contiene `anchorISO` y `n` meses después (n puede ser negativo). */
+export function shiftMonth(anchorISO: string, n: number): string {
+  const [y, m] = anchorISO.split('-').map(Number)
+  const d = new Date(y, m - 1 + n, 1)
+  return toISODate(d)
+}
+
+export interface MonthCell extends DayColumn {
+  /** false para los días de relleno de los meses vecinos. */
+  inMonth: boolean
+}
+
+/**
+ * Cuadrícula del mes (semanas de lunes a domingo, solo las filas necesarias:
+ * 4 a 6) con las tareas de cada día.
+ */
+export function buildMonth(
+  state: Pick<PersistedState, 'tasks' | 'archivedTasks'>,
+  anchorISO: string,
+  now: Date = new Date()
+): MonthCell[] {
+  const first = shiftMonth(anchorISO, 0)
+  const monthKey = first.slice(0, 7)
+  const start = weekOf(first)[0]
+  const lastDay = addDaysISO(shiftMonth(anchorISO, 1), -1)
+  const end = weekOf(lastDay)[6]
+
+  const dates: string[] = []
+  for (let d = start; d <= end; d = addDaysISO(d, 1)) dates.push(d)
+
+  return buildWeek(state, dates, now).map((c) => ({ ...c, inMonth: c.iso.startsWith(monthKey) }))
+}

@@ -1,6 +1,6 @@
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { buildSummary } from '@shared/insights'
+import { buildSummary, normalizeRange } from '@shared/insights'
 import { state, task } from './helpers'
 
 const NOW = new Date('2026-08-28T12:00:00')
@@ -223,4 +223,44 @@ test('un período sin datos no revienta', () => {
   assert.equal(sum.avgTaskMs, null)
   assert.equal(sum.daily.length, 30)
   assert.ok(sum.suggestions.length >= 1)
+})
+
+test('tramo de fechas: cuenta solo las tareas cerradas dentro del rango', () => {
+  const now = new Date(2026, 9, 15, 12, 0, 0)
+  const at = (d: number, h = 10): string => new Date(2026, 9, d, h, 0, 0).toISOString()
+  const done = (d: number): ReturnType<typeof task> =>
+    task({ done: true, completedDate: at(d), createdDate: `2026-10-${String(d).padStart(2, '0')}` })
+  const st = state({ archivedTasks: [done(2), done(5), done(6), done(6), done(9), done(12)] })
+
+  const s = buildSummary(st, 'custom', now, { from: '2026-10-05', to: '2026-10-09' })
+  assert.equal(s.days, 5)
+  assert.equal(s.completed.value, 4)
+  assert.equal(s.activeDays, 3)
+  // el tramo anterior de la misma duración (30 sep a 4 oct) trae la tarea del 2
+  assert.equal(s.completed.prev, 1)
+  assert.equal(s.rangeLabel.includes('–'), true)
+  assert.equal(s.daily.length, 5)
+  assert.equal(s.daily[s.daily.length - 1].date, '2026-10-09')
+})
+
+test('tramo de fechas: se ordena si viene al revés y no pasa de hoy', () => {
+  assert.deepEqual(normalizeRange({ from: '2026-10-09', to: '2026-10-05' }, '2026-10-15'), {
+    from: '2026-10-05',
+    to: '2026-10-09'
+  })
+  assert.deepEqual(normalizeRange({ from: '2026-10-10', to: '2026-12-31' }, '2026-10-15'), {
+    from: '2026-10-10',
+    to: '2026-10-15'
+  })
+  assert.deepEqual(normalizeRange({ from: '2027-01-01', to: '2027-01-05' }, '2026-10-15'), {
+    from: '2026-10-15',
+    to: '2026-10-15'
+  })
+})
+
+test('tramo de fechas de un solo día que no es hoy muestra la fecha, no "Hoy"', () => {
+  const now = new Date(2026, 9, 15, 12, 0, 0)
+  const s = buildSummary(state(), 'custom', now, { from: '2026-10-10', to: '2026-10-10' })
+  assert.equal(s.days, 1)
+  assert.notEqual(s.rangeLabel, 'Hoy')
 })

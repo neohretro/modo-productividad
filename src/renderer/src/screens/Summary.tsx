@@ -14,7 +14,9 @@ import {
 } from 'lucide-react'
 import {
   buildSummary,
+  normalizeRange,
   PERIOD_LABEL,
+  type DateRange,
   type Kpi,
   type Period,
   type ProjectShare,
@@ -22,7 +24,7 @@ import {
   type Summary as SummaryData
 } from '@shared/insights'
 import { formatDurationLong } from '@shared/focus'
-import { weekdayShortES } from '@shared/date'
+import { addDaysISO, toISODate, weekdayShortES } from '@shared/date'
 import { useAppStore } from '../store/useAppStore'
 import Segmented from '../components/Segmented'
 import { Bar, Card } from '../components/SummaryUi'
@@ -39,10 +41,14 @@ import {
 } from '../components/SummaryParts'
 import { useGame } from '../components/GameChips'
 
-const PERIODS: Period[] = ['today', 'week', 'month', 'all']
+const PERIODS: Period[] = ['today', 'week', 'month', 'all', 'custom']
 
 export default function Summary(): React.JSX.Element {
   const [period, setPeriod] = useState<Period>('week')
+  const [range, setRange] = useState<DateRange>(() => {
+    const today = toISODate()
+    return { from: addDaysISO(today, -13), to: today }
+  })
   const tasks = useAppStore((s) => s.tasks)
   const archivedTasks = useAppStore((s) => s.archivedTasks)
   const projects = useAppStore((s) => s.projects)
@@ -64,9 +70,11 @@ export default function Summary(): React.JSX.Element {
           settings,
           lastRolloverDate: null
         },
-        period
+        period,
+        new Date(),
+        range
       ),
-    [tasks, archivedTasks, projects, snapshots, streak, settings, period]
+    [tasks, archivedTasks, projects, snapshots, streak, settings, period, range]
   )
 
   const empty = sum.completed.value === 0
@@ -80,9 +88,7 @@ export default function Summary(): React.JSX.Element {
           </span>
           <div>
             <h2 className="text-xl">Resumen</h2>
-            <p className="text-xs capitalize text-paper-dim">
-              Cómo te fue · {sum.rangeLabel}
-            </p>
+            <p className="text-xs capitalize text-paper-dim">Cómo te fue · {sum.rangeLabel}</p>
           </div>
         </div>
         <Segmented<Period>
@@ -91,6 +97,8 @@ export default function Summary(): React.JSX.Element {
           options={PERIODS.map((p) => ({ id: p, label: PERIOD_LABEL[p] }))}
         />
       </header>
+
+      {period === 'custom' && <RangePicker range={range} onChange={setRange} />}
 
       {/* lo más importante: 4 números */}
       <div className="grid shrink-0 grid-cols-2 gap-3 min-[1000px]:grid-cols-4">
@@ -206,7 +214,10 @@ export default function Summary(): React.JSX.Element {
       )}
 
       {sum.consistency.some((d) => d.hasData) && (
-        <Card title="Cierre de tus días" hint="qué tanto de tu lista de cada día terminaste · 14 días">
+        <Card
+          title="Cierre de tus días"
+          hint="qué tanto de tu lista de cada día terminaste · 14 días"
+        >
           <div className="flex h-20 items-end gap-1">
             {sum.consistency.map((d) => (
               <div key={d.date} className="flex flex-1 flex-col items-center gap-1">
@@ -215,7 +226,9 @@ export default function Summary(): React.JSX.Element {
                   style={{ height: `${Math.max(4, d.rate * 100)}%` }}
                   title={`${d.date} · ${d.hasData ? Math.round(d.rate * 100) + '%' : 'sin datos'}`}
                 />
-                <span className="text-[8px] text-paper-dim">{weekdayShortES(d.date).slice(0, 1)}</span>
+                <span className="text-[8px] text-paper-dim">
+                  {weekdayShortES(d.date).slice(0, 1)}
+                </span>
               </div>
             ))}
           </div>
@@ -227,17 +240,106 @@ export default function Summary(): React.JSX.Element {
   )
 }
 
+/* ---------- tramo de fechas ---------- */
+
+function RangePicker({
+  range,
+  onChange
+}: {
+  range: DateRange
+  onChange: (r: DateRange) => void
+}): React.JSX.Element {
+  const today = toISODate()
+  const monday = weekStart(today)
+  const quick: { label: string; r: () => DateRange }[] = [
+    { label: 'Esta semana', r: () => ({ from: monday, to: today }) },
+    {
+      label: 'Semana pasada',
+      r: () => ({ from: addDaysISO(monday, -7), to: addDaysISO(monday, -1) })
+    },
+    {
+      label: 'Este mes',
+      r: () => ({ from: `${today.slice(0, 8)}01`, to: today })
+    },
+    { label: 'Mes pasado', r: () => lastMonth(today) }
+  ]
+  // al cambiar una fecha se acomoda el tramo: nunca queda "hasta" antes que "desde"
+  const set = (patch: Partial<DateRange>): void => {
+    const next = { ...range, ...patch }
+    if (!next.from || !next.to) return
+    onChange(normalizeRange(next, today))
+  }
+  const field =
+    'no-drag rounded-chip border border-border-hi bg-ink px-2.5 py-1.5 text-xs text-paper outline-none focus:border-orange'
+  return (
+    <div className="glass flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 rounded-card px-4 py-3">
+      <label className="flex items-center gap-2 text-xs text-paper-dim">
+        Desde
+        <input
+          type="date"
+          value={range.from}
+          max={today}
+          onChange={(e) => set({ from: e.target.value })}
+          className={field}
+        />
+      </label>
+      <label className="flex items-center gap-2 text-xs text-paper-dim">
+        Hasta
+        <input
+          type="date"
+          value={range.to}
+          max={today}
+          onChange={(e) => set({ to: e.target.value })}
+          className={field}
+        />
+      </label>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {quick.map((q) => (
+          <button
+            key={q.label}
+            onClick={() => onChange(q.r())}
+            className="no-drag rounded-full border border-border-hi px-2.5 py-1 text-[11px] text-paper-dim transition-colors hover:border-orange hover:text-orange"
+          >
+            {q.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function weekStart(iso: string): string {
+  const dow = (new Date(`${iso}T00:00:00`).getDay() + 6) % 7
+  return addDaysISO(iso, -dow)
+}
+
+function lastMonth(todayIso: string): DateRange {
+  const [y, m] = todayIso.split('-').map(Number)
+  return {
+    from: toISODate(new Date(y, m - 2, 1)),
+    to: toISODate(new Date(y, m - 1, 0))
+  }
+}
+
 /* ---------- piezas ---------- */
 
 /** Cambio frente al período anterior: ▲ 25% / ▼ 10% / nuevo. */
 function Delta({ kpi }: { kpi: Kpi }): React.JSX.Element | null {
   if (kpi.prev === null || (kpi.prev === 0 && kpi.value === 0)) return null
   if (kpi.prev === 0) {
-    return <span className="rounded-full bg-orange-soft px-1.5 py-0.5 text-[10px] text-orange">nuevo</span>
+    return (
+      <span className="rounded-full bg-orange-soft px-1.5 py-0.5 text-[10px] text-orange">
+        nuevo
+      </span>
+    )
   }
   const change = (kpi.value - kpi.prev) / kpi.prev
   if (Math.abs(change) < 0.02) {
-    return <span className="rounded-full bg-ink-soft px-1.5 py-0.5 text-[10px] text-paper-dim">igual</span>
+    return (
+      <span className="rounded-full bg-ink-soft px-1.5 py-0.5 text-[10px] text-paper-dim">
+        igual
+      </span>
+    )
   }
   const up = change > 0
   const Arrow = up ? ArrowUp : ArrowDown
@@ -326,7 +428,9 @@ function ProjectsCard({ sum }: { sum: SummaryData }): React.JSX.Element {
         ))}
       </ul>
       {rows.length > 8 && (
-        <p className="mt-2 text-[10px] text-paper-dim">y {rows.length - 8} más con menos actividad</p>
+        <p className="mt-2 text-[10px] text-paper-dim">
+          y {rows.length - 8} más con menos actividad
+        </p>
       )}
     </Card>
   )
@@ -370,7 +474,12 @@ function DailyCard({ sum }: { sum: SummaryData }): React.JSX.Element {
   const n = sum.daily.length
   const labelEvery = n <= 14 ? 1 : n <= 31 ? 5 : 10
   return (
-    <Card title="Tareas cerradas por día" hint={`últimos ${n} días`}>
+    <Card
+      title="Tareas cerradas por día"
+      hint={
+        sum.period === 'custom' ? `${n} ${n === 1 ? 'día' : 'días'} del tramo` : `últimos ${n} días`
+      }
+    >
       <div className="flex h-36 items-end gap-[3px]">
         {sum.daily.map((d, i) => (
           <div
@@ -387,7 +496,9 @@ function DailyCard({ sum }: { sum: SummaryData }): React.JSX.Element {
               className={`w-full rounded-t-[4px] ${
                 d.count === 0 ? 'bg-ink' : d.isToday ? 'bg-orange' : 'bg-orange/60'
               }`}
-              style={{ height: d.count === 0 ? '3px' : `${Math.max(8, (d.count / max) * 78)}%` }}
+              style={{
+                height: d.count === 0 ? '3px' : `${Math.max(8, (d.count / max) * 78)}%`
+              }}
             />
             <span className="h-3 text-[8px] leading-3 text-paper-dim">
               {i % labelEvery === 0 || d.isToday
@@ -421,7 +532,9 @@ function LongestCard({ sum }: { sum: SummaryData }): React.JSX.Element {
                 <span className="min-w-0 truncate text-paper" title={t.text}>
                   {t.text}
                 </span>
-                <span className="shrink-0 tabular-nums text-paper">{formatDurationLong(t.timeMs)}</span>
+                <span className="shrink-0 tabular-nums text-paper">
+                  {formatDurationLong(t.timeMs)}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="min-w-0 flex-1">

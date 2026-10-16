@@ -21,16 +21,23 @@ import {
   type WorkProfile
 } from './profile'
 
-export type Period = 'today' | 'week' | 'month' | 'all'
+export type Period = 'today' | 'week' | 'month' | 'all' | 'custom'
+
+/** Tramo de fechas elegido por la persona (ambos incluidos, formato AAAA-MM-DD). */
+export interface DateRange {
+  from: string
+  to: string
+}
 
 export const PERIOD_LABEL: Record<Period, string> = {
   today: 'Hoy',
   week: '7 días',
   month: '30 días',
-  all: 'Todo'
+  all: 'Todo',
+  custom: 'Fechas'
 }
 
-const PERIOD_DAYS: Record<Exclude<Period, 'all'>, number> = { today: 1, week: 7, month: 30 }
+const PERIOD_DAYS: Record<Exclude<Period, 'all' | 'custom'>, number> = { today: 1, week: 7, month: 30 }
 
 const DOW_LABEL = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
 
@@ -154,7 +161,20 @@ function fmtDay(iso: string): string {
     .replace('.', '')
 }
 
-export function buildSummary(state: PersistedState, period: Period, now: Date = new Date()): Summary {
+/** Ordena el tramo y lo recorta al día de hoy (no hay tareas cerradas en el futuro). */
+export function normalizeRange(range: DateRange, today: string): DateRange {
+  const [a, b] = range.from <= range.to ? [range.from, range.to] : [range.to, range.from]
+  const to = b > today ? today : b
+  const from = a > to ? to : a
+  return { from, to }
+}
+
+export function buildSummary(
+  state: PersistedState,
+  period: Period,
+  now: Date = new Date(),
+  range?: DateRange
+): Summary {
   const today = toISODate(now)
 
   // --- tareas cerradas (vivas + archivadas) con su día y hora LOCALES ---
@@ -167,16 +187,21 @@ export function buildSummary(state: PersistedState, period: Period, now: Date = 
 
   // --- ventana actual y anterior ---
   let from: string
+  let to = today
   let days: number
   if (period === 'all') {
     const first = dones.reduce<string>((min, x) => (x.day < min ? x.day : min), today)
     from = first
     days = Math.max(1, daysBetween(first, today) + 1)
+  } else if (period === 'custom') {
+    const r = normalizeRange(range ?? { from: today, to: today }, today)
+    from = r.from
+    to = r.to
+    days = daysBetween(from, to) + 1
   } else {
     days = PERIOD_DAYS[period]
     from = addDaysISO(today, -(days - 1))
   }
-  const to = today
   const prevTo = addDaysISO(from, -1)
   const prevFrom = addDaysISO(prevTo, -(days - 1))
   const hasPrev = period !== 'all'
@@ -214,10 +239,10 @@ export function buildSummary(state: PersistedState, period: Period, now: Date = 
     .sort((a, b) => b.tasks - a.tasks || b.timeMs - a.timeMs)
 
   // --- por día (gráfica) ---
-  const chartDays = period === 'all' ? Math.min(days, 60) : Math.max(days, 7)
+  const chartDays = period === 'all' || period === 'custom' ? Math.min(days, 60) : Math.max(days, 7)
   const daily: DayPoint[] = []
   for (let i = chartDays - 1; i >= 0; i--) {
-    const date = addDaysISO(today, -i)
+    const date = addDaysISO(to, -i)
     const ofDay = dones.filter((x) => x.day === date)
     daily.push({ date, count: ofDay.length, timeMs: sumTime(ofDay), isToday: date === today })
   }
@@ -379,7 +404,7 @@ export function buildSummary(state: PersistedState, period: Period, now: Date = 
 
   const summary: Summary = {
     period,
-    rangeLabel: days === 1 ? 'Hoy' : `${fmtDay(from)} – ${fmtDay(to)}`,
+    rangeLabel: days === 1 ? (to === today ? 'Hoy' : fmtDay(from)) : `${fmtDay(from)} – ${fmtDay(to)}`,
     days,
     completed: { value: cur.length, prev: hasPrev ? prev.length : null },
     timeMs: { value: totalTime, prev: hasPrev ? sumTime(prev) : null },
@@ -432,7 +457,7 @@ function buildSuggestions(state: PersistedState, s: Summary, now: Date): Suggest
   const nudges: Suggestion[] = []
   const wins: Suggestion[] = []
   const info: Suggestion[] = []
-  const periodName = PERIOD_LABEL[s.period].toLowerCase()
+  const periodName = s.period === 'custom' ? 'esas fechas' : PERIOD_LABEL[s.period].toLowerCase()
   const today = toISODate(now)
 
   // 1. una tarea que lleva días rodando
