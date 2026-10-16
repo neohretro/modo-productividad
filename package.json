@@ -1,6 +1,6 @@
 {
   "name": "modo-productividad",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "MODO CREADOR - Productividad — app de escritorio de productividad",
   "main": "./out/main/index.js",
   "author": "neohretro",
@@ -16,10 +16,9 @@
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "test": "vitest run",
     "dist:win": "electron-vite build && electron-builder --win",
-    "dist:mac": "electron-vite build && electron-builder --mac",
+    "dist:mac": "electron-vite build && electron-builder --mac --publish never",
     "release:win": "electron-vite build && electron-builder --win --publish always",
     "release:mac": "electron-vite build && electron-builder --mac --publish always",
-    "dist:mac": "electron-vite build && electron-builder --mac --publish never",
     "release": "node scripts/release.mjs"
   },
   "devDependencies": {
