@@ -12,6 +12,14 @@ import type { PersistedState, Task } from './types'
 import { addDaysISO, daysBetween, localDayOf, toISODate } from './date'
 import { formatDurationLong } from './focus'
 import { looseTasks, projectProgressOf, scheduledAhead, todayList } from './tasks'
+import {
+  buildProfile,
+  buildRecommendations,
+  peakWindow,
+  type ProfileInput,
+  type Recommendation,
+  type WorkProfile
+} from './profile'
 
 export type Period = 'today' | 'week' | 'month' | 'all'
 
@@ -84,7 +92,32 @@ export interface Summary {
 
   byProject: ProjectShare[]
   daily: DayPoint[]
-  weekday: { dow: number; label: string; count: number; timeMs: number }[]
+  weekday: {
+    dow: number
+    label: string
+    count: number
+    timeMs: number
+    /** cuántas veces cae ese día de la semana dentro del período. */
+    occurrences: number
+    /** promedio de tareas cerradas por ese día de la semana. */
+    avg: number
+  }[]
+  /** tareas cerradas por hora local del día (24) y su promedio por día con tareas. */
+  hourly: { hour: number; count: number; avgPerActiveDay: number }[]
+  /** mejor franja de 2 horas seguidas, o null. */
+  peakWindow: { from: number; to: number; count: number; share: number } | null
+  /** mejor y peor día de la semana por promedio (solo con datos suficientes). */
+  bestDay: { label: string; avg: number } | null
+  worstDay: { label: string; avg: number } | null
+  averages: {
+    perCalendarDay: number
+    perActiveDay: number
+    perWeek: number | null
+    timePerActiveDayMs: number | null
+  }
+  maxRun: number
+  profile: WorkProfile
+  recommendations: Recommendation[]
   dayparts: { id: 'madrugada' | 'manana' | 'tarde' | 'noche'; label: string; hours: string; count: number }[]
   longest: { text: string; projectName: string; timeMs: number; day: string }[]
   stuck: { text: string; projectName: string; daysRolled: number }[]
@@ -190,12 +223,24 @@ export function buildSummary(state: PersistedState, period: Period, now: Date = 
   }
 
   // --- por día de la semana ---
-  const weekday = DOW_LABEL.map((label, dow) => ({ dow, label, count: 0, timeMs: 0 }))
+  const weekday = DOW_LABEL.map((label, dow) => ({
+    dow,
+    label,
+    count: 0,
+    timeMs: 0,
+    occurrences: 0,
+    avg: 0
+  }))
   for (const x of cur) {
     const dow = (new Date(`${x.day}T00:00:00`).getDay() + 6) % 7
     weekday[dow].count += 1
     weekday[dow].timeMs += x.task.timeSpentMs
   }
+  for (let i = 0; i < days; i++) {
+    const dow = (new Date(`${addDaysISO(from, i)}T00:00:00`).getDay() + 6) % 7
+    weekday[dow].occurrences += 1
+  }
+  for (const w of weekday) w.avg = w.occurrences === 0 ? 0 : w.count / w.occurrences
 
   // --- por momento del día ---
   const dayparts: Summary['dayparts'] = [
@@ -273,6 +318,65 @@ export function buildSummary(state: PersistedState, period: Period, now: Date = 
 
   const activeDays = new Set(cur.map((x) => x.day)).size
 
+  // --- horas del día, mejor/peor día, promedios y perfil ---
+  const hourCounts = Array.from({ length: 24 }, () => 0)
+  for (const x of cur) hourCounts[x.hour] += 1
+  const hourly = hourCounts.map((count, hour) => ({
+    hour,
+    count,
+    avgPerActiveDay: activeDays === 0 ? 0 : count / activeDays
+  }))
+  const peak = peakWindow(hourCounts)
+
+  const ranked = weekday.filter((w) => w.occurrences > 0)
+  const enough = days >= 7 && cur.length >= 5
+  const bestW = enough ? [...ranked].sort((a, b) => b.avg - a.avg)[0] : undefined
+  const worstW = enough ? [...ranked].sort((a, b) => a.avg - b.avg)[0] : undefined
+  const bestDay = bestW && bestW.avg > 0 ? { label: bestW.label, avg: bestW.avg } : null
+  const worstDay =
+    worstW && bestW && worstW.dow !== bestW.dow ? { label: worstW.label, avg: worstW.avg } : null
+
+  const averages = {
+    perCalendarDay: cur.length / days,
+    perActiveDay: activeDays === 0 ? 0 : cur.length / activeDays,
+    perWeek: days >= 7 ? cur.length / (days / 7) : null,
+    timePerActiveDayMs: activeDays === 0 || totalTime === 0 ? null : totalTime / activeDays
+  }
+
+  // racha más larga de días seguidos con tareas cerradas dentro del período
+  const activeSet = new Set(cur.map((x) => x.day))
+  let maxRun = 0
+  let run = 0
+  for (let i = 0; i < days; i++) {
+    if (activeSet.has(addDaysISO(from, i))) {
+      run++
+      if (run > maxRun) maxRun = run
+    } else run = 0
+  }
+  const perDayCount = new Map<string, number>()
+  for (const x of cur) perDayCount.set(x.day, (perDayCount.get(x.day) ?? 0) + 1)
+
+  const profileInput: ProfileInput = {
+    completed: cur.length,
+    days,
+    activeDays,
+    hourly: hourCounts,
+    weekdayCounts: weekday.map((w) => w.count),
+    timeMs: totalTime,
+    trackedCount,
+    avgTaskMs: trackedCount > 0 ? totalTime / trackedCount : null,
+    coverage: cur.length === 0 ? 0 : trackedCount / cur.length,
+    created: createdIn(from, to),
+    backlogLoose: backlog.loose,
+    maxRun,
+    maxInDay: Math.max(0, ...perDayCount.values()),
+    topProjectShare: byProject[0]?.taskShare ?? 0,
+    projectsUsed: byProject.filter((p) => p.id !== null).length,
+    hasProjects: state.projects.length > 0
+  }
+  const profile = buildProfile(profileInput)
+  const recommendations = buildRecommendations(profileInput, profile)
+
   const summary: Summary = {
     period,
     rangeLabel: days === 1 ? 'Hoy' : `${fmtDay(from)} – ${fmtDay(to)}`,
@@ -288,6 +392,14 @@ export function buildSummary(state: PersistedState, period: Period, now: Date = 
     byProject,
     daily,
     weekday,
+    hourly,
+    peakWindow: peak,
+    bestDay,
+    worstDay,
+    averages,
+    maxRun,
+    profile,
+    recommendations,
     dayparts,
     longest,
     stuck,

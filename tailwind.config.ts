@@ -27,7 +27,7 @@ export default {
         },
         frost: 'var(--frost)',
         orange: {
-          DEFAULT: 'var(--orange)',
+          DEFAULT: 'rgb(var(--orange-rgb) / <alpha-value>)',
           soft: 'var(--orange-soft)',
           glow: 'var(--orange-glow)'
         },

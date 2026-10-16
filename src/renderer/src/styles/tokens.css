@@ -20,6 +20,7 @@
   --paper: #211f1b; /* texto principal */
   --paper-dim: rgba(33, 31, 27, 0.5); /* texto secundario */
   --orange: #ec7a00;
+  --orange-rgb: 236 122 0; /* mismos tonos en canales, para los modificadores de opacidad (bg-orange/50) */
   --orange-soft: rgba(236, 122, 0, 0.12);
   --orange-glow: rgba(236, 122, 0, 0.16);
   --on-accent: #1c1a16; /* texto sobre naranja */
@@ -41,6 +42,7 @@
     --paper: #f4f3ef;
     --paper-dim: rgba(244, 243, 239, 0.54);
     --orange: #ff8c00;
+    --orange-rgb: 255 140 0;
     --orange-soft: rgba(255, 140, 0, 0.13);
     --orange-glow: rgba(255, 140, 0, 0.2);
     --on-accent: #100f0e;
@@ -61,6 +63,7 @@
   --paper: #f4f3ef;
   --paper-dim: rgba(244, 243, 239, 0.54);
   --orange: #ff8c00;
+  --orange-rgb: 255 140 0;
   --orange-soft: rgba(255, 140, 0, 0.13);
   --orange-glow: rgba(255, 140, 0, 0.2);
   --on-accent: #100f0e;

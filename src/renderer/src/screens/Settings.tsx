@@ -8,6 +8,7 @@ import {
   PictureInPicture2,
   Power,
   RefreshCw,
+  Sparkles,
   Sun
 } from 'lucide-react'
 import type { ThemePref } from '@shared/types'
@@ -26,6 +27,7 @@ export default function Settings(): React.JSX.Element {
   const setLaunchOnStartup = useAppStore((s) => s.setLaunchOnStartup)
   const setGlobalShortcut = useAppStore((s) => s.setGlobalShortcut)
   const setMultitaskNudges = useAppStore((s) => s.setMultitaskNudges)
+  const setCelebrations = useAppStore((s) => s.setCelebrations)
   const setTheme = useAppStore((s) => s.setTheme)
   const [version, setVersion] = useState('0.1.0')
   const [capturing, setCapturing] = useState(false)
@@ -107,6 +109,13 @@ export default function Settings(): React.JSX.Element {
           desc="Cuando enfocas varias tareas a la vez, un aviso suave (nunca bloquea)."
         >
           <Toggle checked={settings.multitaskNudges} onChange={setMultitaskNudges} />
+        </Card>
+        <Card
+          Icon={Sparkles}
+          title="Efectos de celebración"
+          desc="Confeti y avisos al subir de nivel o desbloquear un logro. Apágalos si prefieres calma."
+        >
+          <Toggle checked={settings.celebrations} onChange={setCelebrations} />
         </Card>
         <Card
           Icon={PictureInPicture2}

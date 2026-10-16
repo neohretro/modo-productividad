@@ -25,6 +25,19 @@ import { formatDurationLong } from '@shared/focus'
 import { weekdayShortES } from '@shared/date'
 import { useAppStore } from '../store/useAppStore'
 import Segmented from '../components/Segmented'
+import { Bar, Card } from '../components/SummaryUi'
+import {
+  AchievementsCard,
+  AveragesCard,
+  BalanceCard,
+  HoursCard,
+  LevelCard,
+  PartsCard,
+  ProfileCard,
+  RecommendationsCard,
+  WeekCard
+} from '../components/SummaryParts'
+import { useGame } from '../components/GameChips'
 
 const PERIODS: Period[] = ['today', 'week', 'month', 'all']
 
@@ -36,6 +49,7 @@ export default function Summary(): React.JSX.Element {
   const snapshots = useAppStore((s) => s.snapshots)
   const streak = useAppStore((s) => s.streak)
   const settings = useAppStore((s) => s.settings)
+  const game = useGame()
 
   const sum = useMemo(
     () =>
@@ -127,6 +141,8 @@ export default function Summary(): React.JSX.Element {
         </Card>
       )}
 
+      <LevelCard />
+
       {/* lo que vale la pena saber */}
       <Card title="Lo que vale la pena saber" hint="observaciones sobre tus propios datos">
         <ul className="grid gap-2.5 min-[1000px]:grid-cols-2">
@@ -148,7 +164,20 @@ export default function Summary(): React.JSX.Element {
           </div>
 
           <div className="grid gap-4 min-[1000px]:grid-cols-2">
-            <WhenCard sum={sum} />
+            <ProfileCard sum={sum} />
+            <RecommendationsCard sum={sum} />
+          </div>
+
+          <HoursCard sum={sum} />
+
+          <div className="grid gap-4 min-[1000px]:grid-cols-3">
+            <WeekCard sum={sum} />
+            <PartsCard sum={sum} />
+            <AveragesCard sum={sum} />
+          </div>
+
+          <div className="grid gap-4 min-[1000px]:grid-cols-2">
+            <BalanceCard sum={sum} />
             <LongestCard sum={sum} />
           </div>
         </>
@@ -192,46 +221,13 @@ export default function Summary(): React.JSX.Element {
           </div>
         </Card>
       )}
+
+      <AchievementsCard list={game.achievements} />
     </div>
   )
 }
 
 /* ---------- piezas ---------- */
-
-function Card({
-  title,
-  hint,
-  children
-}: {
-  title?: string
-  hint?: string
-  children: React.ReactNode
-}): React.JSX.Element {
-  return (
-    <section className="glass h-full rounded-card p-5">
-      {title && (
-        <div className="mb-3 flex items-baseline justify-between gap-3">
-          <h3 className="text-sm">{title}</h3>
-          {hint && <span className="truncate text-[10px] text-paper-dim">{hint}</span>}
-        </div>
-      )}
-      {children}
-    </section>
-  )
-}
-
-function Bar({ pct, strong = true }: { pct: number; strong?: boolean }): React.JSX.Element {
-  return (
-    <div className="h-2 overflow-hidden rounded-full bg-ink">
-      <div
-        className={`h-full rounded-full transition-[width] duration-500 ease-modo ${
-          strong ? 'bg-orange' : 'bg-orange/55'
-        }`}
-        style={{ width: `${Math.max(pct > 0 ? 2 : 0, Math.round(pct * 100))}%` }}
-      />
-    </div>
-  )
-}
 
 /** Cambio frente al período anterior: ▲ 25% / ▼ 10% / nuevo. */
 function Delta({ kpi }: { kpi: Kpi }): React.JSX.Element | null {
@@ -403,49 +399,6 @@ function DailyCard({ sum }: { sum: SummaryData }): React.JSX.Element {
           </div>
         ))}
       </div>
-    </Card>
-  )
-}
-
-/* ---------- cuándo rindes más ---------- */
-
-function WhenCard({ sum }: { sum: SummaryData }): React.JSX.Element {
-  const maxDow = Math.max(1, ...sum.weekday.map((d) => d.count))
-  const maxPart = Math.max(1, ...sum.dayparts.map((d) => d.count))
-  return (
-    <Card title="¿Cuándo rindes más?">
-      <p className="mb-2 text-[10px] uppercase tracking-wide text-paper-dim">Por día de la semana</p>
-      <div className="mb-4 flex h-20 items-end gap-1.5">
-        {sum.weekday.map((d) => (
-          <div
-            key={d.dow}
-            className="flex h-full flex-1 flex-col items-center justify-end gap-1"
-            title={`${d.label}: ${d.count} ${d.count === 1 ? 'tarea' : 'tareas'}`}
-          >
-            {d.count > 0 && <span className="text-[9px] tabular-nums text-paper-dim">{d.count}</span>}
-            <div
-              className={`w-full rounded-t-[4px] ${
-                d.count === 0 ? 'bg-ink' : d.count === maxDow ? 'bg-orange' : 'bg-orange/55'
-              }`}
-              style={{ height: d.count === 0 ? '3px' : `${Math.max(10, (d.count / maxDow) * 70)}%` }}
-            />
-            <span className="text-[9px] uppercase text-paper-dim">{d.label.slice(0, 1)}</span>
-          </div>
-        ))}
-      </div>
-
-      <p className="mb-2 text-[10px] uppercase tracking-wide text-paper-dim">Por momento del día</p>
-      <ul className="flex flex-col gap-2">
-        {sum.dayparts.map((d) => (
-          <li key={d.id} className="flex items-center gap-3 text-xs">
-            <span className="w-20 shrink-0 text-paper">{d.label}</span>
-            <div className="min-w-0 flex-1">
-              <Bar pct={d.count / maxPart} strong={d.count === maxPart && d.count > 0} />
-            </div>
-            <span className="w-8 shrink-0 text-right tabular-nums text-paper-dim">{d.count}</span>
-          </li>
-        ))}
-      </ul>
     </Card>
   )
 }

@@ -58,14 +58,14 @@ donde quieras. Muestra:
 
 ### La ventana completa
 
-Cinco secciones en la barra de abajo (y **Ajustes** en el engranaje de arriba a
+Cuatro secciones en la barra de abajo (y **Ajustes** en el engranaje de arriba a
 la derecha). Cada una responde una sola pregunta:
 
-**Hoy** — *¿Qué hago hoy?* Una franja con el saludo, el anillo de avance del día,
-las completadas, la racha y los últimos 7 días. Debajo, dos columnas: a la
-izquierda **Hoy** (tus tareas del día, con ▶ ⏸ ✓ y la etiqueta de proyecto si la
-tienen) y a la derecha **Todas las tareas** (lo que aún no está en Hoy: las
-sueltas y las programadas), cada una con un botón **"Hoy"** para traerla de un
+**Hoy** — *¿Qué hago hoy?* Una franja con el saludo, tu nivel y racha, y el anillo
+de avance del día. Debajo, dos columnas: a la izquierda **Hoy** (tus tareas del
+día, con ▶ ⏸ ✓ y la etiqueta de proyecto si la tienen) y a la derecha **Todas las
+tareas** (lo que aún no está en Hoy: las sueltas y las programadas, con pestañas
+Sin día / Con día / Hechas), cada una con un botón **"Hoy"** para traerla de un
 clic. Un botón "Copiar" copia tus pendientes con viñetas (para pegárselos a una
 IA, por ejemplo).
 
@@ -76,30 +76,54 @@ día con una tarjeta (el texto salta de línea, con selector de proyecto) y
 arrastras tareas de un día a otro. Abajo hay una bandeja **"Sin día asignado"**
 con las tareas sueltas para arrastrarlas a un día.
 
-**Tareas** — *¿Qué tengo por hacer?* Todas tus tareas en un solo lugar, con tres
-pestañas: **Sin día** (sueltas, esperando a que las asignes), **Con día** y
-**Hechas**. Se pueden filtrar por proyecto. Cada tarea suelta tiene "Asignar
-día" (Hoy, mañana u otra fecha).
-
 **Proyectos** — *¿Cómo van mis proyectos?* Tarjetas grandes, una por proyecto,
 con su avance acumulado (nunca se reinicia) y cuántas tareas tiene sin día y con
 día. Un proyecto es una **etiqueta**: no separa las tareas de Hoy ni de la
 Semana; al abrirlo ves todas las que lo llevan. Al quitar un proyecto, sus
 tareas se conservan (solo pierden la etiqueta).
 
-**Resumen** — Elige el período (hoy / 7 días / 30 días) y ves:
-- En qué trabajaste, agrupado por proyecto, con el tiempo de cada tarea.
-- El progreso de cada proyecto activo.
-- Tu consistencia de los últimos 14 días (mini gráfico de barras).
-- 3–5 observaciones sobre **tus propios datos**, en tono directo (nunca regaño):
-  "«Responder DMs» lleva 4 días rodando, ¿la partes en algo más chico?", "Esta
-  semana cerraste menos días completos que la anterior", "Planner no tiene
-  movimiento hace 5 días", "Racha de 4 días, vas en buen ritmo", "Promedio por
-  tarea con cronómetro: 23 min".
+**Resumen** — *¿Cómo me va?* Elige el período (hoy / 7 días / 30 días / todo) y
+ves, de arriba hacia abajo:
+- Cuatro números clave (tareas cerradas, tiempo trabajado, promedio por tarea y
+  días con actividad), comparados con el período anterior.
+- **Tu nivel**, la barra de XP, tus días seguidos y tu mejor racha.
+- Observaciones sobre **tus propios datos**, en tono directo (nunca regaño).
+- **A qué proyecto le dedicaste más**, por tareas o por tiempo, y las tareas
+  cerradas por día.
+- **Tu perfil de trabajo**: cronotipo (alondra, diurno, vespertino o búho, según
+  a qué hora cierras tus tareas) y estilo de trabajo (enfoque profundo, por
+  lotes, a impulsos, constante). Cada lectura cita su fuente (Horne y Östberg,
+  Roenneberg, Cal Newport…) y se presenta como orientativa, no clínica.
+- **Cómo mejorar**: recomendaciones de productividad, equilibrio, enfoque y
+  hábito según tu comportamiento (hora pico, trabajo nocturno o de fin de semana,
+  rachas sin descanso, tareas atascadas…).
+- **Horas de mayor productividad** (24 barras con tu franja pico y el promedio
+  por día de cada hora), **tu semana** (promedio por día, el día que más y el que
+  menos trabajas), **mañana / tarde / noche** y **promedios** globales, por día,
+  por semana y de tiempo por día activo.
+- **Equilibrio**: % en fines de semana, % de noche y días seguidos sin parar.
+- Las que más tiempo te llevaron, lo pendiente, en qué trabajaste (por proyecto)
+  y el avance de cada proyecto.
+- **Logros**: 20 medallas con su progreso.
 
 **Ajustes** (engranaje arriba a la derecha) — Tema (claro / oscuro / el del sistema), iniciar con Windows, atajo
-global de teclado, aviso de multitasking, activar el modo mini, la cuenta para
+global de teclado, aviso de multitasking, efectos de celebración, activar el modo mini, la cuenta para
 sincronizar, y las actualizaciones.
+
+### El juego (sin estrés)
+
+Todo se calcula de tus propios datos, sin números inventados ni castigos:
+
+- **XP y niveles**: cada tarea cerrada suma 10 XP, más extras por el tiempo de
+  enfoque medido y por rescatar tareas que llevaban días rodando. Los niveles
+  tienen título (de «Semilla» a «Imparable»…).
+- **Racha de días**: días seguidos cerrando al menos una tarea. Si hoy aún no
+  cerraste nada pero ayer sí, la app te lo recuerda con calma.
+- **Logros**: 20 medallas (primer paso, tres seguidos, día perfecto, hora tras
+  hora, madrugador, búho…) con barra de progreso.
+- **Celebraciones**: al cerrar una tarea, subir de nivel o desbloquear un logro
+  aparece un aviso con confeti. Se pueden apagar en Ajustes → "Efectos de
+  celebración".
 
 ### Una sola lista de tareas
 
