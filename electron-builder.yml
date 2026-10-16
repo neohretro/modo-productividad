@@ -42,12 +42,20 @@ nsis:
   shortcutName: MODO CREADOR - Productividad
   deleteAppDataOnUninstall: false
 
+# macOS SIN firma de Apple (por ahora). `identity: '-'` firma "ad hoc": hace falta para
+# que el Mac con chip Apple abra la app, pero NO es un certificado de desarrollador, así
+# que la primera vez hay que abrirla con clic derecho > Abrir (ver docs/MAC.md).
+# Cuando haya cuenta de Apple Developer: quitar `identity` y activar `notarize`.
 mac:
   target:
     - target: dmg
       arch: [arm64, x64]
   icon: build/icon.png
   category: public.app-category.productivity
-  artifactName: MODO-Creador-Productividad-${version}.${ext}
+  artifactName: MODO-Creador-Productividad-${version}-mac-${arch}.${ext}
+  identity: '-'
+  hardenedRuntime: false
+  gatekeeperAssess: false
 
-# Auto-actualización (electron-updater): stretch, no configurado aún.
+dmg:
+  sign: false

@@ -1,10 +1,45 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, shell } from 'electron'
 import electronUpdater from 'electron-updater'
 import type { UpdateStatus } from '../shared/update'
 
 const { autoUpdater } = electronUpdater
 
 let status: UpdateStatus = { state: 'idle' }
+
+const RELEASES_API = 'https://api.github.com/repos/neohretro/modo-productividad/releases/latest'
+const RELEASES_PAGE = 'https://github.com/neohretro/modo-productividad/releases/latest'
+
+/**
+ * En macOS la auto-actualización exige una app firmada con certificado de Apple.
+ * Mientras no la tengamos, la app solo AVISA que hay versión nueva y abre la página
+ * de descargas; la instalación es manual. En Windows todo es automático.
+ */
+const MANUAL_UPDATES = process.platform === 'darwin'
+
+function isNewer(a: string, b: string): boolean {
+  const pa = a.split('.').map((n) => parseInt(n, 10) || 0)
+  const pb = b.split('.').map((n) => parseInt(n, 10) || 0)
+  for (let i = 0; i < 3; i++) {
+    if ((pa[i] ?? 0) !== (pb[i] ?? 0)) return (pa[i] ?? 0) > (pb[i] ?? 0)
+  }
+  return false
+}
+
+async function checkManually(): Promise<void> {
+  broadcast({ state: 'checking' })
+  try {
+    const res = await fetch(RELEASES_API, { headers: { Accept: 'application/vnd.github+json' } })
+    if (!res.ok) throw new Error(`GitHub respondió ${res.status}`)
+    const latest = String(((await res.json()) as { tag_name?: string }).tag_name ?? '').replace(/^v/, '')
+    broadcast(
+      latest && isNewer(latest, app.getVersion())
+        ? { state: 'available', version: latest }
+        : { state: 'none' }
+    )
+  } catch (err) {
+    broadcast({ state: 'error', message: (err as Error)?.message ?? 'Error al comprobar' })
+  }
+}
 
 export function getUpdateStatus(): UpdateStatus {
   return status
@@ -20,6 +55,12 @@ function broadcast(next: UpdateStatus): void {
 /** Configura electron-updater. No hace nada en desarrollo (no hay release feed). */
 export function initUpdater(): void {
   if (!app.isPackaged) return
+
+  if (MANUAL_UPDATES) {
+    setTimeout(() => void checkManually(), 8_000)
+    setInterval(() => void checkManually(), 3 * 60 * 60 * 1000)
+    return
+  }
 
   autoUpdater.autoDownload = false // pedimos permiso antes de bajar
   autoUpdater.autoInstallOnAppQuit = true
@@ -52,6 +93,7 @@ export function initUpdater(): void {
 
 export async function checkForUpdates(): Promise<void> {
   if (!app.isPackaged) return
+  if (MANUAL_UPDATES) return checkManually()
   try {
     await autoUpdater.checkForUpdates()
   } catch (err) {
@@ -61,6 +103,10 @@ export async function checkForUpdates(): Promise<void> {
 
 export async function downloadUpdate(): Promise<void> {
   if (!app.isPackaged) return
+  if (MANUAL_UPDATES) {
+    void shell.openExternal(RELEASES_PAGE)
+    return
+  }
   try {
     await autoUpdater.downloadUpdate()
   } catch (err) {

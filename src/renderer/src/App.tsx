@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Minimize2, Minus, Settings as SettingsIcon } from 'lucide-react'
 import { useAppStore } from './store/useAppStore'
 import { useTheme } from './theme'
+import { IS_MAC } from './platform'
 import BottomNav from './components/BottomNav'
 import CompletionToast from './components/CompletionToast'
 import FlashToast from './components/FlashToast'
@@ -78,7 +79,10 @@ export default function App(): React.JSX.Element {
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden bg-ink px-5 pb-3 pt-2.5">
-      <header className="drag flex items-center justify-between px-1 pb-2">
+      {/* en Mac, los 3 botones de la ventana (rojo/amarillo/verde) ocupan la esquina izquierda */}
+      <header
+        className={`drag flex items-center justify-between pb-2 ${IS_MAC ? 'pl-[68px] pr-1' : 'px-1'}`}
+      >
         <span className="text-[10px] font-medium tracking-[0.2em] text-paper-dim">
           MODO CREADOR · PRODUCTIVIDAD
         </span>

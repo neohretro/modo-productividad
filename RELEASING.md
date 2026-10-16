@@ -28,6 +28,9 @@ Eso hace todo:
 5. Sube el commit y la etiqueta
 6. Abre la página del release en el navegador
 
+Al publicarse, GitHub Actions compila además el instalador de **Mac** y lo agrega al mismo
+release (ver `docs/MAC.md`).
+
 En un rato, las apps instaladas verán la actualización. Para probarlo rápido:
 abrir la app → **Ajustes → Actualizaciones → "Buscar actualizaciones"**.
 

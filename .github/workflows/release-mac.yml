@@ -1,0 +1,55 @@
+# Compila el instalador de macOS (.dmg) en un Mac de GitHub y lo agrega al release.
+#
+# Se dispara solo cuando se PUBLICA un release (lo hace `npm run release` en Windows),
+# o a mano desde Actions > "Instalador de Mac" > Run workflow (indicando la etiqueta,
+# p. ej. v0.6.3). Sin firma de Apple por ahora: ver docs/MAC.md.
+name: Instalador de Mac
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Etiqueta del release al que se agrega el .dmg (p. ej. v0.6.3)'
+        required: true
+
+permissions:
+  contents: write
+
+# `npm run release` re-crea la etiqueta y publica el release dos veces: nos quedamos con la última.
+concurrency:
+  group: release-mac-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: true
+
+jobs:
+  dmg:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Valores públicos (mismos que Planner expone en el navegador): se guardan como
+      # "variables" del repositorio, no hace falta que sean secretos.
+      - name: Configurar sincronización (Supabase)
+        run: |
+          {
+            echo "MAIN_VITE_SUPABASE_URL=${{ vars.SUPABASE_URL }}"
+            echo "MAIN_VITE_SUPABASE_ANON_KEY=${{ vars.SUPABASE_ANON_KEY }}"
+          } > .env
+          test -n "${{ vars.SUPABASE_URL }}" || { echo "::error::Falta la variable SUPABASE_URL del repositorio"; exit 1; }
+
+      - name: Compilar y subir el .dmg al release
+        run: npm run release:mac
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'

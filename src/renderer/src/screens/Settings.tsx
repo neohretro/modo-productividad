@@ -15,6 +15,7 @@ import type { ThemePref } from '@shared/types'
 import { useAppStore } from '../store/useAppStore'
 import { useUpdate } from '../hooks/useUpdate'
 import AccountSection from '../components/AccountSection'
+import { IS_MAC } from '../platform'
 
 const THEMES: { value: ThemePref; label: string; Icon: LucideIcon }[] = [
   { value: 'light', label: 'Claro', Icon: Sun },
@@ -39,7 +40,7 @@ export default function Settings(): React.JSX.Element {
   const onCapture = (e: React.KeyboardEvent): void => {
     e.preventDefault()
     const mods: string[] = []
-    if (e.ctrlKey) mods.push('CommandOrControl')
+    if (e.ctrlKey || e.metaKey) mods.push('CommandOrControl')
     if (e.altKey) mods.push('Alt')
     if (e.shiftKey) mods.push('Shift')
     const key = e.key.length === 1 ? e.key.toUpperCase() : e.key
@@ -77,7 +78,7 @@ export default function Settings(): React.JSX.Element {
       <Group label="Sistema">
         <Card
           Icon={Power}
-          title="Iniciar con Windows"
+          title={IS_MAC ? 'Iniciar con el Mac' : 'Iniciar con Windows'}
           desc="Abre la app en segundo plano al encender el equipo."
         >
           <Toggle checked={settings.launchOnStartup} onChange={setLaunchOnStartup} />
@@ -248,5 +249,8 @@ function Toggle({
 }
 
 function prettyAccelerator(a: string): string {
+  if (IS_MAC) {
+    return a.replace('CommandOrControl', '⌘').replace('Alt', '⌥').replace('Shift', '⇧').replace(/\+/g, ' ')
+  }
   return a.replace('CommandOrControl', 'Ctrl').replace(/\+/g, ' + ')
 }

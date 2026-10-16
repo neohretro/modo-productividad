@@ -18,6 +18,8 @@
     "dist:win": "electron-vite build && electron-builder --win",
     "dist:mac": "electron-vite build && electron-builder --mac",
     "release:win": "electron-vite build && electron-builder --win --publish always",
+    "release:mac": "electron-vite build && electron-builder --mac --publish always",
+    "dist:mac": "electron-vite build && electron-builder --mac --publish never",
     "release": "node scripts/release.mjs"
   },
   "devDependencies": {
