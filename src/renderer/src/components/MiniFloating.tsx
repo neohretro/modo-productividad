@@ -9,6 +9,9 @@ import FocusTaskRow from './FocusTaskRow'
 import MultitaskNudge from './MultitaskNudge'
 import CompletionToast from './CompletionToast'
 import FlashToast from './FlashToast'
+import RewardToast from './RewardToast'
+import { LevelBadge, useGame } from './GameChips'
+import { Flame } from 'lucide-react'
 import AddTask from './AddTask'
 import Dropdown from './Dropdown'
 import UpdateBanner from './UpdateBanner'
@@ -25,6 +28,7 @@ export default function MiniFloating(): React.JSX.Element {
   const miniTargetId = useAppStore((s) => s.miniTargetId)
   const setMiniTarget = useAppStore((s) => s.setMiniTarget)
   const addTask = useAppStore((s) => s.addTask)
+  const game = useGame()
   const view = useMemo(
     () => targetView({ tasks, archivedTasks, projects, miniTargetId }),
     [tasks, archivedTasks, projects, miniTargetId]
@@ -90,6 +94,23 @@ export default function MiniFloating(): React.JSX.Element {
           />
         </div>
 
+        <div className="relative -mt-1 flex items-center justify-center gap-2 pb-2 text-[10px] text-paper-dim">
+          <LevelBadge level={game.level} size={18} />
+          <span className="text-paper">{game.title}</span>
+          <span className="tabular-nums">
+            {game.xpInLevel}/{game.xpSpan} XP
+          </span>
+          {game.streakDays > 0 && (
+            <span
+              className={`flex items-center gap-0.5 tabular-nums ${game.streakAtRisk ? 'text-orange' : 'text-orange'}`}
+              title={game.streakAtRisk ? 'Cierra una tarea hoy para mantener tu racha' : 'Días seguidos'}
+            >
+              <Flame size={11} strokeWidth={2} />
+              {game.streakDays}
+            </span>
+          )}
+        </div>
+
         <div className="relative min-h-0 flex-1 space-y-1.5 overflow-y-auto px-3 pt-1">
           {hydrated && focusing.length >= 2 && <MultitaskNudge count={focusing.length} />}
 
@@ -116,6 +137,7 @@ export default function MiniFloating(): React.JSX.Element {
 
         <CompletionToast compact />
         <FlashToast />
+        <RewardToast compact />
       </div>
     </div>
   )

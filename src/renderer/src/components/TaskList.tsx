@@ -21,6 +21,8 @@ interface Props {
   hideProject?: boolean
   /** botón de un clic para traer la tarea a Hoy (si todavía no está en Hoy). */
   quickToday?: boolean
+  /** "Asignar día" como solo ícono (columnas angostas). */
+  compactDay?: boolean
 }
 
 export default function TaskList({
@@ -30,7 +32,8 @@ export default function TaskList({
   emptyHint,
   showDay,
   hideProject,
-  quickToday
+  quickToday,
+  compactDay
 }: Props): React.JSX.Element {
   if (tasks.length === 0) {
     return (
@@ -54,6 +57,7 @@ export default function TaskList({
           showDay={showDay}
           hideProject={hideProject}
           quickToday={quickToday}
+          compactDay={compactDay}
         />
       ))}
     </ul>
@@ -66,7 +70,8 @@ function TaskItem({
   focusable,
   showDay,
   hideProject,
-  quickToday
+  quickToday,
+  compactDay
 }: {
   task: Task
   showRolled?: boolean
@@ -74,6 +79,7 @@ function TaskItem({
   showDay?: boolean
   hideProject?: boolean
   quickToday?: boolean
+  compactDay?: boolean
 }): React.JSX.Element {
   const toggleTask = useAppStore((s) => s.toggleTask)
   const deleteTask = useAppStore((s) => s.deleteTask)
@@ -172,7 +178,7 @@ function TaskItem({
           </button>
         )}
 
-        {showDay && !task.done && <AssignDay task={task} compact={quickToday} />}
+        {showDay && !task.done && <AssignDay task={task} compact={compactDay} />}
 
         {task.remindAt && !task.done && (
           <Bell size={13} strokeWidth={2} className="text-orange" aria-label="Con recordatorio" />

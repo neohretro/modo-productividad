@@ -85,6 +85,10 @@ export interface AppSettings {
   multitaskNudges: boolean
   /** Tema visible: claro, oscuro o el del sistema. */
   theme: ThemePref
+  /** Efectos de celebración (confeti, +XP) al completar tareas. */
+  celebrations: boolean
+  /** Logros cuyo aviso ya se mostró; null = aún no se ha tomado la base (no avisar de lo viejo). */
+  seenAchievements: string[] | null
 }
 
 /** Forma completa del estado persistido en disco (electron-store). */
@@ -116,7 +120,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   globalShortcut: 'CommandOrControl+Shift+M',
   miniWindowBounds: null,
   multitaskNudges: true,
-  theme: 'system'
+  theme: 'system',
+  celebrations: true,
+  seenAchievements: null
 }
 
 export const STATE_VERSION = 5

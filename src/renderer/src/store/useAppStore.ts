@@ -12,8 +12,9 @@ import { toISODate } from '@shared/date'
 import { rolloverIfNeeded } from '@shared/rollover'
 import { activeFocusTasks, commitFocus, normalizeState } from '@shared/focus'
 import { projectNameFor, projectTasks, todayList } from '@shared/tasks'
+import { computeGame, rewardBetween, type Reward } from '@shared/game'
 
-type Screen = 'today' | 'week' | 'tasks' | 'projects' | 'summary' | 'settings'
+type Screen = 'today' | 'week' | 'projects' | 'summary' | 'settings'
 
 /** Aviso efímero al completar una tarea con tiempo registrado. */
 export interface CompletionReveal {
@@ -36,6 +37,8 @@ interface AppState extends PersistedState {
   flash: string | null
   /** tarea en modo edición inline (doble clic o menú "Editar"). */
   editingTaskId: string | null
+  /** recompensa por la última tarea cerrada (XP, nivel, logros); la muestra el toast. */
+  reward: Reward | null
 
   hydrate: () => Promise<void>
   /** Aplica un estado llegado de otra ventana sin re-guardarlo. */
@@ -44,6 +47,8 @@ interface AppState extends PersistedState {
   setActiveProject: (id: string) => void
   setMiniTarget: (id: string) => void
   clearRecentCompletion: () => void
+  clearReward: () => void
+  setCelebrations: (on: boolean) => void
   setFlash: (msg: string) => void
   checkRollover: () => void
 
@@ -140,10 +145,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   recentCompletion: null,
   flash: null,
   editingTaskId: null,
+  reward: null,
 
   hydrate: async () => {
     const loaded = (await window.modo?.loadState()) ?? INITIAL_STATE
-    const ready = rolloverIfNeeded(normalizeState(loaded))
+    let ready = rolloverIfNeeded(normalizeState(loaded))
+    // Primera vez con logros: lo que ya tenías desbloqueado no se anuncia como nuevo.
+    if (ready.settings.seenAchievements === null) {
+      const seen = computeGame(ready)
+        .achievements.filter((a) => a.unlocked)
+        .map((a) => a.id)
+      ready = { ...ready, settings: { ...ready.settings, seenAchievements: seen } }
+    }
     set({ ...ready, hydrated: true, activeProjectId: ALL_TASKS_ID })
     void window.modo?.saveState(persisted(get()))
 
@@ -166,6 +179,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   setActiveProject: (activeProjectId) => set({ activeProjectId }),
   setMiniTarget: (miniTargetId) => set({ miniTargetId }),
   clearRecentCompletion: () => set({ recentCompletion: null }),
+  clearReward: () => set({ reward: null }),
+  setCelebrations: (on) => set((s) => ({ settings: { ...s.settings, celebrations: on } })),
   setFlash: (flash) => {
     set({ flash })
     window.setTimeout(() => {
@@ -207,7 +222,24 @@ export const useAppStore = create<AppState>((set, get) => ({
               : base.scheduledDate
         }
       })
-      return { ...patch, recentCompletion: reveal }
+      // Premio por cerrar: XP, subida de nivel y logros nuevos (se avisa una sola vez).
+      let rewardOut: Reward | null = s.reward
+      let settings = s.settings
+      const closing = patch.tasks.find((t) => t.id === id)?.done === true
+      if (closing) {
+        const before = computeGame(persisted(s))
+        const after = computeGame({ ...persisted(s), tasks: patch.tasks })
+        const seen = s.settings.seenAchievements ?? []
+        const r = rewardBetween(before, after, seen)
+        if (r) {
+          settings = {
+            ...settings,
+            seenAchievements: [...new Set([...seen, ...r.achievements.map((a) => a.id)])]
+          }
+          if (s.settings.celebrations) rewardOut = r
+        }
+      }
+      return { ...patch, recentCompletion: reveal, reward: rewardOut, settings }
     }),
 
   deleteTask: (id) => set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),

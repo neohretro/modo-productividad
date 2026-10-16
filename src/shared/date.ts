@@ -26,3 +26,14 @@ export function weekdayShortES(iso: string): string {
     .toLocaleDateString('es', { weekday: 'short' })
     .replace('.', '')
 }
+
+/**
+ * Día LOCAL (YYYY-MM-DD) de una fecha ISO. Las fechas con hora se guardan en UTC
+ * (`toISOString`): cortar el texto daba el día equivocado después de las 7 pm en
+ * Colombia. Aquí se convierten a la hora local antes de tomar el día.
+ */
+export function localDayOf(iso: string): string {
+  if (iso.length <= 10) return iso
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? iso.slice(0, 10) : toISODate(d)
+}

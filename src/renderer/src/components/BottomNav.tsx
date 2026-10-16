@@ -1,11 +1,10 @@
-import { BarChart3, CalendarCheck, CalendarDays, FolderKanban, ListChecks } from 'lucide-react'
+import { BarChart3, CalendarCheck, CalendarDays, FolderKanban } from 'lucide-react'
 import { ALL_TASKS_ID } from '@shared/types'
 import { useAppStore } from '../store/useAppStore'
 
 const ITEMS = [
   { id: 'today', label: 'Hoy', Icon: CalendarCheck },
   { id: 'week', label: 'Semana', Icon: CalendarDays },
-  { id: 'tasks', label: 'Tareas', Icon: ListChecks },
   { id: 'projects', label: 'Proyectos', Icon: FolderKanban },
   { id: 'summary', label: 'Resumen', Icon: BarChart3 }
 ] as const

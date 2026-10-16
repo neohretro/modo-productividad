@@ -5,10 +5,10 @@ import { useTheme } from './theme'
 import BottomNav from './components/BottomNav'
 import CompletionToast from './components/CompletionToast'
 import FlashToast from './components/FlashToast'
+import RewardToast from './components/RewardToast'
 import UpdateBanner from './components/UpdateBanner'
 import Today from './screens/Today'
 import Calendar from './screens/Calendar'
-import Tasks from './screens/Tasks'
 import Projects from './screens/Projects'
 import Summary from './screens/Summary'
 import Settings from './screens/Settings'
@@ -46,7 +46,6 @@ function WindowControls(): React.JSX.Element {
 const SCREENS = {
   today: Today,
   week: Calendar,
-  tasks: Tasks,
   projects: Projects,
   summary: Summary,
   settings: Settings
@@ -101,6 +100,7 @@ export default function App(): React.JSX.Element {
       <BottomNav />
       <CompletionToast />
       <FlashToast />
+      <RewardToast />
     </div>
   )
 }

@@ -5,7 +5,7 @@
  *  - día futuro  → tareas con ese día asignado
  */
 import type { PersistedState, Task } from './types'
-import { addDaysISO, toISODate } from './date'
+import { addDaysISO, localDayOf, toISODate } from './date'
 
 export interface DayColumn {
   iso: string
@@ -24,7 +24,7 @@ export function weekOf(anchorISO: string): string[] {
 }
 
 function dateOf(iso: string | null): string {
-  return iso ? iso.slice(0, 10) : ''
+  return iso ? localDayOf(iso) : ''
 }
 
 /** Construye las 7 columnas de una semana con sus tareas. */
