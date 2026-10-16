@@ -55,14 +55,16 @@ export default function MiniFloating(): React.JSX.Element {
   }
 
   return (
+    // `drag` solo en el marco de 8px y en el encabezado/anillo: si TODA la ventana es zona de
+    // arrastre, macOS no le entrega la rueda/trackpad a la lista (el scroll "a veces no responde").
     <div className="drag flex h-screen w-screen p-2">
-      <div className="frost relative flex h-full w-full flex-col overflow-hidden rounded-[22px]">
+      <div className="frost no-drag relative flex h-full w-full flex-col overflow-hidden rounded-[22px]">
         {/* resplandor detrás del anillo — caja cuadrada, se desvanece dentro de sí */}
         <div
           className="ring-halo pointer-events-none absolute left-1/2 top-[112px] h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2"
           aria-hidden
         />
-        <header className="relative flex items-center justify-between gap-2 px-3 pb-1.5 pt-2.5">
+        <header className="drag relative flex items-center justify-between gap-2 px-3 pb-1.5 pt-2.5">
           <Dropdown
             className="min-w-0 flex-1"
             value={miniTargetId}
@@ -84,7 +86,7 @@ export default function MiniFloating(): React.JSX.Element {
 
         <UpdateBanner compact />
 
-        <div className="relative grid place-items-center pb-3 pt-1">
+        <div className="drag relative grid place-items-center pb-3 pt-1">
           <ProgressRing
             pct={pct}
             size={132}
@@ -94,7 +96,7 @@ export default function MiniFloating(): React.JSX.Element {
           />
         </div>
 
-        <div className="relative -mt-1 flex items-center justify-center gap-2 pb-2 text-[10px] text-paper-dim">
+        <div className="drag relative -mt-1 flex items-center justify-center gap-2 pb-2 text-[10px] text-paper-dim">
           <LevelBadge level={game.level} size={18} />
           <span className="text-paper">{game.title}</span>
           <span className="tabular-nums">

@@ -11,6 +11,7 @@ import AddTask from '../components/AddTask'
 import ProjectPicker from '../components/ProjectPicker'
 import MultitaskNudge from '../components/MultitaskNudge'
 import GameChips, { useGame } from '../components/GameChips'
+import { useWheelForward } from '../hooks/useWheelForward'
 
 function greeting(): string {
   const h = new Date().getHours()
@@ -32,6 +33,7 @@ export default function Today(): React.JSX.Element {
   const setFlash = useAppStore((s) => s.setFlash)
   const [label, setLabel] = useState<string | null>(null)
   const game = useGame()
+  const { listRef, onWheel } = useWheelForward()
 
   // "Hoy" = todas las tareas con día asignado hoy o antes (de cualquier proyecto).
   const todayTasks = useMemo(() => todayList({ tasks }), [tasks])
@@ -73,7 +75,10 @@ export default function Today(): React.JSX.Element {
 
       <div className="grid min-h-0 flex-1 grid-cols-2 gap-3">
         {/* HOY */}
-        <section className="glass flex min-h-0 min-w-0 flex-col rounded-card p-4">
+        <section
+          onWheel={onWheel}
+          className="glass flex min-h-0 min-w-0 flex-col rounded-card p-4"
+        >
           <div className="mb-2.5 flex shrink-0 items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <h2 className="shrink-0 text-base">Hoy</h2>
@@ -96,7 +101,7 @@ export default function Today(): React.JSX.Element {
             )}
           </div>
 
-          <div className="-mr-1.5 min-h-0 flex-1 overflow-y-auto pr-1.5">
+          <div ref={listRef} className="-mr-1.5 min-h-0 flex-1 overflow-y-auto pr-1.5">
             <TaskList
               tasks={todayTasks}
               showRolled

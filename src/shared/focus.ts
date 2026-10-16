@@ -50,6 +50,20 @@ export function commitFocus(task: Task, now: number = Date.now()): Task {
   return { ...task, timeSpentMs: task.timeSpentMs + add, focusStartedAt: null }
 }
 
+/** Tope razonable para un tiempo escrito a mano (999 h). */
+export const MAX_MANUAL_MS = 999 * 3_600_000
+
+/**
+ * Fija el TOTAL de tiempo dedicado a una tarea (la persona olvidó medirlo, o lo corrige).
+ * Si la tarea está corriendo, se cierra el tramo actual y se sigue contando desde ahora.
+ */
+export function withTimeSpent(task: Task, ms: number, now: number = Date.now()): Task {
+  const clean = Number.isFinite(ms) ? Math.min(MAX_MANUAL_MS, Math.max(0, Math.round(ms))) : 0
+  const running = task.focusStartedAt !== null
+  const base = commitFocus(task, now)
+  return { ...base, timeSpentMs: clean, focusStartedAt: running ? now : null }
+}
+
 function normalizeTask(t: Partial<Task>): Task {
   return {
     id: t.id ?? crypto.randomUUID(),

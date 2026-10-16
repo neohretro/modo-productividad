@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeftToLine, Bell, Check, Pause, Play, Trash2 } from 'lucide-react'
+import { ArrowLeftToLine, Bell, Check, Clock, Pause, Play, Trash2 } from 'lucide-react'
 import { toISODate } from '@shared/date'
 import type { Task } from '@shared/types'
 import { focusPhase, focusSortRank, formatDurationLong } from '@shared/focus'
@@ -90,7 +90,7 @@ function TaskItem({
   const projectName = useAppStore((s) => projectNameOf(s, task))
   const assignDay = useAppStore((s) => s.assignDay)
   const [draft, setDraft] = useState(task.text)
-  const { onContextMenu, menu } = useTaskMenu(task)
+  const { onContextMenu, openTime, menu } = useTaskMenu(task)
 
   const startEdit = (): void => {
     setDraft(task.text)
@@ -183,6 +183,27 @@ function TaskItem({
         {task.remindAt && !task.done && (
           <Bell size={13} strokeWidth={2} className="text-orange" aria-label="Con recordatorio" />
         )}
+
+        {!running &&
+          (task.timeSpentMs >= 60_000 && !paused ? (
+            <button
+              onClick={openTime}
+              title="Cambiar el tiempo dedicado"
+              className="inline-flex items-center gap-1 rounded-full bg-ink px-2 py-0.5 text-[10px] tabular-nums text-paper-dim transition-colors hover:text-orange"
+            >
+              <Clock size={10} strokeWidth={2} />
+              {formatDurationLong(task.timeSpentMs)}
+            </button>
+          ) : (
+            <button
+              onClick={openTime}
+              aria-label="Agregar tiempo dedicado"
+              title="Agregar tiempo dedicado"
+              className="grid h-6 w-6 place-items-center rounded-full text-paper-dim opacity-0 transition-opacity duration-150 hover:text-orange group-hover:opacity-100"
+            >
+              <Clock size={13} strokeWidth={1.75} />
+            </button>
+          ))}
 
         {showRolled && task.daysRolled > 0 && !task.done && (
           <span className="rounded-full bg-orange-glow px-2 py-0.5 text-[10px] text-orange">

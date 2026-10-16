@@ -3,6 +3,8 @@ import assert from 'node:assert/strict'
 import type { PersistedState } from '@shared/types'
 import {
   activeFocusTasks,
+  MAX_MANUAL_MS,
+  withTimeSpent,
   commitFocus,
   elapsedMs,
   focusPhase,
@@ -113,4 +115,24 @@ test('focusPhase: idle / running / paused', () => {
   assert.equal(focusPhase(task({ focusStartedAt: null, timeSpentMs: 5000 })), 'paused')
   assert.equal(focusPhase(task({ focusStartedAt: null, timeSpentMs: 5000, done: true })), 'idle')
   assert.equal(focusPhase(task({ focusStartedAt: null, timeSpentMs: 200 })), 'idle', 'sub-segundo no cuenta')
+})
+
+test('withTimeSpent fija el total a mano y no deja valores raros', () => {
+  const t = task({ timeSpentMs: 10 * 60_000 })
+  assert.equal(withTimeSpent(t, 90 * 60_000).timeSpentMs, 90 * 60_000)
+  assert.equal(withTimeSpent(t, 0).timeSpentMs, 0)
+  assert.equal(withTimeSpent(t, -5).timeSpentMs, 0)
+  assert.equal(withTimeSpent(t, Number.NaN).timeSpentMs, 0)
+  assert.equal(withTimeSpent(t, 10 ** 12).timeSpentMs, MAX_MANUAL_MS)
+})
+
+test('withTimeSpent en una tarea corriendo cierra el tramo y sigue contando', () => {
+  const started = 1_000_000
+  const now = started + 5 * 60_000
+  const t = task({ timeSpentMs: 0, focusStartedAt: started })
+  const out = withTimeSpent(t, 30 * 60_000, now)
+  assert.equal(out.timeSpentMs, 30 * 60_000)
+  assert.equal(out.focusStartedAt, now)
+  // en pausa se queda en pausa
+  assert.equal(withTimeSpent(task(), 60_000, now).focusStartedAt, null)
 })

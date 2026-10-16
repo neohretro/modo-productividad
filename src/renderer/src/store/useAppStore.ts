@@ -10,7 +10,7 @@ import {
 } from '@shared/types'
 import { toISODate } from '@shared/date'
 import { rolloverIfNeeded } from '@shared/rollover'
-import { activeFocusTasks, commitFocus, normalizeState } from '@shared/focus'
+import { activeFocusTasks, commitFocus, normalizeState, withTimeSpent } from '@shared/focus'
 import { projectNameFor, projectTasks, todayList } from '@shared/tasks'
 import { computeGame, rewardBetween, type Reward } from '@shared/game'
 
@@ -49,6 +49,8 @@ interface AppState extends PersistedState {
   clearRecentCompletion: () => void
   clearReward: () => void
   setCelebrations: (on: boolean) => void
+  /** Fija el tiempo total dedicado a una tarea (viva o ya archivada). */
+  setTaskTime: (id: string, ms: number) => void
   setFlash: (msg: string) => void
   checkRollover: () => void
 
@@ -330,6 +332,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   stopFocus: (id) => set((s) => mapTask(s, id, (t) => commitFocus(t))),
+
+  setTaskTime: (id, ms) =>
+    set((s) => {
+      const fix = (t: Task): Task => (t.id === id ? withTimeSpent(t, ms) : t)
+      return { tasks: s.tasks.map(fix), archivedTasks: s.archivedTasks.map(fix) }
+    }),
 
   toggleFocus: (id) => {
     // Play/pausa con el mismo botón. Pausar cierra el tramo (suma su tiempo);

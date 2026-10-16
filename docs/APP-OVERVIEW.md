@@ -158,6 +158,11 @@ el tiempo que ya llevas, para que te acuerdes de retomarla.
 **Darle ▶ a una tarea suelta o de otro día la pasa a Hoy**: si la estás
 trabajando, es de hoy.
 
+**¿Olvidaste darle ▶?** Puedes poner o corregir el tiempo a mano: clic en el reloj de la tarea
+(o clic derecho → "Tiempo dedicado…"), escribes horas y minutos o sumas con atajos (+15 min, +30 min,
++1 h, +2 h) y guardas. Funciona también con tareas de días pasados desde la Semana, y el Resumen
+lo cuenta igual que el tiempo medido.
+
 Si enfocas dos o más tareas a la vez, aparece el aviso de multitasking: una
 notificación de Windows con el dato completo, y en la app un recordatorio
 discreto de una línea. Es suave y con cooldown; puedes seguir si quieres.

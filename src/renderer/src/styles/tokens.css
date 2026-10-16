@@ -82,8 +82,11 @@
     height: 100%;
   }
 
-  /* Barras de desplazamiento discretas (en vez de las blancas del sistema). */
-  * {
+  /* Barras de desplazamiento discretas (en vez de las blancas del sistema).
+     En Mac NO: ahí las barras nativas son de las que aparecen al deslizar con los dedos,
+     y forzar `scrollbar-width` hace que Chromium las dibuje "a mano" y el trackpad
+     responda peor. */
+  :root:not(.is-mac) * {
     scrollbar-width: thin;
     scrollbar-color: var(--border-hi) transparent;
   }

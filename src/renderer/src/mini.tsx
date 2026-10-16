@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles/tokens.css'
+import './platform'
 import MiniFloating from './components/MiniFloating'
 import { useTheme } from './theme'
 

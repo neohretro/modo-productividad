@@ -6,6 +6,7 @@ import {
   CalendarPlus,
   CalendarX2,
   Check,
+  Clock,
   Copy,
   CopyPlus,
   FolderKanban,
@@ -16,6 +17,7 @@ import {
 import type { Task } from '@shared/types'
 import { addDaysISO, toISODate } from '@shared/date'
 import { inHoursISO, laterTodayISO, tomorrowAtISO } from '@shared/reminders'
+import { formatDurationLong, MAX_MANUAL_MS } from '@shared/focus'
 import { useAppStore } from '../store/useAppStore'
 import { ContextMenu, MenuItem, MenuLabel, MenuSep, type MenuPos } from './ContextMenu'
 
@@ -36,17 +38,21 @@ function toLocalInput(d: Date): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`
 }
 
+export type MenuMode = 'root' | 'date' | 'project' | 'remind' | 'time'
+
 export default function TaskContextMenu({
   task,
   pos,
+  initialMode = 'root',
   onClose
 }: {
   task: Task
   pos: MenuPos
+  initialMode?: MenuMode
   onClose: () => void
 }): React.JSX.Element {
   const s = useAppStore()
-  const [mode, setMode] = useState<'root' | 'date' | 'project' | 'remind'>('root')
+  const [mode, setMode] = useState<MenuMode>(initialMode)
   const [date, setDate] = useState(addDaysISO(toISODate(), 1))
   const [when, setWhen] = useState(() => toLocalInput(new Date(Date.now() + 3_600_000)))
   const laterToday = laterTodayISO(18)
@@ -103,6 +109,16 @@ export default function TaskContextMenu({
             />
           )}
           <MenuItem Icon={FolderKanban} label="Proyecto…" onClick={() => setMode('project')} />
+          <MenuItem
+            Icon={Clock}
+            label="Tiempo dedicado…"
+            onClick={() => setMode('time')}
+            trailing={
+              task.timeSpentMs >= 60_000 ? (
+                <span className="text-[10px] text-paper-dim">{formatDurationLong(task.timeSpentMs)}</span>
+              ) : null
+            }
+          />
           <MenuSep />
           {task.remindAt ? (
             <MenuItem
@@ -121,6 +137,15 @@ export default function TaskContextMenu({
             onClick={() => done(() => s.deleteTask(task.id))}
           />
         </>
+      )}
+
+      {mode === 'time' && (
+        <TimeEditor
+          initialMs={task.timeSpentMs}
+          running={task.focusStartedAt !== null}
+          onBack={initialMode === 'time' ? onClose : () => setMode('root')}
+          onSave={(ms) => done(() => s.setTaskTime(task.id, ms), 'Tiempo guardado')}
+        />
       )}
 
       {mode === 'date' && (
@@ -233,5 +258,111 @@ export default function TaskContextMenu({
         </>
       )}
     </ContextMenu>
+  )
+}
+
+/** Editor del tiempo total: horas + minutos, con atajos para sumar lo que se olvidó medir. */
+function TimeEditor({
+  initialMs,
+  running,
+  onBack,
+  onSave
+}: {
+  initialMs: number
+  running: boolean
+  onBack: () => void
+  onSave: (ms: number) => void
+}): React.JSX.Element {
+  const totalMin = Math.floor(initialMs / 60_000)
+  const [hours, setHours] = useState(String(Math.floor(totalMin / 60)))
+  const [mins, setMins] = useState(String(totalMin % 60))
+
+  const toMs = (): number => {
+    const h = Math.max(0, parseInt(hours, 10) || 0)
+    const m = Math.max(0, parseInt(mins, 10) || 0)
+    return Math.min(MAX_MANUAL_MS, (h * 60 + m) * 60_000)
+  }
+  const add = (minutes: number): void => {
+    const total = Math.floor(toMs() / 60_000) + minutes
+    setHours(String(Math.floor(total / 60)))
+    setMins(String(total % 60))
+  }
+
+  const field =
+    'w-full rounded-[11px] border border-border-hi bg-ink px-2.5 py-1.5 text-center text-sm tabular-nums text-paper outline-none focus:border-orange'
+  return (
+    <div className="w-[220px] p-1">
+      <MenuLabel>Tiempo dedicado</MenuLabel>
+      <p className="px-2.5 pb-2 text-[11px] leading-snug text-paper-dim">
+        ¿Olvidaste medirlo? Escribe el total o suma lo que falta.
+        {running && ' Sigue contando desde ahora.'}
+      </p>
+      <div className="mb-2 flex items-end gap-2">
+        <label className="flex-1 text-[10px] text-paper-dim">
+          Horas
+          <input
+            type="number"
+            min={0}
+            value={hours}
+            onChange={(e) => setHours(e.target.value)}
+            onFocus={(e) => e.currentTarget.select()}
+            className={`${field} mt-0.5`}
+          />
+        </label>
+        <label className="flex-1 text-[10px] text-paper-dim">
+          Minutos
+          <input
+            type="number"
+            min={0}
+            value={mins}
+            onChange={(e) => setMins(e.target.value)}
+            onFocus={(e) => e.currentTarget.select()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') onSave(toMs())
+            }}
+            className={`${field} mt-0.5`}
+          />
+        </label>
+      </div>
+      <div className="mb-2 flex flex-wrap gap-1">
+        {[
+          ['+15 min', 15],
+          ['+30 min', 30],
+          ['+1 h', 60],
+          ['+2 h', 120]
+        ].map(([label, n]) => (
+          <button
+            key={label}
+            onClick={() => add(n as number)}
+            className="rounded-full border border-border-hi px-2 py-0.5 text-[10px] text-paper-dim transition-colors hover:border-orange hover:text-orange"
+          >
+            {label}
+          </button>
+        ))}
+        <button
+          onClick={() => {
+            setHours('0')
+            setMins('0')
+          }}
+          className="rounded-full px-2 py-0.5 text-[10px] text-paper-dim transition-colors hover:text-orange"
+        >
+          Borrar
+        </button>
+      </div>
+      <div className="flex gap-1.5">
+        <button
+          onClick={onBack}
+          className="flex-1 rounded-[11px] px-2 py-1.5 text-xs text-paper-dim hover:bg-ink-glass"
+        >
+          Atrás
+        </button>
+        <button
+          onClick={() => onSave(toMs())}
+          className="flex-1 rounded-[11px] bg-orange px-2 py-1.5 text-xs text-onaccent"
+        >
+          Guardar
+        </button>
+      </div>
+    </div>
   )
 }

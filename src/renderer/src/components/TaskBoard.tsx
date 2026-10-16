@@ -8,6 +8,7 @@ import { ContextMenu, MenuItem, MenuSep, type MenuPos } from './ContextMenu'
 import ProjectPicker from './ProjectPicker'
 import Segmented from './Segmented'
 import TaskList from './TaskList'
+import { useWheelForward } from '../hooks/useWheelForward'
 
 type Tab = 'loose' | 'planned' | 'done'
 
@@ -74,9 +75,13 @@ export default function TaskBoard({
   }, [tasks, archivedTasks, projectId, excludeToday])
 
   const total = scoped.loose.length + scoped.planned.length
+  const { listRef, onWheel } = useWheelForward()
 
   return (
-    <section className={`glass flex min-h-0 min-w-0 flex-col rounded-card p-4 ${className}`}>
+    <section
+      onWheel={onWheel}
+      className={`glass flex min-h-0 min-w-0 flex-col rounded-card p-4 ${className}`}
+    >
       {title && (
         <div className="mb-2.5 flex shrink-0 items-center gap-2">
           <h2 className="text-base">{title}</h2>
@@ -144,7 +149,7 @@ export default function TaskBoard({
         />
       </div>
 
-      <div className="-mr-1.5 min-h-0 flex-1 overflow-y-auto pr-1.5">
+      <div ref={listRef} className="-mr-1.5 min-h-0 flex-1 overflow-y-auto pr-1.5">
         <TaskList
           tasks={scoped[tab]}
           showDay={tab !== 'done'}
