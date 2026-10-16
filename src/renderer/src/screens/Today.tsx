@@ -67,7 +67,7 @@ export default function Today(): React.JSX.Element {
 
         <div className="relative shrink-0">
           <div className="ring-halo pointer-events-none absolute inset-0" />
-          <ProgressRing pct={pct} size={92} stroke={5} label="del día" sub={`${done} de ${total}`} />
+          <ProgressRing pct={pct} size={100} stroke={5} sub={`${done} de ${total}`} />
         </div>
       </section>
 
