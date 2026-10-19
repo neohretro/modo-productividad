@@ -8,7 +8,9 @@
  * faltan, la app corre igual pero sin opción de iniciar sesión.
  */
 import { EventEmitter } from 'node:events'
-import { BrowserWindow, ipcMain, safeStorage } from 'electron'
+import { appendFileSync, renameSync, statSync } from 'node:fs'
+import { join } from 'node:path'
+import { app, BrowserWindow, ipcMain, safeStorage } from 'electron'
 import Store from 'electron-store'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { AuthResult, AuthState, AuthUser } from '../shared/auth'
@@ -17,6 +19,25 @@ const URL = import.meta.env.MAIN_VITE_SUPABASE_URL as string | undefined
 const ANON_KEY = import.meta.env.MAIN_VITE_SUPABASE_ANON_KEY as string | undefined
 
 export const isSupabaseConfigured = Boolean(URL && ANON_KEY)
+
+/**
+ * Bitácora corta de la sesión (`auth.log` en la carpeta de datos de la app). Solo guarda
+ * QUÉ pasó (eventos y mensajes de error), nunca tokens ni contraseñas. Sirve para saber por
+ * qué se cerró una sesión.
+ */
+function authLog(msg: string): void {
+  try {
+    const file = join(app.getPath('userData'), 'auth.log')
+    try {
+      if (statSync(file).size > 100_000) renameSync(file, `${file}.old`)
+    } catch {
+      /* no existe todavía */
+    }
+    appendFileSync(file, `${new Date().toISOString()} v${app.getVersion()} ${msg}\n`)
+  } catch {
+    /* la bitácora nunca debe romper la app */
+  }
+}
 
 // --- almacén de sesión (cifrado si se puede) --------------------------------
 const sessionStore = new Store<{ v: Record<string, string> }>({
@@ -41,7 +62,8 @@ const authStorage = {
     if (!raw.startsWith('enc:')) return raw
     try {
       return safeStorage.decryptString(Buffer.from(raw.slice(4), 'base64'))
-    } catch {
+    } catch (e) {
+      authLog(`no se pudo descifrar la sesión guardada (${(e as Error).message})`)
       return null
     }
   },
@@ -105,6 +127,23 @@ export function onAuthStateChange(cb: (s: AuthState) => void): () => void {
   return () => bus.off('change', cb)
 }
 
+/** Usuario de la sesión guardada en disco, aunque no se haya podido renovar (p. ej. sin internet). */
+function storedUser(): AuthUser | null {
+  try {
+    const all = sessionStore.get('v')
+    for (const key of Object.keys(all)) {
+      if (!key.endsWith('-auth-token')) continue
+      const raw = authStorage.getItem(key)
+      if (!raw) continue
+      const u = (JSON.parse(raw) as { user?: { id?: string; email?: string | null } }).user
+      if (u?.id && u.email) return { id: u.id, email: u.email }
+    }
+  } catch {
+    /* sin sesión guardada */
+  }
+  return null
+}
+
 /** Resuelve la sesión guardada y engancha los cambios. Llamar una vez al arrancar. */
 export async function initAuth(): Promise<void> {
   const sb = getSupabase()
@@ -112,14 +151,34 @@ export async function initAuth(): Promise<void> {
     setState({ loading: false })
     return
   }
-  const { data } = await sb.auth.getSession()
-  setState({ user: userFrom(data.session), loading: false })
 
-  sb.auth.onAuthStateChange((_event, session) => {
+  // Primero se escuchan los cambios (así no se pierde ningún evento del arranque).
+  // Regla: SOLO "SIGNED_OUT" borra al usuario. Cualquier otro evento sin sesión (como el
+  // inicial, cuando todavía no hay internet para renovarla) no debe cerrarla en pantalla.
+  sb.auth.onAuthStateChange((event, session) => {
+    authLog(`evento ${event} · sesión ${session ? 'sí' : 'no'}`)
     const wasSignedIn = current.user !== null
-    setState({ user: userFrom(session), loading: false })
+    if (session) setState({ user: userFrom(session), loading: false })
+    else if (event === 'SIGNED_OUT') setState({ user: null, loading: false })
+    else setState({ loading: false })
     if (!wasSignedIn && current.user) void upsertProfile()
   })
+
+  const { data, error } = await sb.auth.getSession()
+  let user = userFrom(data.session)
+  authLog(`arranque · sesión ${user ? 'sí' : 'no'}${error ? ` · error: ${error.message}` : ''}`)
+
+  // Sin internet al abrir (muy común si la app arranca con Windows antes de conectarse a
+  // la red): la sesión sigue guardada, solo que aún no se pudo renovar. No se pide iniciar
+  // sesión de nuevo; se renueva sola apenas haya conexión.
+  if (!user && error) {
+    const cached = storedUser()
+    if (cached) {
+      user = cached
+      authLog('sin conexión al arrancar: se mantiene la sesión guardada')
+    }
+  }
+  setState({ user, loading: false })
 }
 
 // --- acciones (las llama el IPC `auth:*`) ---------------------------------
@@ -166,7 +225,10 @@ export async function verifyCode(
 export async function signOut(): Promise<void> {
   const sb = getSupabase()
   if (!sb) return
-  await sb.auth.signOut()
+  authLog('cierre de sesión manual (botón Salir)')
+  // scope 'local': cierra SOLO este equipo. El valor por defecto ('global') cerraría la sesión en
+  // todos tus equipos y en el Planner al mismo tiempo.
+  await sb.auth.signOut({ scope: 'local' })
   setState({ user: null, loading: false })
 }
 
