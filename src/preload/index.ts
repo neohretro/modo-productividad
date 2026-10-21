@@ -11,6 +11,9 @@ const api = {
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   closeWindow: () => ipcRenderer.send('window:close'),
   enterMiniMode: () => ipcRenderer.send('window:enterMini'),
+  /** Mover la ventana mini arrastrando desde cualquier parte (ver useDragAnywhere). */
+  miniDragStart: () => ipcRenderer.send('mini:dragStart'),
+  miniDragMove: (dx: number, dy: number) => ipcRenderer.send('mini:dragMove', dx, dy),
   exitMiniMode: () => ipcRenderer.send('window:exitMini'),
   notifyMultitask: (count: number) => ipcRenderer.send('notify:multitask', count),
   setResolvedTheme: (theme: 'light' | 'dark') => ipcRenderer.send('theme:set', theme),

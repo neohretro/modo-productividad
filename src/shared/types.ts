@@ -81,6 +81,11 @@ export interface AppSettings {
   launchOnStartup: boolean
   globalShortcut: string
   miniWindowBounds: { x: number; y: number } | null
+  /**
+   * Burbuja mini "fijada en el escritorio": no flota encima de las demás ventanas (otras apps
+   * la tapan) y no se mueve por accidente. Apagado = siempre visible encima de todo.
+   */
+  miniPinned: boolean
   /** Avisar cuando hay varias tareas en enfoque a la vez (nudge, no bloqueo). */
   multitaskNudges: boolean
   /** Tema visible: claro, oscuro o el del sistema. */
@@ -119,6 +124,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   launchOnStartup: true,
   globalShortcut: 'CommandOrControl+Shift+M',
   miniWindowBounds: null,
+  miniPinned: false,
   multitaskNudges: true,
   theme: 'system',
   celebrations: true,

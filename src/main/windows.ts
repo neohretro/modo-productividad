@@ -98,7 +98,7 @@ export function createMiniWindow(opts: { show?: boolean } = {}): BrowserWindow {
     webPreferences: { preload: PRELOAD, sandbox: false, backgroundThrottling: false }
   })
 
-  miniWindow.setAlwaysOnTop(true, 'floating')
+  applyMiniPin(getState().settings.miniPinned)
   miniWindow.on('ready-to-show', () => {
     if (autoShow) miniWindow?.show()
   })
@@ -115,6 +115,18 @@ export function createMiniWindow(opts: { show?: boolean } = {}): BrowserWindow {
 
   loadRoute(miniWindow, 'mini')
   return miniWindow
+}
+
+/**
+ * Fijar / soltar la burbuja mini.
+ *  - fijada: deja de flotar encima de todo (queda "en el escritorio": otras ventanas la
+ *    tapan, y se ve al mostrar el escritorio) y no se puede mover por accidente.
+ *  - suelta: siempre visible encima de todas las ventanas y se puede arrastrar.
+ */
+export function applyMiniPin(pinned: boolean): void {
+  if (!miniWindow || miniWindow.isDestroyed()) return
+  miniWindow.setAlwaysOnTop(!pinned, 'floating')
+  miniWindow.setMovable(!pinned)
 }
 
 /** Pasar a modo mini: oculta la principal, muestra la burbuja. */
@@ -143,6 +155,14 @@ function activeWindow(): BrowserWindow {
 export function toggleVisibility(): void {
   const win = activeWindow()
   if (win.isVisible() && !win.isMinimized()) {
+    // Mini fijada en el escritorio y tapada por otras ventanas: el atajo la TRAE al frente
+    // (ocultarla sería lo contrario de lo que se espera cuando no la ves).
+    if (win === miniWindow && getState().settings.miniPinned && !win.isFocused()) {
+      win.show()
+      win.moveTop()
+      win.focus()
+      return
+    }
     win.hide()
   } else {
     win.show()

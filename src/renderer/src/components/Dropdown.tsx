@@ -84,6 +84,7 @@ export default function Dropdown({
               top: rect.bottom + 4,
               width: Math.max(rect.width, 150)
             }}
+            data-no-move
             className="no-drag z-50 max-h-60 animate-fade overflow-y-auto rounded-chip border border-border-hi bg-ink-glass-strong p-1 shadow-[0_10px_30px_-8px_rgba(0,0,0,0.5)]"
           >
             {options.map((o) => (

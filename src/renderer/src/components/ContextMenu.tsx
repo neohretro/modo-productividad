@@ -56,6 +56,7 @@ export function ContextMenu({
       style={{ position: 'fixed', left: adj.x, top: adj.y }}
       // `no-drag`: sin esto, en el mini (ventana sin marco) la zona del menú
       // cuenta como zona de arrastre de ventana y los clics no llegan a los items.
+      data-no-move
       className="no-drag glass-strong z-50 w-max min-w-[196px] max-w-[260px] animate-fade rounded-chip p-1.5"
     >
       {children}

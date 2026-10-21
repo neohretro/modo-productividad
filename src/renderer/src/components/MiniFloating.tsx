@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from 'react'
-import { Maximize2 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Maximize2, Pin, PinOff } from 'lucide-react'
 import { ALL_TASKS_ID, TODAY_PROJECT_ID } from '@shared/types'
 import { toISODate } from '@shared/date'
 import { focusSortRank } from '@shared/focus'
@@ -15,6 +15,8 @@ import { Flame } from 'lucide-react'
 import AddTask from './AddTask'
 import Dropdown from './Dropdown'
 import UpdateBanner from './UpdateBanner'
+import { ContextMenu, MenuItem, MenuSep, type MenuPos } from './ContextMenu'
+import { useDragAnywhere } from '../hooks/useDragAnywhere'
 
 // El rollover diario lo maneja solo la ventana principal; el mini recibe el
 // estado ya actualizado por el broadcast store:changed.
@@ -29,6 +31,10 @@ export default function MiniFloating(): React.JSX.Element {
   const setMiniTarget = useAppStore((s) => s.setMiniTarget)
   const addTask = useAppStore((s) => s.addTask)
   const game = useGame()
+  const pinned = useAppStore((s) => s.settings.miniPinned)
+  const setMiniPinned = useAppStore((s) => s.setMiniPinned)
+  const dragAnywhere = useDragAnywhere()
+  const [menuPos, setMenuPos] = useState<MenuPos | null>(null)
   const view = useMemo(
     () => targetView({ tasks, archivedTasks, projects, miniTargetId }),
     [tasks, archivedTasks, projects, miniTargetId]
@@ -55,16 +61,23 @@ export default function MiniFloating(): React.JSX.Element {
   }
 
   return (
-    // `drag` solo en el marco de 8px y en el encabezado/anillo: si TODA la ventana es zona de
-    // arrastre, macOS no le entrega la rueda/trackpad a la lista (el scroll "a veces no responde").
-    <div className="drag flex h-screen w-screen p-2">
-      <div className="frost no-drag relative flex h-full w-full flex-col overflow-hidden rounded-[22px]">
+    // Mover la ventana: por código (`useDragAnywhere`) desde cualquier parte que no sea un
+    // control. NO se usan zonas `drag` del CSS: le quitan al contenido la rueda/trackpad y el
+    // clic derecho (en Mac el scroll "a veces no respondía" y en Windows salía el menú del sistema).
+    <div {...dragAnywhere} className="flex h-screen w-screen p-2">
+      <div
+        onContextMenu={(e) => {
+          e.preventDefault()
+          setMenuPos({ x: e.clientX, y: e.clientY })
+        }}
+        className="frost relative flex h-full w-full flex-col overflow-hidden rounded-[22px]"
+      >
         {/* resplandor detrás del anillo — caja cuadrada, se desvanece dentro de sí */}
         <div
           className="ring-halo pointer-events-none absolute left-1/2 top-[112px] h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2"
           aria-hidden
         />
-        <header className="drag relative flex items-center justify-between gap-2 px-3 pb-1.5 pt-2.5">
+        <header className="relative flex items-center justify-between gap-2 px-3 pb-1.5 pt-2.5">
           <Dropdown
             className="min-w-0 flex-1"
             value={miniTargetId}
@@ -76,6 +89,20 @@ export default function MiniFloating(): React.JSX.Element {
             ]}
           />
           <button
+            aria-label={pinned ? 'Dejar siempre visible' : 'Fijar en el escritorio'}
+            title={
+              pinned
+                ? 'Fijada en el escritorio · clic para que vuelva a flotar sobre todo'
+                : 'Fijar en el escritorio (sin flotar sobre las demás ventanas)'
+            }
+            onClick={() => setMiniPinned(!pinned)}
+            className={`no-drag grid h-6 w-6 shrink-0 place-items-center rounded-md transition-colors hover:bg-ink-glass ${
+              pinned ? 'text-orange' : 'text-paper-dim hover:text-paper'
+            }`}
+          >
+            {pinned ? <Pin size={13} strokeWidth={2} /> : <PinOff size={13} strokeWidth={1.75} />}
+          </button>
+          <button
             aria-label="Abrir ventana completa"
             onClick={() => window.modo?.exitMiniMode()}
             className="no-drag grid h-6 w-6 shrink-0 place-items-center rounded-md text-paper-dim transition-colors hover:bg-ink-glass hover:text-paper"
@@ -86,7 +113,7 @@ export default function MiniFloating(): React.JSX.Element {
 
         <UpdateBanner compact />
 
-        <div className="drag relative grid place-items-center pb-3 pt-1">
+        <div className="relative grid place-items-center pb-3 pt-1">
           <ProgressRing
             pct={pct}
             size={132}
@@ -96,7 +123,7 @@ export default function MiniFloating(): React.JSX.Element {
           />
         </div>
 
-        <div className="drag relative -mt-1 flex items-center justify-center gap-2 pb-2 text-[10px] text-paper-dim">
+        <div className="relative -mt-1 flex items-center justify-center gap-2 pb-2 text-[10px] text-paper-dim">
           <LevelBadge level={game.level} size={18} />
           <span className="text-paper">{game.title}</span>
           <span className="tabular-nums">
@@ -136,6 +163,25 @@ export default function MiniFloating(): React.JSX.Element {
             placeholder={`Agregar a ${view.name}`}
           />
         </div>
+
+        {menuPos && (
+          <ContextMenu pos={menuPos} onClose={() => setMenuPos(null)}>
+            <MenuItem
+              Icon={pinned ? PinOff : Pin}
+              label={pinned ? 'Dejar siempre visible' : 'Fijar en el escritorio'}
+              onClick={() => {
+                setMiniPinned(!pinned)
+                setMenuPos(null)
+              }}
+            />
+            <MenuSep />
+            <MenuItem
+              Icon={Maximize2}
+              label="Abrir ventana completa"
+              onClick={() => window.modo?.exitMiniMode()}
+            />
+          </ContextMenu>
+        )}
 
         <CompletionToast compact />
         <FlashToast />

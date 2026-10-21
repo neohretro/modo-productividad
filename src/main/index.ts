@@ -3,6 +3,7 @@ import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { getState, registerStoreIpc } from './store'
 import {
   createMiniWindow,
+  applyMiniPin,
   enterMiniMode,
   exitMiniMode,
   getMainWindow,
@@ -43,6 +44,26 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.on('window:close', () => enterMiniMode()) // cerrar la completa = volver al mini
     ipcMain.on('window:enterMini', () => enterMiniMode())
     ipcMain.on('window:exitMini', () => exitMiniMode())
+
+    // Arrastrar la burbuja mini desde cualquier parte (no solo desde las "zonas de arrastre"
+    // del CSS, que en la lista le quitan la rueda/trackpad). Se guarda el origen al empezar y
+    // se mueve con setBounds conservando el tamaño (setPosition a secas puede ir agrandando
+    // la ventana en pantallas con escala de 125 %/150 %).
+    let dragOrigin: Electron.Rectangle | null = null
+    ipcMain.on('mini:dragStart', (e) => {
+      const win = BrowserWindow.fromWebContents(e.sender)
+      dragOrigin = win && !win.isDestroyed() ? win.getBounds() : null
+    })
+    ipcMain.on('mini:dragMove', (e, dx: number, dy: number) => {
+      const win = BrowserWindow.fromWebContents(e.sender)
+      if (!win || win.isDestroyed() || !dragOrigin || getState().settings.miniPinned) return
+      win.setBounds({
+        x: Math.round(dragOrigin.x + dx),
+        y: Math.round(dragOrigin.y + dy),
+        width: dragOrigin.width,
+        height: dragOrigin.height
+      })
+    })
     ipcMain.on('notify:multitask', (_e, count: number) => notifyMultitask(count))
     ipcMain.on('theme:set', (_e, t: 'light' | 'dark') => setWindowsBackground(t))
     ipcMain.handle('app:getVersion', () => app.getVersion())
@@ -106,5 +127,6 @@ if (!app.requestSingleInstanceLock()) {
 function onSettingsChange(next: AppSettings): void {
   applyLoginItem(next.launchOnStartup)
   applyGlobalShortcut(next.globalShortcut)
+  applyMiniPin(next.miniPinned)
   refreshTrayMenu()
 }

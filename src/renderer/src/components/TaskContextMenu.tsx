@@ -11,6 +11,8 @@ import {
   CopyPlus,
   FolderKanban,
   Pencil,
+  Pin,
+  PinOff,
   Sun,
   Trash2
 } from 'lucide-react'
@@ -37,6 +39,9 @@ function toLocalInput(d: Date): string {
   const p = (n: number): string => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`
 }
+
+/** El menú también se usa en la ventana mini (mini.html): ahí suma "Fijar en el escritorio". */
+const IN_MINI = typeof window !== 'undefined' && window.location.pathname.endsWith('mini.html')
 
 export type MenuMode = 'root' | 'date' | 'project' | 'remind' | 'time'
 
@@ -128,6 +133,16 @@ export default function TaskContextMenu({
             />
           ) : (
             <MenuItem Icon={Bell} label="Recordarme…" onClick={() => setMode('remind')} />
+          )}
+          {IN_MINI && (
+            <>
+              <MenuSep />
+              <MenuItem
+                Icon={s.settings.miniPinned ? PinOff : Pin}
+                label={s.settings.miniPinned ? 'Dejar siempre visible' : 'Fijar en el escritorio'}
+                onClick={() => done(() => s.setMiniPinned(!s.settings.miniPinned))}
+              />
+            </>
           )}
           <MenuSep />
           <MenuItem

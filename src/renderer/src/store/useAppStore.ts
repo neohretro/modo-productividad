@@ -49,6 +49,8 @@ interface AppState extends PersistedState {
   clearRecentCompletion: () => void
   clearReward: () => void
   setCelebrations: (on: boolean) => void
+  /** Fijar la burbuja mini en el escritorio (no flota encima de las demás ventanas). */
+  setMiniPinned: (on: boolean) => void
   /** Fija el tiempo total dedicado a una tarea (viva o ya archivada). */
   setTaskTime: (id: string, ms: number) => void
   setFlash: (msg: string) => void
@@ -183,6 +185,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   clearRecentCompletion: () => set({ recentCompletion: null }),
   clearReward: () => set({ reward: null }),
   setCelebrations: (on) => set((s) => ({ settings: { ...s.settings, celebrations: on } })),
+  setMiniPinned: (on) => set((s) => ({ settings: { ...s.settings, miniPinned: on } })),
   setFlash: (flash) => {
     set({ flash })
     window.setTimeout(() => {

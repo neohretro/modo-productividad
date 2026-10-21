@@ -55,6 +55,10 @@ donde quieras. Muestra:
   mañana o a otra fecha, moverla a un proyecto, ponerle un **recordatorio**
   (en 1 h, hoy a las 18:00, mañana a las 9:00 o la hora que elijas), o eliminarla.
 - **Un botón para expandir** a la ventana completa.
+- **Se mueve agarrándola de cualquier parte** (huecos, texto de las tareas, el anillo), no solo del encabezado.
+- **Fijar en el escritorio** (botón del pin o clic derecho): la burbuja deja de flotar encima de las demás
+  ventanas y queda quieta donde está; otras ventanas la tapan y el atajo global la trae al frente. Al soltarla
+  vuelve a quedar siempre visible.
 
 ### La ventana completa
 
