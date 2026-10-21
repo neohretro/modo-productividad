@@ -10,9 +10,11 @@ import {
   Copy,
   CopyPlus,
   FolderKanban,
+  Minus,
   Pencil,
   Pin,
   PinOff,
+  Power,
   Sun,
   Trash2
 } from 'lucide-react'
@@ -141,6 +143,17 @@ export default function TaskContextMenu({
                 Icon={s.settings.miniPinned ? PinOff : Pin}
                 label={s.settings.miniPinned ? 'Dejar siempre visible' : 'Fijar en el escritorio'}
                 onClick={() => done(() => s.setMiniPinned(!s.settings.miniPinned))}
+              />
+              <MenuItem
+                Icon={Minus}
+                label="Minimizar"
+                onClick={() => done(() => window.modo?.hideMini())}
+              />
+              <MenuItem
+                Icon={Power}
+                label="Cerrar la app"
+                danger
+                onClick={() => done(() => window.modo?.quitApp())}
               />
             </>
           )}

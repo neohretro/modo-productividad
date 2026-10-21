@@ -57,7 +57,7 @@ donde quieras. Muestra:
 - **Un botón para expandir** a la ventana completa.
 - **Se mueve agarrándola de cualquier parte** (huecos, texto de las tareas, el anillo), no solo del encabezado.
 - **Fijar en el escritorio** (botón del pin o clic derecho): la burbuja deja de flotar encima de las demás
-  ventanas y queda quieta donde está; otras ventanas la tapan y el atajo global la trae al frente. Al soltarla
+  ventanas (se sigue pudiendo mover); otras ventanas la tapan y el atajo global la trae al frente. Al soltarla
   vuelve a quedar siempre visible.
 
 ### La ventana completa

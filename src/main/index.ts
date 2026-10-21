@@ -4,6 +4,7 @@ import { getState, registerStoreIpc } from './store'
 import {
   createMiniWindow,
   applyMiniPin,
+  hideMini,
   enterMiniMode,
   exitMiniMode,
   getMainWindow,
@@ -44,6 +45,8 @@ if (!app.requestSingleInstanceLock()) {
     ipcMain.on('window:close', () => enterMiniMode()) // cerrar la completa = volver al mini
     ipcMain.on('window:enterMini', () => enterMiniMode())
     ipcMain.on('window:exitMini', () => exitMiniMode())
+    ipcMain.on('mini:hide', () => hideMini())
+    ipcMain.on('app:quit', () => app.quit())
 
     // Arrastrar la burbuja mini desde cualquier parte (no solo desde las "zonas de arrastre"
     // del CSS, que en la lista le quitan la rueda/trackpad). Se guarda el origen al empezar y
@@ -56,7 +59,7 @@ if (!app.requestSingleInstanceLock()) {
     })
     ipcMain.on('mini:dragMove', (e, dx: number, dy: number) => {
       const win = BrowserWindow.fromWebContents(e.sender)
-      if (!win || win.isDestroyed() || !dragOrigin || getState().settings.miniPinned) return
+      if (!win || win.isDestroyed() || !dragOrigin) return
       win.setBounds({
         x: Math.round(dragOrigin.x + dx),
         y: Math.round(dragOrigin.y + dy),

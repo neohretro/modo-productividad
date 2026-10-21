@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Maximize2, Pin, PinOff } from 'lucide-react'
+import { Maximize2, Minus, Pin, PinOff, Power } from 'lucide-react'
 import { ALL_TASKS_ID, TODAY_PROJECT_ID } from '@shared/types'
 import { toISODate } from '@shared/date'
 import { focusSortRank } from '@shared/focus'
@@ -174,11 +174,25 @@ export default function MiniFloating(): React.JSX.Element {
                 setMenuPos(null)
               }}
             />
-            <MenuSep />
             <MenuItem
               Icon={Maximize2}
               label="Abrir ventana completa"
               onClick={() => window.modo?.exitMiniMode()}
+            />
+            <MenuSep />
+            <MenuItem
+              Icon={Minus}
+              label="Minimizar"
+              onClick={() => {
+                setMenuPos(null)
+                window.modo?.hideMini()
+              }}
+            />
+            <MenuItem
+              Icon={Power}
+              label="Cerrar la app"
+              danger
+              onClick={() => window.modo?.quitApp()}
             />
           </ContextMenu>
         )}

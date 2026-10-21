@@ -118,15 +118,19 @@ export function createMiniWindow(opts: { show?: boolean } = {}): BrowserWindow {
 }
 
 /**
- * Fijar / soltar la burbuja mini.
- *  - fijada: deja de flotar encima de todo (queda "en el escritorio": otras ventanas la
- *    tapan, y se ve al mostrar el escritorio) y no se puede mover por accidente.
- *  - suelta: siempre visible encima de todas las ventanas y se puede arrastrar.
+ * Fijar / soltar la burbuja mini (solo cambia DÓNDE se ve; moverla siempre se puede).
+ *  - fijada: deja de flotar encima de todo; queda "en el escritorio" y las demás ventanas
+ *    (otras apps, otras páginas) la tapan.
+ *  - suelta: siempre visible encima de todas las ventanas.
  */
 export function applyMiniPin(pinned: boolean): void {
   if (!miniWindow || miniWindow.isDestroyed()) return
   miniWindow.setAlwaysOnTop(!pinned, 'floating')
-  miniWindow.setMovable(!pinned)
+}
+
+/** Oculta la burbuja (sigue en la bandeja; el atajo global o el icono la traen de vuelta). */
+export function hideMini(): void {
+  if (miniWindow && !miniWindow.isDestroyed()) miniWindow.hide()
 }
 
 /** Pasar a modo mini: oculta la principal, muestra la burbuja. */

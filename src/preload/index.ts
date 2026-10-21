@@ -12,6 +12,9 @@ const api = {
   closeWindow: () => ipcRenderer.send('window:close'),
   enterMiniMode: () => ipcRenderer.send('window:enterMini'),
   /** Mover la ventana mini arrastrando desde cualquier parte (ver useDragAnywhere). */
+  /** Ocultar la burbuja mini (queda en la bandeja) y salir de la app. */
+  hideMini: () => ipcRenderer.send('mini:hide'),
+  quitApp: () => ipcRenderer.send('app:quit'),
   miniDragStart: () => ipcRenderer.send('mini:dragStart'),
   miniDragMove: (dx: number, dy: number) => ipcRenderer.send('mini:dragMove', dx, dy),
   exitMiniMode: () => ipcRenderer.send('window:exitMini'),
